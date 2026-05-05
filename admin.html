@@ -1,0 +1,871 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Genesis Vault | Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #020608;
+    --bg2: #060d10;
+    --bg3: #0a1520;
+    --accent: #00f5c4;
+    --accent2: #00a8ff;
+    --accent3: #ff003c;
+    --accent4: #ffaa00;
+    --text: #c8e6f0;
+    --text-dim: #4a7a8a;
+    --border: #0f2a35;
+    --glow: 0 0 20px rgba(0,245,196,0.2);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Rajdhani', sans-serif;
+    min-height: 100vh;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(255,0,60,0.02) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,0,60,0.02) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    background: rgba(2,6,8,0.97);
+    border-bottom: 1px solid var(--accent3);
+    padding: 0 20px;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    z-index: 100;
+    backdrop-filter: blur(10px);
+  }
+
+  .nav-logo {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.9rem;
+    letter-spacing: 3px;
+  }
+
+  .nav-logo span:first-child { color: var(--accent3); }
+  .nav-logo span:last-child { color: white; }
+  .nav-logo .admin-tag {
+    color: var(--accent3);
+    font-size: 0.65rem;
+    letter-spacing: 2px;
+    display: block;
+    margin-top: -2px;
+  }
+
+  .logout-btn {
+    background: none;
+    border: 1px solid var(--accent3);
+    color: var(--accent3);
+    padding: 4px 12px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.7rem;
+    cursor: pointer;
+    letter-spacing: 1px;
+    transition: all 0.2s;
+  }
+
+  .logout-btn:hover { background: var(--accent3); color: white; }
+
+  .bottom-nav {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    background: rgba(2,6,8,0.97);
+    border-top: 1px solid var(--accent3);
+    display: flex;
+    z-index: 100;
+  }
+
+  .nav-item {
+    flex: 1;
+    padding: 10px 4px;
+    text-align: center;
+    cursor: pointer;
+    border-top: 2px solid transparent;
+    transition: all 0.2s;
+  }
+
+  .nav-item.active { border-top-color: var(--accent3); }
+  .nav-item .nav-icon { font-size: 1.1rem; display: block; }
+  .nav-item .nav-label {
+    font-size: 0.55rem;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    font-family: 'Share Tech Mono', monospace;
+    margin-top: 2px;
+    display: block;
+  }
+  .nav-item.active .nav-label { color: var(--accent3); }
+
+  main {
+    padding-top: 76px;
+    padding-bottom: 80px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .page { display: none; padding: 16px; }
+  .page.active { display: block; }
+
+  .section-title {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.75rem;
+    color: var(--accent3);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 8px;
+  }
+
+  /* DASHBOARD STATS */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+
+  .stat-card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent3);
+    padding: 14px;
+    animation: fadeIn 0.4s ease;
+  }
+
+  .stat-card.green { border-left-color: var(--accent); }
+  .stat-card.blue { border-left-color: var(--accent2); }
+  .stat-card.yellow { border-left-color: var(--accent4); }
+
+  .stat-value {
+    font-size: 1.8rem;
+    font-weight: 700;
+    font-family: 'Share Tech Mono', monospace;
+    color: var(--accent);
+  }
+
+  .stat-card.red .stat-value { color: var(--accent3); }
+  .stat-card.yellow .stat-value { color: var(--accent4); }
+
+  .stat-label {
+    font-size: 0.65rem;
+    color: var(--text-dim);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-top: 4px;
+  }
+
+  /* CARDS */
+  .item-card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    padding: 16px;
+    margin-bottom: 10px;
+    animation: fadeIn 0.4s ease;
+  }
+
+  .item-card h4 {
+    font-size: 1rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+    color: white;
+    margin-bottom: 4px;
+  }
+
+  .item-card p {
+    font-size: 0.8rem;
+    color: var(--text-dim);
+    margin-bottom: 8px;
+    line-height: 1.5;
+  }
+
+  .item-meta {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--text-dim);
+    margin-bottom: 10px;
+  }
+
+  .item-meta span { color: var(--accent2); }
+
+  .actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .btn-approve {
+    background: var(--accent);
+    color: var(--bg);
+    border: none;
+    padding: 8px 16px;
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 700;
+    font-size: 0.8rem;
+    letter-spacing: 2px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .btn-approve:hover { background: white; }
+
+  .btn-reject {
+    background: none;
+    color: var(--accent3);
+    border: 1px solid var(--accent3);
+    padding: 8px 16px;
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 700;
+    font-size: 0.8rem;
+    letter-spacing: 2px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .btn-reject:hover { background: var(--accent3); color: white; }
+
+  .btn-action {
+    background: none;
+    color: var(--accent2);
+    border: 1px solid var(--accent2);
+    padding: 6px 14px;
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 700;
+    font-size: 0.75rem;
+    letter-spacing: 1px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .btn-action:hover { background: var(--accent2); color: var(--bg); }
+
+  .btn-warn {
+    background: none;
+    color: var(--accent4);
+    border: 1px solid var(--accent4);
+    padding: 6px 14px;
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 700;
+    font-size: 0.75rem;
+    letter-spacing: 1px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .btn-warn:hover { background: var(--accent4); color: var(--bg); }
+
+  .badge {
+    display: inline-block;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.6rem;
+    padding: 2px 8px;
+    letter-spacing: 1px;
+    margin-bottom: 8px;
+  }
+
+  .badge-safe { border: 1px solid var(--accent); color: var(--accent); }
+  .badge-flagged { border: 1px solid var(--accent3); color: var(--accent3); }
+  .badge-pending { border: 1px solid var(--accent4); color: var(--accent4); }
+
+  /* PROMOTE MODAL */
+  .modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(2,6,8,0.95);
+    z-index: 200;
+    padding: 20px;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .modal.active { display: flex; }
+
+  .modal-box {
+    background: var(--bg2);
+    border: 1px solid var(--accent3);
+    padding: 28px;
+    width: 100%;
+    max-width: 340px;
+  }
+
+  .modal-box h3 {
+    font-family: 'Share Tech Mono', monospace;
+    color: var(--accent3);
+    letter-spacing: 3px;
+    font-size: 0.9rem;
+    margin-bottom: 20px;
+  }
+
+  select {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 12px 16px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.85rem;
+    outline: none;
+    margin-bottom: 16px;
+  }
+
+  .modal-actions { display: flex; gap: 10px; }
+
+  .btn-full {
+    flex: 1;
+    padding: 12px;
+    background: var(--accent);
+    color: var(--bg);
+    border: none;
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 700;
+    font-size: 0.9rem;
+    letter-spacing: 2px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .btn-full:hover { background: white; }
+
+  .btn-cancel {
+    flex: 1;
+    padding: 12px;
+    background: none;
+    color: var(--text-dim);
+    border: 1px solid var(--border);
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .btn-cancel:hover { border-color: var(--accent3); color: var(--accent3); }
+
+  .loading {
+    text-align: center;
+    padding: 40px;
+    color: var(--text-dim);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.8rem;
+  }
+
+  .empty {
+    text-align: center;
+    padding: 30px;
+    color: var(--text-dim);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.8rem;
+  }
+
+  .toast {
+    position: fixed;
+    bottom: 90px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--accent);
+    color: var(--bg);
+    padding: 10px 24px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.8rem;
+    letter-spacing: 2px;
+    z-index: 300;
+    opacity: 0;
+    transition: opacity 0.3s;
+    pointer-events: none;
+    white-space: nowrap;
+  }
+
+  .toast.show { opacity: 1; }
+
+  .spinner {
+    display: inline-block;
+    width: 14px; height: 14px;
+    border: 2px solid var(--border);
+    border-top-color: var(--accent3);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    vertical-align: middle;
+    margin-right: 6px;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .ai-scan {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.7rem;
+    padding: 4px 8px;
+    margin-bottom: 8px;
+    display: inline-block;
+  }
+
+  .payout-amount {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 1.2rem;
+    color: var(--accent);
+    margin-bottom: 4px;
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-logo">
+    <span>GENESIS</span><span>VAULT</span>
+    <span class="admin-tag">// ADMIN TERMINAL</span>
+  </div>
+  <button class="logout-btn" onclick="logout()">EXIT</button>
+</nav>
+
+<main>
+
+  <!-- DASHBOARD -->
+  <div class="page active" id="page-dashboard">
+    <p class="section-title">// System Overview</p>
+    <div class="stats-grid" id="stats-grid">
+      <div class="loading" style="grid-column:1/-1"><span class="spinner"></span>Loading...</div>
+    </div>
+  </div>
+
+  <!-- PENDING TOOLS -->
+  <div class="page" id="page-tools">
+    <p class="section-title">// Pending Tool Reviews</p>
+    <div id="tools-container">
+      <div class="loading"><span class="spinner"></span>Loading...</div>
+    </div>
+  </div>
+
+  <!-- PAYMENTS -->
+  <div class="page" id="page-payments">
+    <p class="section-title">// Pending Payments</p>
+    <div id="payments-container">
+      <div class="loading"><span class="spinner"></span>Loading...</div>
+    </div>
+
+    <p class="section-title" style="margin-top:20px;">// Payout Requests</p>
+    <div id="payouts-container">
+      <div class="loading"><span class="spinner"></span>Loading...</div>
+    </div>
+  </div>
+
+  <!-- USERS -->
+  <div class="page" id="page-users">
+    <p class="section-title">// Flagged Posts</p>
+    <div id="posts-container">
+      <div class="loading"><span class="spinner"></span>Loading...</div>
+    </div>
+
+    <p class="section-title" style="margin-top:20px;">// Member Management</p>
+    <div id="members-container">
+      <div class="loading"><span class="spinner"></span>Loading...</div>
+    </div>
+  </div>
+
+</main>
+
+<!-- BOTTOM NAV -->
+<div class="bottom-nav">
+  <div class="nav-item active" onclick="showPage('dashboard', this)">
+    <span class="nav-icon">◈</span>
+    <span class="nav-label">Overview</span>
+  </div>
+  <div class="nav-item" onclick="showPage('tools', this)">
+    <span class="nav-icon">⊞</span>
+    <span class="nav-label">Tools</span>
+  </div>
+  <div class="nav-item" onclick="showPage('payments', this)">
+    <span class="nav-icon">◎</span>
+    <span class="nav-label">Payments</span>
+  </div>
+  <div class="nav-item" onclick="showPage('users', this)">
+    <span class="nav-icon">◉</span>
+    <span class="nav-label">Users</span>
+  </div>
+</div>
+
+<!-- PROMOTE MODAL -->
+<div class="modal" id="promote-modal">
+  <div class="modal-box">
+    <h3>// PROMOTE MEMBER</h3>
+    <p style="color:var(--text-dim);font-size:0.8rem;margin-bottom:16px;font-family:'Share Tech Mono',monospace;" id="promote-username-label"></p>
+    <select id="promote-rank">
+      <option value="Ghost">Ghost</option>
+      <option value="Scout">Scout</option>
+      <option value="Hunter">Hunter</option>
+      <option value="Predator">Predator</option>
+      <option value="Phantom">Phantom</option>
+      <option value="Architect">Architect</option>
+      <option value="Guardian">Guardian</option>
+    </select>
+    <div class="modal-actions">
+      <button class="btn-full" onclick="confirmPromote()">[ PROMOTE ]</button>
+      <button class="btn-cancel" onclick="closePromoteModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+  const API = 'https://genesis-vault-backend.onrender.com/api';
+  let token = localStorage.getItem('gv_token');
+  let currentUser = JSON.parse(localStorage.getItem('gv_user') || '{}');
+  let promoteUserId = null;
+
+  if (!token) window.location.href = 'login.html';
+  if (!currentUser.is_admin) {
+    window.location.href = 'dashboard.html';
+  }
+
+  function authHeaders() {
+    return { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` };
+  }
+
+  function logout() {
+    localStorage.removeItem('gv_token');
+    localStorage.removeItem('gv_user');
+    window.location.href = 'login.html';
+  }
+
+  function showPage(name, el) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    document.getElementById(`page-${name}`).classList.add('active');
+    el.classList.add('active');
+
+    if (name === 'dashboard') loadDashboard();
+    if (name === 'tools') loadPendingTools();
+    if (name === 'payments') loadPayments();
+    if (name === 'users') loadUsers();
+  }
+
+  function toast(msg, color = 'var(--accent)') {
+    const el = document.getElementById('toast');
+    el.textContent = msg;
+    el.style.background = color;
+    el.style.color = color === 'var(--accent)' ? 'var(--bg)' : 'white';
+    el.classList.add('show');
+    setTimeout(() => el.classList.remove('show'), 2500);
+  }
+
+  // ─── DASHBOARD ───────────────────────────────
+  async function loadDashboard() {
+    try {
+      const res = await fetch(`${API}/admin/dashboard`, { headers: authHeaders() });
+      const data = await res.json();
+      document.getElementById('stats-grid').innerHTML = `
+        <div class="stat-card green">
+          <div class="stat-value">${data.total_users}</div>
+          <div class="stat-label">Total Members</div>
+        </div>
+        <div class="stat-card blue">
+          <div class="stat-value">${data.total_tools}</div>
+          <div class="stat-label">Live Tools</div>
+        </div>
+        <div class="stat-card yellow">
+          <div class="stat-value">${data.pending_tools}</div>
+          <div class="stat-label">Pending Review</div>
+        </div>
+        <div class="stat-card red">
+          <div class="stat-value">${data.flagged_posts}</div>
+          <div class="stat-label">Flagged Posts</div>
+        </div>
+        <div class="stat-card green" style="grid-column:1/-1">
+          <div class="stat-value">$${parseFloat(data.total_revenue || 0).toFixed(2)}</div>
+          <div class="stat-label">Platform Revenue (USDT)</div>
+        </div>
+        <div class="stat-card yellow" style="grid-column:1/-1">
+          <div class="stat-value">${data.pending_payouts}</div>
+          <div class="stat-label">Pending Payout Requests</div>
+        </div>
+      `;
+    } catch(e) {
+      document.getElementById('stats-grid').innerHTML = '<div class="empty">// Failed to load stats.</div>';
+    }
+  }
+
+  // ─── TOOLS ───────────────────────────────────
+  async function loadPendingTools() {
+    const c = document.getElementById('tools-container');
+    c.innerHTML = '<div class="loading"><span class="spinner"></span>Loading...</div>';
+    try {
+      const res = await fetch(`${API}/admin/pending-tools`, { headers: authHeaders() });
+      const data = await res.json();
+      if (!data.tools || data.tools.length === 0) {
+        c.innerHTML = '<div class="empty">// No tools pending review. ✓</div>';
+        return;
+      }
+      c.innerHTML = data.tools.map(t => `
+        <div class="item-card" id="tool-card-${t.id}">
+          <div class="item-meta">
+            <span>${t.seller_name}</span> · submitted ${timeAgo(t.created_at)}
+            ${t.is_ai_powered ? ' · <span>AI POWERED</span>' : ''}
+          </div>
+          <h4>${t.title}</h4>
+          <p>${t.description.substring(0, 120)}...</p>
+          <div class="badge ${t.ai_scan_result === 'SAFE' ? 'badge-safe' : t.ai_scan_result === 'FLAGGED' ? 'badge-flagged' : 'badge-pending'}">
+            AI SCAN: ${t.ai_scan_result || 'NOT SCANNED'}
+          </div>
+          <p style="font-family:'Share Tech Mono',monospace;font-size:0.75rem;color:var(--accent2);">
+            Price: ${t.price === 0 ? 'FREE' : '$' + t.price + ' USDT'}
+          </p>
+          <div class="actions" style="margin-top:12px;">
+            <button class="btn-approve" onclick="approveTool(${t.id})">[ APPROVE ]</button>
+            <button class="btn-reject" onclick="rejectTool(${t.id})">[ REJECT ]</button>
+          </div>
+        </div>
+      `).join('');
+    } catch(e) {
+      c.innerHTML = '<div class="empty">// Failed to load tools.</div>';
+    }
+  }
+
+  async function approveTool(id) {
+    try {
+      const res = await fetch(`${API}/admin/tools/${id}/approve`, { method: 'POST', headers: authHeaders() });
+      if (res.ok) {
+        document.getElementById(`tool-card-${id}`).remove();
+        toast('// Tool approved and live!');
+        loadDashboard();
+      }
+    } catch(e) {}
+  }
+
+  async function rejectTool(id) {
+    const reason = prompt('Rejection reason (optional):') || 'Does not meet guidelines';
+    try {
+      const res = await fetch(`${API}/admin/tools/${id}/reject`, {
+        method: 'POST', headers: authHeaders(),
+        body: JSON.stringify({ reason })
+      });
+      if (res.ok) {
+        document.getElementById(`tool-card-${id}`).remove();
+        toast('// Tool rejected.', 'var(--accent3)');
+      }
+    } catch(e) {}
+  }
+
+  // ─── PAYMENTS ────────────────────────────────
+  async function loadPayments() {
+    const pc = document.getElementById('payments-container');
+    const pyc = document.getElementById('payouts-container');
+
+    pc.innerHTML = '<div class="loading"><span class="spinner"></span>Loading...</div>';
+    pyc.innerHTML = '<div class="loading"><span class="spinner"></span>Loading...</div>';
+
+    // Pending payments (awaiting confirmation)
+    try {
+      const res = await fetch(`${API}/admin/pending-payments`, { headers: authHeaders() });
+      const data = await res.json();
+      if (!data.purchases || data.purchases.length === 0) {
+        pc.innerHTML = '<div class="empty">// No payments awaiting confirmation. ✓</div>';
+      } else {
+        pc.innerHTML = data.purchases.map(p => `
+          <div class="item-card" id="payment-${p.id}">
+            <div class="item-meta">Buyer: <span>${p.buyer_name}</span> · ${timeAgo(p.purchased_at)}</div>
+            <h4>${p.title}</h4>
+            <p class="payout-amount">$${p.amount_paid} USDT</p>
+            <p style="font-family:'Share Tech Mono',monospace;font-size:0.7rem;color:var(--accent4);">
+              TX: ${p.binance_tx_id || 'Not provided'}
+            </p>
+            <div class="actions" style="margin-top:10px;">
+              <button class="btn-approve" onclick="confirmPayment(${p.id})">[ CONFIRM PAYMENT ]</button>
+              <button class="btn-reject" onclick="rejectPayment(${p.id})">[ REJECT ]</button>
+            </div>
+          </div>
+        `).join('');
+      }
+    } catch(e) {
+      pc.innerHTML = '<div class="empty">// Failed to load payments.</div>';
+    }
+
+    // Payout requests
+    try {
+      const res = await fetch(`${API}/admin/payouts`, { headers: authHeaders() });
+      const data = await res.json();
+      if (!data.payouts || data.payouts.length === 0) {
+        pyc.innerHTML = '<div class="empty">// No payout requests. ✓</div>';
+      } else {
+        pyc.innerHTML = data.payouts.map(p => `
+          <div class="item-card" id="payout-${p.id}">
+            <div class="item-meta">Seller: <span>${p.username}</span> · ${timeAgo(p.created_at)}</div>
+            <p class="payout-amount">$${parseFloat(p.amount).toFixed(2)} USDT</p>
+            <p style="font-family:'Share Tech Mono',monospace;font-size:0.7rem;color:var(--text-dim);word-break:break-all;">
+              → ${p.binance_address}
+            </p>
+            <div class="actions" style="margin-top:10px;">
+              <button class="btn-approve" onclick="markPayoutSent(${p.id})">[ MARK SENT ]</button>
+            </div>
+          </div>
+        `).join('');
+      }
+    } catch(e) {
+      pyc.innerHTML = '<div class="empty">// Failed to load payouts.</div>';
+    }
+  }
+
+  async function confirmPayment(id) {
+    try {
+      const res = await fetch(`${API}/payments/admin-confirm/${id}`, { method: 'POST', headers: authHeaders() });
+      if (res.ok) {
+        document.getElementById(`payment-${id}`).remove();
+        toast('// Payment confirmed! Tool unlocked for buyer.');
+      }
+    } catch(e) {}
+  }
+
+  async function rejectPayment(id) {
+    toast('// Payment rejected.', 'var(--accent3)');
+    document.getElementById(`payment-${id}`).remove();
+  }
+
+  async function markPayoutSent(id) {
+    try {
+      const res = await fetch(`${API}/admin/payouts/${id}/mark-sent`, { method: 'POST', headers: authHeaders() });
+      if (res.ok) {
+        document.getElementById(`payout-${id}`).remove();
+        toast('// Payout marked as sent!');
+        loadDashboard();
+      }
+    } catch(e) {}
+  }
+
+  // ─── USERS ───────────────────────────────────
+  async function loadUsers() {
+    const pc = document.getElementById('posts-container');
+    const mc = document.getElementById('members-container');
+
+    pc.innerHTML = '<div class="loading"><span class="spinner"></span>Loading...</div>';
+    mc.innerHTML = '<div class="loading"><span class="spinner"></span>Loading...</div>';
+
+    // Flagged posts
+    try {
+      const res = await fetch(`${API}/admin/flagged-posts`, { headers: authHeaders() });
+      const data = await res.json();
+      if (!data.posts || data.posts.length === 0) {
+        pc.innerHTML = '<div class="empty">// No flagged posts. ✓</div>';
+      } else {
+        pc.innerHTML = data.posts.map(p => `
+          <div class="item-card" id="post-${p.id}">
+            <div class="item-meta">By: <span>${p.username}</span> · ${timeAgo(p.created_at)}</div>
+            <p>${p.content}</p>
+            <div class="actions" style="margin-top:10px;">
+              <button class="btn-action" onclick="clearPost(${p.id})">[ CLEAR ]</button>
+              <button class="btn-reject" onclick="deletePost(${p.id})">[ DELETE ]</button>
+            </div>
+          </div>
+        `).join('');
+      }
+    } catch(e) {}
+
+    // Members
+    try {
+      const res = await fetch(`${API}/community/members`, { headers: authHeaders() });
+      const data = await res.json();
+      if (!data.members || data.members.length === 0) {
+        mc.innerHTML = '<div class="empty">// No members yet.</div>';
+      } else {
+        mc.innerHTML = data.members.map(m => `
+          <div class="item-card">
+            <div class="item-meta">
+              <span>${m.username}</span> · [${m.rank}] · ${m.followers} followers
+            </div>
+            <p style="font-size:0.75rem;color:var(--text-dim);">Joined ${timeAgo(m.created_at)}</p>
+            <div class="actions" style="margin-top:10px;">
+              <button class="btn-action" onclick="openPromoteModal(${m.id}, '${m.username}')">[ PROMOTE ]</button>
+              <button class="btn-warn" onclick="banUser(${m.id}, '${m.username}')">[ BAN ]</button>
+            </div>
+          </div>
+        `).join('');
+      }
+    } catch(e) {}
+  }
+
+  async function clearPost(id) {
+    try {
+      const res = await fetch(`${API}/admin/posts/${id}/clear`, { method: 'POST', headers: authHeaders() });
+      if (res.ok) { document.getElementById(`post-${id}`).remove(); toast('// Post cleared.'); }
+    } catch(e) {}
+  }
+
+  async function deletePost(id) {
+    try {
+      const res = await fetch(`${API}/admin/posts/${id}/delete`, { method: 'POST', headers: authHeaders() });
+      if (res.ok) { document.getElementById(`post-${id}`).remove(); toast('// Post deleted.', 'var(--accent3)'); }
+    } catch(e) {}
+  }
+
+  async function banUser(id, username) {
+    if (!confirm(`Ban ${username}? This will block their access.`)) return;
+    try {
+      const res = await fetch(`${API}/admin/users/${id}/ban`, { method: 'POST', headers: authHeaders() });
+      if (res.ok) { toast(`// ${username} banned.`, 'var(--accent3)'); loadUsers(); }
+    } catch(e) {}
+  }
+
+  function openPromoteModal(id, username) {
+    promoteUserId = id;
+    document.getElementById('promote-username-label').textContent = `// ${username}`;
+    document.getElementById('promote-modal').classList.add('active');
+  }
+
+  function closePromoteModal() {
+    document.getElementById('promote-modal').classList.remove('active');
+    promoteUserId = null;
+  }
+
+  async function confirmPromote() {
+    const rank = document.getElementById('promote-rank').value;
+    try {
+      const res = await fetch(`${API}/admin/users/${promoteUserId}/promote`, {
+        method: 'POST', headers: authHeaders(),
+        body: JSON.stringify({ rank })
+      });
+      if (res.ok) {
+        toast(`// Member promoted to ${rank}!`);
+        closePromoteModal();
+        loadUsers();
+      }
+    } catch(e) {}
+  }
+
+  function timeAgo(dateStr) {
+    if (!dateStr) return 'unknown';
+    const diff = Date.now() - new Date(dateStr).getTime();
+    const mins = Math.floor(diff / 60000);
+    if (mins < 1) return 'just now';
+    if (mins < 60) return `${mins}m ago`;
+    const hrs = Math.floor(mins / 60);
+    if (hrs < 24) return `${hrs}h ago`;
+    return `${Math.floor(hrs / 24)}d ago`;
+  }
+
+  // Init
+  loadDashboard();
+</script>
+</body>
+</html>
