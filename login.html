@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Genesis Vault | Access</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #020608;
+    --bg2: #060d10;
+    --accent: #00f5c4;
+    --accent2: #00a8ff;
+    --accent3: #ff003c;
+    --text: #c8e6f0;
+    --text-dim: #4a7a8a;
+    --border: #0f2a35;
+    --glow: 0 0 20px rgba(0,245,196,0.3);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Rajdhani', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+
+  /* Grid background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(0,245,196,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,245,196,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 420px;
+    padding: 20px;
+  }
+
+  .logo {
+    text-align: center;
+    margin-bottom: 40px;
+    animation: fadeDown 0.6s ease;
+  }
+
+  .logo a {
+    text-decoration: none;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 1.4rem;
+    letter-spacing: 4px;
+  }
+
+  .logo a span:first-child { color: var(--accent); }
+  .logo a span:last-child { color: white; }
+
+  .logo p {
+    color: var(--text-dim);
+    font-size: 0.75rem;
+    letter-spacing: 3px;
+    margin-top: 6px;
+    text-transform: uppercase;
+  }
+
+  .card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    padding: 36px 32px;
+    animation: fadeUp 0.6s ease;
+  }
+
+  .card h2 {
+    font-size: 1.4rem;
+    font-weight: 700;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+    color: white;
+  }
+
+  .card .sub {
+    color: var(--text-dim);
+    font-size: 0.85rem;
+    letter-spacing: 1px;
+    margin-bottom: 28px;
+    font-family: 'Share Tech Mono', monospace;
+  }
+
+  .tabs {
+    display: flex;
+    gap: 0;
+    margin-bottom: 28px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .tab {
+    flex: 1;
+    padding: 10px;
+    text-align: center;
+    cursor: pointer;
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 600;
+    font-size: 0.85rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s;
+  }
+
+  .tab.active {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+  }
+
+  .form-group {
+    margin-bottom: 18px;
+  }
+
+  label {
+    display: block;
+    font-size: 0.75rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 8px;
+    font-family: 'Share Tech Mono', monospace;
+  }
+
+  input {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 12px 16px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.9rem;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+
+  input:focus {
+    border-color: var(--accent);
+    box-shadow: var(--glow);
+  }
+
+  input::placeholder { color: var(--text-dim); }
+
+  .btn {
+    width: 100%;
+    padding: 14px;
+    background: var(--accent);
+    color: var(--bg);
+    border: none;
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 700;
+    font-size: 1rem;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-top: 8px;
+    clip-path: polygon(8px 0%, 100% 0%, calc(100% - 8px) 100%, 0% 100%);
+  }
+
+  .btn:hover {
+    background: white;
+    box-shadow: var(--glow);
+  }
+
+  .btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .error {
+    background: rgba(255,0,60,0.1);
+    border: 1px solid var(--accent3);
+    color: var(--accent3);
+    padding: 10px 14px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.8rem;
+    margin-bottom: 16px;
+    display: none;
+  }
+
+  .success {
+    background: rgba(0,245,196,0.1);
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    padding: 10px 14px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.8rem;
+    margin-bottom: 16px;
+    display: none;
+  }
+
+  .form-panel { display: none; }
+  .form-panel.active { display: block; }
+
+  .referral-note {
+    color: var(--text-dim);
+    font-size: 0.75rem;
+    font-family: 'Share Tech Mono', monospace;
+    margin-top: 16px;
+    text-align: center;
+    letter-spacing: 1px;
+  }
+
+  .back-link {
+    text-align: center;
+    margin-top: 24px;
+    animation: fadeUp 0.8s ease;
+  }
+
+  .back-link a {
+    color: var(--text-dim);
+    text-decoration: none;
+    font-size: 0.8rem;
+    letter-spacing: 2px;
+    font-family: 'Share Tech Mono', monospace;
+    transition: color 0.2s;
+  }
+
+  .back-link a:hover { color: var(--accent); }
+
+  @keyframes fadeDown {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .scanner {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--accent), transparent);
+    animation: scan 3s linear infinite;
+    z-index: 0;
+  }
+
+  @keyframes scan {
+    0% { top: 0; opacity: 1; }
+    100% { top: 100vh; opacity: 0; }
+  }
+</style>
+</head>
+<body>
+
+<div class="scanner"></div>
+
+<div class="container">
+  <div class="logo">
+    <a href="index.html"><span>GENESIS</span><span>VAULT</span></a>
+    <p>// Secure Access Terminal</p>
+  </div>
+
+  <div class="card">
+    <h2>Authentication</h2>
+    <p class="sub">$ vault --authenticate</p>
+
+    <div class="tabs">
+      <div class="tab active" onclick="switchTab('login')">Login</div>
+      <div class="tab" onclick="switchTab('register')">Register</div>
+    </div>
+
+    <div id="error-msg" class="error"></div>
+    <div id="success-msg" class="success"></div>
+
+    <!-- LOGIN FORM -->
+    <div id="panel-login" class="form-panel active">
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" id="login-email" placeholder="hunter@email.com">
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="login-password" placeholder="••••••••">
+      </div>
+      <button class="btn" onclick="handleLogin()" id="login-btn">[ ACCESS VAULT ]</button>
+    </div>
+
+    <!-- REGISTER FORM -->
+    <div id="panel-register" class="form-panel">
+      <div class="form-group">
+        <label>Username</label>
+        <input type="text" id="reg-username" placeholder="your_handle">
+      </div>
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" id="reg-email" placeholder="hunter@email.com">
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="reg-password" placeholder="min 8 characters">
+      </div>
+      <div class="form-group">
+        <label>Referral Code (optional)</label>
+        <input type="text" id="reg-referral" placeholder="XXXXXXXX">
+      </div>
+      <button class="btn" onclick="handleRegister()" id="reg-btn">[ JOIN THE VAULT ]</button>
+      <p class="referral-note">// Invite only. You need a referral code or admin approval.</p>
+    </div>
+  </div>
+
+  <div class="back-link">
+    <a href="index.html">← Return to base</a>
+  </div>
+</div>
+
+<script>
+  const API = 'https://genesis-vault-backend.onrender.com/api';
+
+  function switchTab(tab) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.form-panel').forEach(p => p.classList.remove('active'));
+    document.querySelector(`.tab:${tab === 'login' ? 'first-child' : 'last-child'}`).classList.add('active');
+    document.getElementById(`panel-${tab}`).classList.add('active');
+    hideMessages();
+  }
+
+  function showError(msg) {
+    const el = document.getElementById('error-msg');
+    el.textContent = '// ERROR: ' + msg;
+    el.style.display = 'block';
+    document.getElementById('success-msg').style.display = 'none';
+  }
+
+  function showSuccess(msg) {
+    const el = document.getElementById('success-msg');
+    el.textContent = '// ' + msg;
+    el.style.display = 'block';
+    document.getElementById('error-msg').style.display = 'none';
+  }
+
+  function hideMessages() {
+    document.getElementById('error-msg').style.display = 'none';
+    document.getElementById('success-msg').style.display = 'none';
+  }
+
+  async function handleLogin() {
+    const email = document.getElementById('login-email').value.trim();
+    const password = document.getElementById('login-password').value;
+    const btn = document.getElementById('login-btn');
+
+    if (!email || !password) return showError('All fields required');
+
+    btn.disabled = true;
+    btn.textContent = '[ AUTHENTICATING... ]';
+
+    try {
+      const res = await fetch(`${API}/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        showError(data.error || 'Login failed');
+      } else {
+        localStorage.setItem('gv_token', data.token);
+        localStorage.setItem('gv_user', JSON.stringify(data.user));
+        showSuccess('Access granted. Redirecting...');
+        setTimeout(() => window.location.href = 'dashboard.html', 1000);
+      }
+    } catch (e) {
+      showError('Connection failed. Try again.');
+    }
+
+    btn.disabled = false;
+    btn.textContent = '[ ACCESS VAULT ]';
+  }
+
+  async function handleRegister() {
+    const username = document.getElementById('reg-username').value.trim();
+    const email = document.getElementById('reg-email').value.trim();
+    const password = document.getElementById('reg-password').value;
+    const referral_code = document.getElementById('reg-referral').value.trim();
+    const btn = document.getElementById('reg-btn');
+
+    if (!username || !email || !password) return showError('All fields required');
+    if (password.length < 8) return showError('Password must be at least 8 characters');
+
+    btn.disabled = true;
+    btn.textContent = '[ PROCESSING... ]';
+
+    try {
+      const res = await fetch(`${API}/auth/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, email, password, referral_code })
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        showError(data.error || 'Registration failed');
+      } else {
+        localStorage.setItem('gv_token', data.token);
+        showSuccess('Account created! Welcome to the Vault.');
+        setTimeout(() => window.location.href = 'dashboard.html', 1500);
+      }
+    } catch (e) {
+      showError('Connection failed. Try again.');
+    }
+
+    btn.disabled = false;
+    btn.textContent = '[ JOIN THE VAULT ]';
+  }
+
+  // Check if already logged in
+  if (localStorage.getItem('gv_token')) {
+    window.location.href = 'dashboard.html';
+  }
+
+  // Enter key support
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Enter') {
+      const activePanel = document.querySelector('.form-panel.active');
+      if (activePanel.id === 'panel-login') handleLogin();
+      else handleRegister();
+    }
+  });
+</script>
+</body>
+</html>
