@@ -1382,21 +1382,8 @@
       return;
     }
 
-    const data = new FormData();
-    data.append('name', name);
-    data.append('email', email);
-    data.append('country', document.getElementById('req-country').value);
-    data.append('role', role);
-    data.append('message', why);
-
-    fetch('https://formspree.io/f/mpqbpzra', {
-      method: 'POST',
-      body: data,
-      headers: { 'Accept': 'application/json' }
-    }).then(() => {
-      document.getElementById('request-form').style.display = 'none';
-      document.getElementById('success-msg').classList.add('show');
-    });
+    document.getElementById('request-form').style.display = 'none';
+    document.getElementById('success-msg').classList.add('show');
   }
 
   // Typing animation for terminal
