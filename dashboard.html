@@ -785,6 +785,7 @@
 
 <script>
   const API = 'https://genesis-vault-backend.onrender.com/api';
+  const AI_API = 'https://genesis-ai-backend.onrender.com';
   let token = localStorage.getItem('gv_token');
   let currentUser = JSON.parse(localStorage.getItem('gv_user') || '{}');
 
@@ -854,7 +855,7 @@
     copy.style.display = 'none';
 
     try {
-      const res = await fetch(`${API}/ai/report-writer`, {
+      const res = await fetch(`${AI_API}/report`, {
         method: 'POST',
         headers: authHeaders(),
         body: JSON.stringify({
@@ -885,7 +886,7 @@
     output.style.display = 'none'; copy.style.display = 'none';
 
     try {
-      const res = await fetch(`${API}/ai/recon-summary`, {
+      const res = await fetch(`${AI_API}/recon`, {
         method: 'POST', headers: authHeaders(),
         body: JSON.stringify({
           target: document.getElementById('recon-target').value,
@@ -910,7 +911,7 @@
     output.style.display = 'none'; copy.style.display = 'none';
 
     try {
-      const res = await fetch(`${API}/ai/xss-triage`, {
+      const res = await fetch(`${AI_API}/xss-triage`, {
         method: 'POST', headers: authHeaders(),
         body: JSON.stringify({
           target: document.getElementById('xss-target').value,
