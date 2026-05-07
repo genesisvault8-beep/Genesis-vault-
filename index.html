@@ -1396,5 +1396,374 @@
     }, i * 400 + 500);
   });
 </script>
+
+
+<!-- ============================================================
+     GENESIS VAULT // AI TOOLS
+     Paste this entire block just before </body> in index.html
+     Replace YOUR_BACKEND_URL with your Render URL e.g:
+     https://genesis-ai-backend.onrender.com
+     ============================================================ -->
+
+<style>
+  /* ── MODAL OVERLAY ── */
+  .gv-modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(2,6,8,0.92);
+    z-index: 9000;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  .gv-modal-overlay.open { display: flex; }
+
+  .gv-modal {
+    background: #060d10;
+    border: 1px solid #0f2a35;
+    border-top: 2px solid #00f5c4;
+    width: 100%;
+    max-width: 600px;
+    max-height: 90vh;
+    overflow-y: auto;
+    padding: 30px 24px;
+    position: relative;
+    font-family: 'Rajdhani', sans-serif;
+  }
+
+  .gv-modal-title {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.75rem;
+    color: #00f5c4;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    margin-bottom: 24px;
+  }
+
+  .gv-modal-close {
+    position: absolute;
+    top: 16px; right: 16px;
+    background: transparent;
+    border: 1px solid #0f2a35;
+    color: #4a7a8a;
+    width: 30px; height: 30px;
+    cursor: pointer;
+    font-size: 1rem;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.2s;
+  }
+  .gv-modal-close:hover { border-color: #ff003c; color: #ff003c; }
+
+  .gv-field { margin-bottom: 16px; }
+
+  .gv-label {
+    display: block;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.6rem;
+    color: #00f5c4;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+
+  .gv-input, .gv-select, .gv-textarea {
+    width: 100%;
+    background: #020608;
+    border: 1px solid #0f2a35;
+    color: #c8e6f0;
+    padding: 10px 14px;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 0.95rem;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .gv-input:focus, .gv-select:focus, .gv-textarea:focus {
+    border-color: #00f5c4;
+  }
+  .gv-textarea { min-height: 90px; resize: vertical; }
+  .gv-select option { background: #020608; }
+
+  .gv-btn {
+    width: 100%;
+    background: #00f5c4;
+    color: #020608;
+    border: none;
+    padding: 14px;
+    font-family: 'Orbitron', monospace;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 3px;
+    cursor: pointer;
+    text-transform: uppercase;
+    transition: all 0.3s;
+    margin-top: 8px;
+  }
+  .gv-btn:hover { background: #00a8ff; }
+  .gv-btn:disabled { background: #0f2a35; color: #4a7a8a; cursor: not-allowed; }
+
+  /* ── OUTPUT BOX ── */
+  .gv-output {
+    display: none;
+    margin-top: 20px;
+    background: #020608;
+    border: 1px solid #0f2a35;
+    border-left: 3px solid #00f5c4;
+    padding: 16px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.75rem;
+    color: #c8e6f0;
+    line-height: 1.8;
+    white-space: pre-wrap;
+    word-break: break-word;
+    max-height: 400px;
+    overflow-y: auto;
+  }
+  .gv-output.show { display: block; }
+  .gv-output h3 {
+    color: #00f5c4;
+    font-size: 0.7rem;
+    letter-spacing: 3px;
+    margin: 14px 0 6px;
+    font-family: 'Share Tech Mono', monospace;
+  }
+  .gv-output code {
+    background: #0a1520;
+    padding: 2px 6px;
+    color: #00a8ff;
+    border-radius: 2px;
+  }
+  .gv-output pre {
+    background: #0a1520;
+    border-left: 2px solid #00a8ff;
+    padding: 10px;
+    margin: 8px 0;
+    overflow-x: auto;
+    white-space: pre-wrap;
+  }
+
+  .gv-loading {
+    color: #00f5c4;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.75rem;
+    letter-spacing: 2px;
+  }
+  .gv-cursor { animation: blink 1s infinite; }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+
+  .gv-error { color: #ff003c; }
+</style>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!--  MODAL 1: REPORT WRITER                                 -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div id="modal-report" class="gv-modal-overlay">
+  <div class="gv-modal">
+    <button class="gv-modal-close" onclick="closeModal('modal-report')">✕</button>
+    <div class="gv-modal-title">// Report Writer</div>
+
+    <div class="gv-field">
+      <label class="gv-label">Vulnerability Type</label>
+      <input id="rw-type" class="gv-input" placeholder="e.g. XSS, IDOR, CSRF">
+    </div>
+    <div class="gv-field">
+      <label class="gv-label">Target</label>
+      <input id="rw-target" class="gv-input" placeholder="e.g. app.example.com">
+    </div>
+    <div class="gv-field">
+      <label class="gv-label">Severity</label>
+      <select id="rw-severity" class="gv-select">
+        <option>Critical</option>
+        <option>High</option>
+        <option selected>Medium</option>
+        <option>Low</option>
+        <option>Informational</option>
+      </select>
+    </div>
+    <div class="gv-field">
+      <label class="gv-label">Your Findings</label>
+      <textarea id="rw-findings" class="gv-textarea" placeholder="Describe what you found..."></textarea>
+    </div>
+    <div class="gv-field">
+      <label class="gv-label">Steps to Reproduce</label>
+      <textarea id="rw-steps" class="gv-textarea" placeholder="1. Go to...&#10;2. Click...&#10;3. Observe..."></textarea>
+    </div>
+
+    <button id="rw-btn" class="gv-btn" onclick="runReportWriter()">[ Generate Report ]</button>
+    <div id="rw-output" class="gv-output"></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!--  MODAL 2: XSS TRIAGE                                    -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div id="modal-xss" class="gv-modal-overlay">
+  <div class="gv-modal">
+    <button class="gv-modal-close" onclick="closeModal('modal-xss')">✕</button>
+    <div class="gv-modal-title">// XSS Triage</div>
+
+    <div class="gv-field">
+      <label class="gv-label">Target Domain</label>
+      <input id="xss-target" class="gv-input" placeholder="example.com">
+    </div>
+    <div class="gv-field">
+      <label class="gv-label">URLs (one per line)</label>
+      <textarea id="xss-urls" class="gv-textarea" style="min-height:120px"
+        placeholder="https://example.com/search?q=test&#10;https://example.com/page?id=1"></textarea>
+    </div>
+
+    <button id="xss-btn" class="gv-btn" onclick="runXSSTriage()">[ Triage URLs ]</button>
+    <div id="xss-output" class="gv-output"></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!--  MODAL 3: RECON ANALYZER                                -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div id="modal-recon" class="gv-modal-overlay">
+  <div class="gv-modal">
+    <button class="gv-modal-close" onclick="closeModal('modal-recon')">✕</button>
+    <div class="gv-modal-title">// Recon Analyzer</div>
+
+    <div class="gv-field">
+      <label class="gv-label">Target Domain</label>
+      <input id="recon-domain" class="gv-input" placeholder="example.com">
+    </div>
+    <div class="gv-field">
+      <label class="gv-label">Recon Output (paste subfinder/httpx output)</label>
+      <textarea id="recon-data" class="gv-textarea" style="min-height:140px"
+        placeholder="Paste your recon data here..."></textarea>
+    </div>
+
+    <button id="recon-btn" class="gv-btn" onclick="runReconAnalyzer()">[ Analyze ]</button>
+    <div id="recon-output" class="gv-output"></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!--  JAVASCRIPT                                             -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<script>
+  // ── CONFIG ── Replace with your actual Render URL
+  const BACKEND = "https://genesis-ai-backend.onrender.com";
+
+  // ── MODAL CONTROLS ──
+  function openModal(id) {
+    document.getElementById(id).classList.add("open");
+  }
+  function closeModal(id) {
+    document.getElementById(id).classList.remove("open");
+  }
+  // Close on overlay click
+  document.querySelectorAll(".gv-modal-overlay").forEach(overlay => {
+    overlay.addEventListener("click", e => {
+      if (e.target === overlay) overlay.classList.remove("open");
+    });
+  });
+
+  // ── RENDER MARKDOWN-LIKE OUTPUT ──
+  function renderText(text) {
+    return text
+      .replace(/^## (.+)$/gm, '<h3>// $1</h3>')
+      .replace(/\*\*(.+?)\*\*/g, '<strong style="color:#fff">$1</strong>')
+      .replace(/`([^`\n]+)`/g, '<code>$1</code>')
+      .replace(/```[\w]*\n?([\s\S]+?)```/g, '<pre>$1</pre>');
+  }
+
+  // ── SHARED FETCH HELPER ──
+  async function callBackend(route, body, btnId, outputId) {
+    const btn = document.getElementById(btnId);
+    const out = document.getElementById(outputId);
+    const origText = btn.textContent;
+
+    btn.disabled = true;
+    btn.textContent = "[ PROCESSING... ]";
+    out.className = "gv-output show";
+    out.innerHTML = '<div class="gv-loading"><span class="gv-cursor">█</span> AI ENGINE ACTIVE...</div>';
+
+    try {
+      const res = await fetch(`${BACKEND}/${route}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body)
+      });
+
+      const data = await res.json();
+
+      if (data.error) throw new Error(data.error);
+      out.innerHTML = renderText(data.result);
+
+    } catch (err) {
+      out.innerHTML = `<span class="gv-error">[ ERROR ] ${err.message}</span>`;
+    } finally {
+      btn.disabled = false;
+      btn.textContent = origText;
+    }
+  }
+
+  // ── TOOL 1: REPORT WRITER ──
+  function runReportWriter() {
+    const vulnType = document.getElementById("rw-type").value.trim();
+    const findings = document.getElementById("rw-findings").value.trim();
+    const out = document.getElementById("rw-output");
+
+    if (!vulnType || !findings) {
+      out.className = "gv-output show";
+      out.innerHTML = '<span class="gv-error">[ ERROR ] Fill in vulnerability type and findings.</span>';
+      return;
+    }
+
+    callBackend("report", {
+      vulnType,
+      target:   document.getElementById("rw-target").value.trim(),
+      severity: document.getElementById("rw-severity").value,
+      findings,
+      steps:    document.getElementById("rw-steps").value.trim()
+    }, "rw-btn", "rw-output");
+  }
+
+  // ── TOOL 2: XSS TRIAGE ──
+  function runXSSTriage() {
+    const urls = document.getElementById("xss-urls").value.trim();
+    const out  = document.getElementById("xss-output");
+
+    if (!urls) {
+      out.className = "gv-output show";
+      out.innerHTML = '<span class="gv-error">[ ERROR ] Paste at least one URL.</span>';
+      return;
+    }
+
+    callBackend("xss-triage", {
+      target: document.getElementById("xss-target").value.trim(),
+      urls
+    }, "xss-btn", "xss-output");
+  }
+
+  // ── TOOL 3: RECON ANALYZER ──
+  function runReconAnalyzer() {
+    const reconData = document.getElementById("recon-data").value.trim();
+    const out       = document.getElementById("recon-output");
+
+    if (!reconData) {
+      out.className = "gv-output show";
+      out.innerHTML = '<span class="gv-error">[ ERROR ] Paste your recon output first.</span>';
+      return;
+    }
+
+    callBackend("recon", {
+      domain:   document.getElementById("recon-domain").value.trim(),
+      reconData
+    }, "recon-btn", "recon-output");
+  }
+</script>
+
+<!-- ============================================================
+     HOW TO OPEN THE TOOLS FROM YOUR EXISTING BUTTONS:
+     Find your dashboard tool cards and change onclick to:
+
+     Report Writer  → onclick="openModal('modal-report')"
+     XSS Triage     → onclick="openModal('modal-xss')"
+     Recon Analyzer → onclick="openModal('modal-recon')"
+     ============================================================ -->
 </body>
 </html>
