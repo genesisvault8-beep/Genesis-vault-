@@ -859,7 +859,7 @@
         method: 'POST',
         headers: authHeaders(),
         body: JSON.stringify({
-          vulnerability_type: document.getElementById('r-vuln').value,
+          vulnType: document.getElementById('r-vuln').value,
           target: document.getElementById('r-target').value,
           severity: document.getElementById('r-severity').value,
           findings: document.getElementById('r-findings').value,
@@ -867,8 +867,8 @@
         })
       });
       const data = await res.json();
-      if (data.report) {
-        output.textContent = data.report;
+      if (data.result) {
+        output.textContent = data.result;
         output.style.display = 'block';
         copy.style.display = 'inline-block';
       }
@@ -890,12 +890,12 @@
         method: 'POST', headers: authHeaders(),
         body: JSON.stringify({
           target: document.getElementById('recon-target').value,
-          recon_data: document.getElementById('recon-data').value
+          reconData: document.getElementById('recon-data').value
         })
       });
       const data = await res.json();
-      if (data.summary) {
-        output.textContent = data.summary;
+      if (data.result) {
+        output.textContent = data.result;
         output.style.display = 'block';
         copy.style.display = 'inline-block';
       }
@@ -919,8 +919,8 @@
         })
       });
       const data = await res.json();
-      if (data.analysis) {
-        output.textContent = data.analysis;
+      if (data.result) {
+        output.textContent = data.result;
         output.style.display = 'block';
         copy.style.display = 'inline-block';
       }
