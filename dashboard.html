@@ -690,6 +690,7 @@
   <!-- MARKETPLACE PAGE -->
   <div class="page" id="page-marketplace">
     <p class="section-title">// Tool Marketplace</p>
+    <button class="post-btn" onclick="submitTool()" style="margin-bottom:16px;">[ LIST A TOOL ]</button>
     <div id="marketplace-container">
       <div class="loading"><span class="spinner"></span>Loading tools...</div>
     </div>
@@ -1001,7 +1002,7 @@
         return;
       }
       container.innerHTML = data.tools.map(tool => `
-        <div class="tool-card" onclick="viewTool('+tool.id+')" style="cursor:pointer;">
+        <div class="tool-card" onclick="viewTool(${tool.id})" style="cursor:pointer;">
           <h3>${tool.title}</h3>
           <p>${tool.description.substring(0, 100)}...</p>
           <div style="display:flex;justify-content:space-between;align-items:center;margin-top:12px;">
