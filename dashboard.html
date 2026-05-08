@@ -1001,7 +1001,7 @@
         return;
       }
       container.innerHTML = data.tools.map(tool => `
-        <div class="tool-card">
+        <div class="tool-card" onclick="viewTool('+tool.id+')" style="cursor:pointer;">
           <h3>${tool.title}</h3>
           <p>${tool.description.substring(0, 100)}...</p>
           <div style="display:flex;justify-content:space-between;align-items:center;margin-top:12px;">
@@ -1018,6 +1018,31 @@
     } catch(e) {
       container.innerHTML = '<div class="empty">// Failed to load marketplace.</div>';
     }
+  }
+
+
+  async function viewTool(toolId) {
+    const res = await fetch(`${API}/marketplace/tools/${toolId}`, { headers: authHeaders() });
+    const data = await res.json();
+    const t = data.tool;
+    alert(`${t.title}\n\nBy: ${t.seller_name}\nPrice: ${t.price === 0 ? 'FREE' : '$' + t.price + ' USDT'}\nDownloads: ${t.downloads}\n\n${t.description}\n\nFile: ${t.file_url}`);
+  }
+
+  async function submitTool() {
+    const title = prompt('Tool title:');
+    if (!title) return;
+    const description = prompt('Description:');
+    if (!description) return;
+    const price = prompt('Price in USDT (0 for free):');
+    const file_url = prompt('File/GitHub URL:');
+    if (!file_url) return;
+    const res = await fetch(`${API}/marketplace/tools`, {
+      method: 'POST', headers: authHeaders(),
+      body: JSON.stringify({ title, description, price: parseFloat(price) || 0, file_url, category_id: 8 })
+    });
+    const data = await res.json();
+    alert(data.tool_id ? 'Tool submitted for review!' : (data.error || 'Failed'));
+    if (data.tool_id) loadMarketplace();
   }
 
   // ─── PROFILE ─────────────────────────────────
