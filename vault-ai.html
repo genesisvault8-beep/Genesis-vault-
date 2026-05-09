@@ -1,8 +1,9 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>GENESIS VAULT AI // TERMINAL</title>
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
   <style>
@@ -22,560 +23,79 @@
 
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
+    html, body {
+      height: 100%;
+      height: -webkit-fill-available;
+      overflow: hidden;
+    }
+
     body {
       background: var(--bg);
       color: var(--green);
       font-family: 'JetBrains Mono', 'Share Tech Mono', monospace;
-      min-height: 100vh;
       display: flex;
       flex-direction: column;
-      overflow: hidden;
+      position: fixed;
+      inset: 0;
+      width: 100%;
     }
 
-    /* Scanline overlay */
     body::before {
       content: '';
       position: fixed;
       inset: 0;
       background: repeating-linear-gradient(
-        0deg,
-        transparent,
-        transparent 2px,
-        rgba(0,255,136,0.015) 2px,
-        rgba(0,255,136,0.015) 4px
+        0deg, transparent, transparent 2px,
+        rgba(0,255,136,0.015) 2px, rgba(0,255,136,0.015) 4px
       );
       pointer-events: none;
       z-index: 100;
     }
 
-    /* CRT vignette */
-    body::after {
-      content: '';
-      position: fixed;
-      inset: 0;
-      background: radial-gradient(ellipse at center, transparent 60%, rgba(0,0,0,0.7) 100%);
-      pointer-events: none;
-      z-index: 99;
-    }
-
-    /* TOP BAR */
     .topbar {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 10px 16px;
+      padding: 8px 12px;
       border-bottom: 1px solid var(--border);
-      background: rgba(0,20,10,0.9);
+      background: rgba(0,20,10,0.95);
       flex-shrink: 0;
     }
 
-    .topbar-left {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
+    .topbar-left { display: flex; align-items: center; gap: 8px; }
 
     .logo {
-      font-size: 13px;
+      font-size: 11px;
       font-weight: 700;
-      letter-spacing: 3px;
+      letter-spacing: 2px;
       color: var(--green);
-      text-transform: uppercase;
     }
 
     .logo span { color: var(--cyan); }
+    .separator { color: var(--gray); font-size: 10px; }
+    .system-label { font-size: 9px; color: var(--green-dim); letter-spacing: 1px; }
 
-    .separator {
-      color: var(--gray);
-      font-size: 12px;
-    }
-
-    .system-label {
-      font-size: 10px;
-      color: var(--green-dim);
-      letter-spacing: 2px;
-    }
-
-    .topbar-right {
-      display: flex;
-      align-items: center;
-      gap: 16px;
-      font-size: 10px;
-      color: var(--green-dim);
-      letter-spacing: 1px;
-    }
+    .topbar-right { display: flex; align-items: center; gap: 8px; }
 
     .rank-badge {
       border: 1px solid var(--green-dim);
-      padding: 2px 8px;
+      padding: 2px 6px;
       font-size: 9px;
       letter-spacing: 2px;
       color: var(--green);
     }
 
     .status-dot {
-      width: 6px;
-      height: 6px;
+      width: 6px; height: 6px;
       border-radius: 50%;
       background: var(--green);
       animation: pulse 2s infinite;
-      display: inline-block;
+      flex-shrink: 0;
     }
 
     @keyframes pulse {
       0%, 100% { opacity: 1; box-shadow: 0 0 4px var(--green); }
-      50% { opacity: 0.4; box-shadow: none; }
+      50% { opacity: 0.3; }
     }
 
-    /* TERMINAL WINDOW */
-    .terminal-wrapper {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-      padding: 0;
-    }
-
-    .terminal-titlebar {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 8px 14px;
-      background: #0a0a0a;
-      border-bottom: 1px solid #111;
-      flex-shrink: 0;
-    }
-
-    .dot { width: 10px; height: 10px; border-radius: 50%; }
-    .dot.red { background: #ff5f56; }
-    .dot.yellow { background: #ffbd2e; }
-    .dot.green { background: #27c93f; }
-
-    .terminal-title {
-      font-size: 10px;
-      color: #555;
-      letter-spacing: 2px;
-      margin-left: 8px;
-    }
-
-    /* OUTPUT AREA */
-    #output {
-      flex: 1;
-      overflow-y: auto;
-      padding: 16px;
-      font-size: 13px;
-      line-height: 1.7;
-      background: var(--bg2);
-      scroll-behavior: smooth;
-    }
-
-    #output::-webkit-scrollbar { width: 4px; }
-    #output::-webkit-scrollbar-track { background: #000; }
-    #output::-webkit-scrollbar-thumb { background: var(--green-dark); }
-
-    .line { margin-bottom: 2px; word-break: break-word; }
-
-    .line.sys { color: var(--cyan); }
-    .line.log { color: var(--green-dim); }
-    .line.user { color: var(--text); }
-    .line.ai { color: var(--green); }
-    .line.err { color: var(--red); }
-    .line.warn { color: var(--yellow); }
-    .line.divider { color: #1a3322; letter-spacing: 1px; margin: 6px 0; }
-
-    .prefix { opacity: 0.7; }
-    .prefix.sys { color: var(--cyan); }
-    .prefix.user-p { color: var(--green); }
-    .prefix.ai-p { color: var(--green); }
-    .prefix.log-p { color: var(--green-dim); }
-
-    /* Typewriter effect */
-    .typing::after {
-      content: '█';
-      animation: blink 0.7s infinite;
-    }
-
-    @keyframes blink {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0; }
-    }
-
-    /* INPUT AREA */
-    .input-area {
-      display: flex;
-      align-items: center;
-      padding: 12px 16px;
-      border-top: 1px solid var(--border);
-      background: rgba(0,10,5,0.95);
-      gap: 8px;
-      flex-shrink: 0;
-    }
-
-    .input-prefix {
-      color: var(--green);
-      font-size: 13px;
-      white-space: nowrap;
-      flex-shrink: 0;
-    }
-
-    #userInput {
-      flex: 1;
-      background: transparent;
-      border: none;
-      outline: none;
-      color: var(--text);
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 13px;
-      caret-color: var(--green);
-    }
-
-    #userInput::placeholder {
-      color: #1a3322;
-    }
-
-    #sendBtn {
-      background: transparent;
-      border: 1px solid var(--green-dim);
-      color: var(--green);
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 10px;
-      letter-spacing: 2px;
-      padding: 6px 12px;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-
-    #sendBtn:hover {
-      background: var(--green-dark);
-      border-color: var(--green);
-    }
-
-    #sendBtn:disabled {
-      opacity: 0.3;
-      cursor: not-allowed;
-    }
-
-    /* BOTTOM STATUS BAR */
-    .statusbar {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 4px 16px;
-      background: #000;
-      border-top: 1px solid #111;
-      font-size: 9px;
-      color: #2a4a3a;
-      letter-spacing: 1px;
-      flex-shrink: 0;
-    }
-
-    /* Mobile responsive */
-    @media (max-width: 480px) {
-      .topbar-right .hide-mobile { display: none; }
-      #output { font-size: 12px; padding: 12px; }
-      .input-area { padding: 10px 12px; }
-    }
-  </style>
-</head>
-<body>
-
-  <!-- TOP BAR -->
-  <div class="topbar">
-    <div class="topbar-left">
-      <div class="logo">GENESIS<span>VAULT</span></div>
-      <div class="separator">//</div>
-      <div class="system-label">AI TERMINAL v1.0</div>
-    </div>
-    <div class="topbar-right">
-      <span class="hide-mobile">RANK:</span>
-      <span class="rank-badge" id="rankBadge">GHOST</span>
-      <span class="status-dot"></span>
-      <span class="hide-mobile" id="statusText">ONLINE</span>
-    </div>
-  </div>
-
-  <!-- TERMINAL WINDOW -->
-  <div class="terminal-wrapper">
-    <div class="terminal-titlebar">
-      <div class="dot red"></div>
-      <div class="dot yellow"></div>
-      <div class="dot green"></div>
-      <div class="terminal-title">VAULT-AI // SECURE CHANNEL</div>
-    </div>
-
-    <div id="output"></div>
-
-    <div class="input-area">
-      <span class="input-prefix">GHOST@vault:~$</span>
-      <input type="text" id="userInput" placeholder="enter command or query..." autocomplete="off" spellcheck="false">
-      <button id="sendBtn">SEND</button>
-    </div>
-  </div>
-
-  <!-- STATUS BAR -->
-  <div class="statusbar">
-    <span>GENESIS VAULT AI // INFINITY ENGINE v1.0</span>
-    <span id="clockDisplay"></span>
-    <span>SESSION: ACTIVE</span>
-  </div>
-
-<script>
-  // CONFIG
-  const BACKEND_URL = 'https://genesis-vault-backend.onrender.com';
-  const USER_RANK = 'Ghost';
-
-  // State
-  let isProcessing = false;
-  let commandHistory = [];
-  let historyIndex = -1;
-
-  const output = document.getElementById('output');
-  const input = document.getElementById('userInput');
-  const sendBtn = document.getElementById('sendBtn');
-
-  // Clock
-  function updateClock() {
-    const now = new Date();
-    document.getElementById('clockDisplay').textContent =
-      now.toUTCString().replace('GMT', 'UTC');
-  }
-  setInterval(updateClock, 1000);
-  updateClock();
-
-  // Print line to terminal
-  function print(text, type = 'log', prefix = '') {
-    const line = document.createElement('div');
-    line.className = `line ${type}`;
-    if (prefix) {
-      line.innerHTML = `<span class="prefix ${type}-p">${prefix}</span> ${escapeHtml(text)}`;
-    } else {
-      line.textContent = text;
-    }
-    output.appendChild(line);
-    output.scrollTop = output.scrollHeight;
-    return line;
-  }
-
-  function printRaw(html, type = 'log') {
-    const line = document.createElement('div');
-    line.className = `line ${type}`;
-    line.innerHTML = html;
-    output.appendChild(line);
-    output.scrollTop = output.scrollHeight;
-    return line;
-  }
-
-  function divider() {
-    print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'divider');
-  }
-
-  function escapeHtml(text) {
-    return text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-  }
-
-  // Typewriter effect for AI responses
-  function typewrite(element, text, speed = 12) {
-    return new Promise(resolve => {
-      element.classList.add('typing');
-      let i = 0;
-      const prefix = element.innerHTML;
-      element.innerHTML = prefix;
-      function tick() {
-        if (i < text.length) {
-          element.innerHTML = prefix + escapeHtml(text.slice(0, ++i));
-          output.scrollTop = output.scrollHeight;
-          setTimeout(tick, speed);
-        } else {
-          element.classList.remove('typing');
-          resolve();
-        }
-      }
-      tick();
-    });
-  }
-
-  // Boot sequence
-  async function bootSequence() {
-    await sleep(200);
-    print('', 'log');
-    print('GENESIS VAULT AI // INFINITY ENGINE', 'sys');
-    print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'divider');
-    await sleep(300);
-    print('[SYS]: CONNECTING TO VAULT BACKEND...', 'sys');
-    await sleep(600);
-    print('[SYS]: AUTHENTICATING SESSION...', 'sys');
-    await sleep(400);
-    print(`[SYS]: RANK DETECTED → ${USER_RANK.toUpperCase()}`, 'sys');
-    await sleep(300);
-    print('[SYS]: LOADING INFINITY AI ORCHESTRATOR...', 'sys');
-    await sleep(500);
-    print('[SYS]: ALL SYSTEMS NOMINAL. VAULT ONLINE.', 'sys');
-    divider();
-    await sleep(200);
-    print('[LOG]: Welcome to Genesis Vault AI. Your secure cybersecurity intelligence terminal.', 'log');
-    print('[LOG]: Type your query, command, or ask anything about bug bounty, recon, or security.', 'log');
-    print('[LOG]: Type "help" for available commands.', 'log');
-    divider();
-    print('', 'log');
-    input.focus();
-  }
-
-  function sleep(ms) {
-    return new Promise(r => setTimeout(r, ms));
-  }
-
-  // Handle commands locally
-  function handleLocalCommand(cmd) {
-    const c = cmd.toLowerCase().trim();
-    if (c === 'help') {
-      divider();
-      print('[CMD]: AVAILABLE COMMANDS', 'sys');
-      print('  help          → show this menu', 'log');
-      print('  clear         → clear terminal', 'log');
-      print('  rank          → show your current rank', 'log');
-      print('  status        → system status', 'log');
-      print('  methodology   → bug bounty methodology', 'log');
-      print('  [any query]   → ask Genesis Vault AI', 'log');
-      divider();
-      return true;
-    }
-    if (c === 'clear') {
-      output.innerHTML = '';
-      print('[SYS]: TERMINAL CLEARED.', 'sys');
-      return true;
-    }
-    if (c === 'rank') {
-      print(`[SYS]: CURRENT RANK → ${USER_RANK.toUpperCase()}`, 'sys');
-      print('[LOG]: Progress: Ghost → Scout → Hunter → Predator → Phantom → Architect → Guardian', 'log');
-      return true;
-    }
-    if (c === 'status') {
-      print('[SYS]: SYSTEM STATUS', 'sys');
-      print('  BACKEND    → ONLINE (Render/Flask)', 'log');
-      print('  DATABASE   → ONLINE (Supabase)', 'log');
-      print('  AI ENGINE  → ONLINE (Infinity Orchestrator)', 'log');
-      print('  SESSION    → ACTIVE', 'log');
-      return true;
-    }
-    if (c === 'methodology') {
-      divider();
-      print('[SYS]: BUG BOUNTY METHODOLOGY // GENESIS VAULT STANDARD', 'sys');
-      print('  01 → robots.txt & sitemap.xml recon', 'log');
-      print('  02 → Observatory security scan', 'log');
-      print('  03 → Subdomain enumeration (subfinder + httpx)', 'log');
-      print('  04 → Iframe / clickjacking PoC test', 'log');
-      print('  05 → Full PoC build', 'log');
-      print('  06 → Report with proof & screenshots', 'log');
-      divider();
-      return true;
-    }
-    return false;
-  }
-
-  // Send to AI backend
-  async function sendToAI(userMessage) {
-    if (isProcessing || !userMessage.trim()) return;
-    isProcessing = true;
-    sendBtn.disabled = true;
-
-    // Log user input
-    print('', 'log');
-    printRaw(`<span class="prefix user-p">GHOST@vault:~$</span> ${escapeHtml(userMessage)}`, 'user');
-
-    // Check local commands first
-    if (handleLocalCommand(userMessage)) {
-      isProcessing = false;
-      sendBtn.disabled = false;
-      return;
-    }
-
-    // Show analyzing state
-    await sleep(100);
-    const analyzing = print('[LOG]: ANALYZING... ROUTING TO INFINITY ENGINE...', 'log');
-
-    try {
-      const response = await fetch(`${BACKEND_URL}/api/vault-ai`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          message: userMessage,
-          rank: USER_RANK,
-          context: 'cybersecurity'
-        })
-      });
-
-      const data = await response.json();
-
-      // Remove analyzing line
-      analyzing.remove();
-
-      if (data.response || data.message || data.reply) {
-        const aiText = data.response || data.message || data.reply;
-        const aiLine = document.createElement('div');
-        aiLine.className = 'line ai';
-        aiLine.innerHTML = `<span class="prefix ai-p">[VAULT-AI]:</span> `;
-        output.appendChild(aiLine);
-        output.scrollTop = output.scrollHeight;
-        await typewrite(aiLine, aiText, 10);
-      } else if (data.error) {
-        print(`[ERR]: ${data.error}`, 'err');
-      } else {
-        print('[ERR]: UNEXPECTED RESPONSE FORMAT FROM BACKEND.', 'err');
-      }
-
-    } catch (err) {
-      analyzing.remove();
-      print('[ERR]: FAILED TO REACH VAULT BACKEND. CHECK CONNECTION.', 'err');
-      print(`[ERR]: ${err.message}`, 'err');
-    }
-
-    print('', 'log');
-    isProcessing = false;
-    sendBtn.disabled = false;
-    input.focus();
-  }
-
-  // Input handlers
-  input.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter' && !isProcessing) {
-      const val = input.value.trim();
-      if (val) {
-        commandHistory.unshift(val);
-        historyIndex = -1;
-        input.value = '';
-        sendToAI(val);
-      }
-    }
-    // Command history navigation
-    if (e.key === 'ArrowUp') {
-      if (historyIndex < commandHistory.length - 1) {
-        historyIndex++;
-        input.value = commandHistory[historyIndex];
-      }
-    }
-    if (e.key === 'ArrowDown') {
-      if (historyIndex > 0) {
-        historyIndex--;
-        input.value = commandHistory[historyIndex];
-      } else {
-        historyIndex = -1;
-        input.value = '';
-      }
-    }
-  });
-
-  sendBtn.addEventListener('click', () => {
-    const val = input.value.trim();
-    if (val && !isProcessing) {
-      commandHistory.unshift(val);
-      historyIndex = -1;
-      input.value = '';
-      sendToAI(val);
-    }
-  });
-
-  // Boot
-  bootSequence();
-</script>
-</body>
-</html>
+    .terminal
