@@ -255,22 +255,34 @@ async function boot() {
   await sleep(150);
   print('GENESIS VAULT AI // INFINITY ENGINE', 'sys');
   divider();
+  print('[SYS]: INITIALIZING VAULT RECOVERY...', 'sys');
+  await sleep(400);
+
+  try {
+    const res = await fetch(`${BACKEND_URL}/api/session`);
+    const data = await res.json();
+    if (data.status === 'success') {
+      document.querySelector('.rank-badge').textContent = data.rank.toUpperCase();
+      if (data.history && data.history.length > 0) {
+        print(`[SYS]: RECOVERING ${data.history.length} PREVIOUS LOGS...`, 'sys');
+        await sleep(300);
+        data.history.forEach(log => {
+          printHTML(`<span style="color:var(--green);opacity:.7">GHOST:~$</span> ${esc(log.user_query)}`, 'user');
+          printHTML(`<span style="color:var(--green);opacity:.7">[VAULT-AI]:</span> ${esc(log.ai_response ? log.ai_response.slice(0,120)+'...' : '')}`, 'ai');
+        });
+      }
+      print(`[SYS]: SESSION RESTORED. RANK: ${data.rank.toUpperCase()}. LOGS: ${data.total_logs}`, 'sys');
+    }
+  } catch(e) {
+    print('[SYS]: FRESH SESSION INITIALIZED.', 'sys');
+  }
+
   await sleep(300);
-  print('[SYS]: CONNECTING TO VAULT BACKEND...', 'sys');
-  await sleep(600);
-  print('[SYS]: AUTHENTICATING SESSION...', 'sys');
-  await sleep(350);
-  print('[SYS]: RANK DETECTED → GHOST', 'sys');
-  await sleep(300);
-  print('[SYS]: LOADING INFINITY AI ORCHESTRATOR...', 'sys');
-  await sleep(500);
   print('[SYS]: ALL SYSTEMS NOMINAL. VAULT ONLINE.', 'sys');
   divider();
-  await sleep(150);
-  print('[LOG]: Welcome to Genesis Vault AI. Your cybersecurity intelligence terminal.', 'logc');
   print('[LOG]: Type "help" for commands.', 'logc');
   divider();
-}
+} 
 
 function local(cmd) {
   const c = cmd.toLowerCase().trim();
@@ -326,7 +338,33 @@ async function send(msg) {
     btn.disabled = false;
     return;
   }
-
+if (msg.toLowerCase().startsWith('scan ')) {
+    const target = msg.slice(5).trim();
+    const analyzing = print(`[LOG]: INITIATING RECON ON ${target.toUpperCase()}...`, 'logc');
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/recon`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ target: target })
+      });
+      const data = await res.json();
+      analyzing.remove();
+      if (data.response) {
+        const el = document.createElement('div');
+        el.className = 'line ai';
+        el.innerHTML = `<span style="color:var(--green);opacity:.7">[RECON]:</span> `;
+        out.appendChild(el);
+        await typewrite(el, data.response, 6);
+      }
+    } catch(e) {
+      analyzing.remove();
+      print('[ERR]: RECON FAILED.', 'err');
+    }
+    busy = false;
+    btn.disabled = false;
+    return;
+  }
+  
   await sleep(80);
   const analyzing = print('[LOG]: ANALYZING... ROUTING TO INFINITY ENGINE...', 'logc');
 
