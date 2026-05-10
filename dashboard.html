@@ -788,7 +788,8 @@
   const API = 'https://genesis-vault-backend.onrender.com/api';
   const AI_API = 'https://genesis-ai-backend.onrender.com';
   let token = localStorage.getItem('gv_token');
-  let currentUser = JSON.parse(localStorage.getItem('gv_user') || '{}');
+  let currentUser = { rank: localStorage.getItem('gv_rank'), email: localStorage.getItem('gv_email') };
+  
 
   // Auth check
   if (!token) window.location.href = 'login.html';
