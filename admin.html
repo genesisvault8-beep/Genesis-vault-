@@ -833,6 +833,7 @@ if (!data.members || data.members.length === 0) {
       </div>
       <div class="actions">
         <span class="badge ${m.is_admin ? 'badge-safe' : 'badge-pending'}">${m.is_admin ? 'ADMIN' : m.rank}</span>
+${!m.is_admin ? `<button class="btn-reject" onclick="banMember('${m.id}','${m.email}')" style="font-size:0.65rem;padding:4px 10px;">[ BAN ]</button>` : ''}
       </div>
     </div>
   `).join('');
