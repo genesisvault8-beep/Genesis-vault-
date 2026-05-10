@@ -788,24 +788,22 @@
 
     // Members
     try {
-      const res = await fetch(`${API}/community/members`, { headers: authHeaders() });
-      const data = await res.json();
-      if (!data.members || data.members.length === 0) {
-        mc.innerHTML = '<div class="empty">// No members yet.</div>';
-      } else {
-        mc.innerHTML = data.members.map(m => `
-          <div class="item-card">
-            <div class="item-meta">
-              <span>${m.username}</span> · [${m.rank}] · ${m.followers} followers
-            </div>
-            <p style="font-size:0.75rem;color:var(--text-dim);">Joined ${timeAgo(m.created_at)}</p>
-            <div class="actions" style="margin-top:10px;">
-              <button class="btn-action" onclick="openPromoteModal(${m.id}, '${m.username}')">[ PROMOTE ]</button>
-              <button class="btn-warn" onclick="banUser(${m.id}, '${m.username}')">[ BAN ]</button>
-            </div>
-          </div>
-        `).join('');
-      }
+    const res = await fetch(`${API}/admin/members`, { headers: authHeaders() });
+const data = await res.json();
+if (!data.members || data.members.length === 0) {
+  mc.innerHTML = '<div class="empty">// No members yet.</div>';
+} else {
+  mc.innerHTML = data.members.map(m => `
+    <div class="item-card">
+      <div class="item-meta">
+        <span>${m.email}</span> · joined ${timeAgo(m.created_at)}
+      </div>
+      <div class="actions">
+        <span class="badge ${m.is_admin ? 'badge-safe' : 'badge-pending'}">${m.is_admin ? 'ADMIN' : m.rank}</span>
+      </div>
+    </div>
+  `).join('');
+  }
     } catch(e) {}
   }
 
