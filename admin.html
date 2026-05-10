@@ -533,7 +533,11 @@
 <script>
   const API = 'https://genesis-vault-backend.onrender.com/api';
   let token = localStorage.getItem('gv_token');
-  let currentUser = JSON.parse(localStorage.getItem('gv_user') || '{}');
+  let currentUser = { 
+  rank: localStorage.getItem('gv_rank'), 
+  email: localStorage.getItem('gv_email'),
+  is_admin: true
+};
   let promoteUserId = null;
 
   if (!token) window.location.href = 'login.html';
