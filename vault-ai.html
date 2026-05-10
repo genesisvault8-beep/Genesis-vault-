@@ -338,7 +338,45 @@ async function send(msg) {
     btn.disabled = false;
     return;
   }
-if (msg.toLowerCase().startsWith('scan ')) {
+  if (msg.toLowerCase().startsWith('nmap ')) {
+    const target = msg.slice(5).trim();
+    print(`[LOG]: DISPATCHING NMAP JOB → ${target.toUpperCase()}...`, 'logc');
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/jobs/create`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ target: target, command: 'nmap' })
+      });
+      const data = await res.json();
+      const jobId = data.job[0].id;
+      print(`[LOG]: JOB #${jobId} QUEUED. AWAITING BRIDGE...`, 'sys');
+
+      let result = null;
+      for (let i = 0; i < 24; i++) {
+        await sleep(5000);
+        const poll = await fetch(`${BACKEND_URL}/api/jobs/result/${jobId}`);
+        const pollData = await poll.json();
+        if (pollData.result) { result = pollData.result; break; }
+        print(`[LOG]: WAITING FOR BRIDGE... (${(i+1)*5}s)`, 'logc');
+      }
+
+      if (result) {
+        const el = document.createElement('div');
+        el.className = 'line ai';
+        el.innerHTML = `<span style="color:var(--green);opacity:.7">[NMAP]:</span> `;
+        out.appendChild(el);
+        await typewrite(el, result, 3);
+      } else {
+        print('[ERR]: JOB TIMEOUT. IS BRIDGE RUNNING?', 'err');
+      }
+    } catch(e) {
+      print('[ERR]: FAILED TO DISPATCH JOB.', 'err');
+    }
+    busy = false;
+    btn.disabled = false;
+    return;
+  }
+  if (msg.toLowerCase().startsWith('scan ')) {
     const target = msg.slice(5).trim();
     const analyzing = print(`[LOG]: INITIATING RECON ON ${target.toUpperCase()}...`, 'logc');
     try {
