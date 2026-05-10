@@ -784,184 +784,98 @@
   <button class="copy-btn" id="xss-copy" onclick="copyOutput('xss-output')">[ COPY ANALYSIS ]</button>
 </div>
 
-<script>
+  <script>
   const API = 'https://genesis-vault-backend.onrender.com/api';
-  const AI_API = 'https://genesis-ai-backend.onrender.com';
   let token = localStorage.getItem('gv_token');
   let currentUser = { rank: localStorage.getItem('gv_rank'), email: localStorage.getItem('gv_email') };
-  
 
-  // Auth check
   if (!token) window.location.href = 'login.html';
-
-  // Init
-  document.getElementById('nav-username').textContent = currentUser.username || 'hunter';
-  document.getElementById('nav-rank').textContent = currentUser.rank || 'GHOST';
-  document.getElementById('welcome-name').textContent = currentUser.username || 'Hunter';
 
   function authHeaders() {
     return { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` };
   }
 
+  function getDisplayName() {
+    return currentUser.email ? currentUser.email.split('@')[0] : 'Hunter';
+  }
+
+  // Init nav
+  document.getElementById('nav-username').textContent = getDisplayName();
+  document.getElementById('nav-rank').textContent = (currentUser.rank || 'Ghost').toUpperCase();
+  document.getElementById('welcome-name').textContent = getDisplayName().charAt(0).toUpperCase() + getDisplayName().slice(1);
+
+  function showPage(page, el) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    document.getElementById('page-' + page).classList.add('active');
+    el.classList.add('active');
+    if (page === 'community') loadFeed();
+    if (page === 'profile') loadProfile();
+    if (page === 'marketplace') loadMarketplace();
+  }
+
   function logout() {
-    localStorage.removeItem('gv_token');
-    localStorage.removeItem('gv_user');
+    localStorage.clear();
     window.location.href = 'login.html';
   }
 
-  function showPage(name, el) {
-    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-    document.getElementById(`page-${name}`).classList.add('active');
-    el.classList.add('active');
-
-    if (name === 'community') loadFeed();
-    if (name === 'marketplace') loadMarketplace();
-    if (name === 'profile') loadProfile();
-  }
-
-  // ─── HOME ────────────────────────────────────
-  async function loadHomeStats() {
+  // —— PROFILE ——
+  async function loadProfile() {
     try {
-      const res = await fetch(`${API}/auth/profile`, { headers: authHeaders() });
+      const res = await fetch(`${API}/profile`, { headers: authHeaders() });
       const data = await res.json();
-      if (data.user) {
-        document.getElementById('stat-followers').textContent = data.followers;
-        document.getElementById('stat-following').textContent = data.following;
-        document.getElementById('stat-tools').textContent = data.tools_sold;
-        document.getElementById('nav-rank').textContent = data.user.rank;
-        currentUser.rank = data.user.rank;
+      const u = data.user;
+      const name = u.email ? u.email.split('@')[0] : 'Hunter';
+
+      document.getElementById('profile-card').innerHTML = `
+        <div class="profile-avatar">${name[0].toUpperCase()}</div>
+        <div class="profile-username">${name}</div>
+        <div class="profile-rank">[ ${u.rank || 'Ghost'} ]</div>
+        <div class="profile-stats">
+          <div class="profile-stat"><div class="val">0</div><div class="lbl">Followers</div></div>
+          <div class="profile-stat"><div class="val">0</div><div class="lbl">Following</div></div>
+          <div class="profile-stat"><div class="val">0</div><div class="lbl">Tools</div></div>
+        </div>
+      `;
+
+      const nres = await fetch(`${API}/notifications`, { headers: authHeaders() });
+      const ndata = await nres.json();
+      const container = document.getElementById('notifications-container');
+
+      if (!ndata.notifications || ndata.notifications.length === 0) {
+        container.innerHTML = '<div class="empty">// No notifications yet.</div>';
+      } else {
+        container.innerHTML = ndata.notifications.map(n => `
+          <div class="notification-item">
+            <div class="notif-type">${n.type || 'INFO'}</div>
+            ${n.message}
+          </div>
+        `).join('');
       }
-      const earn = await fetch(`${API}/payments/earnings`, { headers: authHeaders() });
-      const edata = await earn.json();
-      document.getElementById('stat-earnings').textContent = '$' + (edata.available || 0).toFixed(2);
-    } catch(e) {}
+    } catch(e) {
+      document.getElementById('profile-card').innerHTML = '<div class="empty">// Failed to load profile.</div>';
+      document.getElementById('notifications-container').innerHTML = '<div class="empty">// Failed to load notifications.</div>';
+    }
   }
 
-  // ─── AI TOOLS ────────────────────────────────
-  function openTool(name) {
-    document.getElementById(`modal-${name}`).classList.add('active');
-  }
-
-  function closeTool(name) {
-    document.getElementById(`modal-${name}`).classList.remove('active');
-  }
-
-  async function generateReport() {
-    const btn = document.getElementById('report-btn');
-    const output = document.getElementById('report-output');
-    const copy = document.getElementById('report-copy');
-    btn.disabled = true;
-    btn.textContent = '[ GENERATING... ]';
-    output.style.display = 'none';
-    copy.style.display = 'none';
-
-    try {
-      const res = await fetch(`${AI_API}/report`, {
-        method: 'POST',
-        headers: authHeaders(),
-        body: JSON.stringify({
-          vulnType: document.getElementById('r-vuln').value,
-          target: document.getElementById('r-target').value,
-          severity: document.getElementById('r-severity').value,
-          findings: document.getElementById('r-findings').value,
-          steps: document.getElementById('r-steps').value
-        })
-      });
-      const data = await res.json();
-      if (data.result) {
-        output.textContent = data.result;
-        output.style.display = 'block';
-        copy.style.display = 'inline-block';
-      }
-    } catch(e) { output.textContent = 'Error: Connection failed'; output.style.display = 'block'; }
-
-    btn.disabled = false;
-    btn.textContent = '[ GENERATE REPORT ]';
-  }
-
-  async function analyzeRecon() {
-    const btn = document.getElementById('recon-btn');
-    const output = document.getElementById('recon-output');
-    const copy = document.getElementById('recon-copy');
-    btn.disabled = true; btn.textContent = '[ ANALYZING... ]';
-    output.style.display = 'none'; copy.style.display = 'none';
-
-    try {
-      const res = await fetch(`${AI_API}/recon`, {
-        method: 'POST', headers: authHeaders(),
-        body: JSON.stringify({
-          target: document.getElementById('recon-target').value,
-          reconData: document.getElementById('recon-data').value
-        })
-      });
-      const data = await res.json();
-      if (data.result) {
-        output.textContent = data.result;
-        output.style.display = 'block';
-        copy.style.display = 'inline-block';
-      }
-    } catch(e) {}
-    btn.disabled = false; btn.textContent = '[ ANALYZE ]';
-  }
-
-  async function triageXSS() {
-    const btn = document.getElementById('xss-btn');
-    const output = document.getElementById('xss-output');
-    const copy = document.getElementById('xss-copy');
-    btn.disabled = true; btn.textContent = '[ TRIAGING... ]';
-    output.style.display = 'none'; copy.style.display = 'none';
-
-    try {
-      const res = await fetch(`${AI_API}/xss-triage`, {
-        method: 'POST', headers: authHeaders(),
-        body: JSON.stringify({
-          target: document.getElementById('xss-target').value,
-          urls: document.getElementById('xss-urls').value
-        })
-      });
-      const data = await res.json();
-      if (data.result) {
-        output.textContent = data.result;
-        output.style.display = 'block';
-        copy.style.display = 'inline-block';
-      }
-    } catch(e) {}
-    btn.disabled = false; btn.textContent = '[ TRIAGE URLS ]';
-  }
-
-  function copyOutput(id) {
-    navigator.clipboard.writeText(document.getElementById(id).textContent);
-    event.target.textContent = '[ COPIED! ]';
-    setTimeout(() => event.target.textContent = `[ COPY ${id.includes('report') ? 'REPORT' : 'ANALYSIS'} ]`, 2000);
-  }
-
-  // ─── COMMUNITY ───────────────────────────────
+  // —— COMMUNITY ——
   async function loadFeed() {
     const container = document.getElementById('feed-container');
     container.innerHTML = '<div class="loading"><span class="spinner"></span>Loading feed...</div>';
     try {
-      const res = await fetch(`${API}/community/feed`, { headers: authHeaders() });
+      const res = await fetch(`${API}/posts`);
       const data = await res.json();
       if (!data.posts || data.posts.length === 0) {
-        container.innerHTML = '<div class="empty">// No posts yet. Be the first.</div>';
+        container.innerHTML = '<div class="empty">// No posts yet. Be the first!</div>';
         return;
       }
-      container.innerHTML = data.posts.map(post => `
+      container.innerHTML = data.posts.map(p => `
         <div class="post-card">
           <div class="post-meta">
-            <div>
-              <span class="post-author">${post.username}</span>
-              <span class="post-rank">[${post.rank}]</span>
-            </div>
-            <span class="post-time">${timeAgo(post.created_at)}</span>
+            <span class="post-author">${p.author_email ? p.author_email.split('@')[0] : 'Ghost'}</span>
+            <span class="post-time">${timeAgo(p.created_at)}</span>
           </div>
-          <div class="post-content">${post.content}</div>
-          <div class="post-actions">
-            <button class="like-btn ${post.user_liked ? 'liked' : ''}" onclick="likePost(${post.id}, this)">
-              ♥ ${post.like_count}
-            </button>
-          </div>
+          <div class="post-content">${p.content}</div>
         </div>
       `).join('');
     } catch(e) {
@@ -973,8 +887,9 @@
     const content = document.getElementById('post-content').value.trim();
     if (!content) return;
     try {
-      await fetch(`${API}/community/posts`, {
-        method: 'POST', headers: authHeaders(),
+      await fetch(`${API}/posts/create`, {
+        method: 'POST',
+        headers: authHeaders(),
         body: JSON.stringify({ content })
       });
       document.getElementById('post-content').value = '';
@@ -982,39 +897,22 @@
     } catch(e) {}
   }
 
-  async function likePost(postId, btn) {
-    try {
-      await fetch(`${API}/community/posts/${postId}/like`, { method: 'POST', headers: authHeaders() });
-      btn.classList.toggle('liked');
-      const count = parseInt(btn.textContent.replace('♥ ', ''));
-      btn.textContent = `♥ ${btn.classList.contains('liked') ? count + 1 : count - 1}`;
-    } catch(e) {}
-  }
-
-  // ─── MARKETPLACE ─────────────────────────────
+  // —— MARKETPLACE ——
   async function loadMarketplace() {
     const container = document.getElementById('marketplace-container');
     container.innerHTML = '<div class="loading"><span class="spinner"></span>Loading tools...</div>';
     try {
-      const res = await fetch(`${API}/marketplace/tools`, { headers: authHeaders() });
+      const res = await fetch(`${API}/marketplace`);
       const data = await res.json();
       if (!data.tools || data.tools.length === 0) {
-        container.innerHTML = '<div class="empty">// No tools listed yet. Be the first seller.</div>';
+        container.innerHTML = '<div class="empty">// No tools listed yet.</div>';
         return;
       }
-      container.innerHTML = data.tools.map(tool => `
-        <div class="tool-card" onclick="viewTool(${tool.id})" style="cursor:pointer;">
-          <h3>${tool.title}</h3>
-          <p>${tool.description.substring(0, 100)}...</p>
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-top:12px;">
-            <span class="tool-tag">${tool.category_name || 'TOOL'}</span>
-            <span style="color:var(--accent);font-family:'Share Tech Mono',monospace;font-size:0.9rem;">
-              ${tool.price === 0 ? 'FREE' : '$' + tool.price + ' USDT'}
-            </span>
-          </div>
-          <p style="color:var(--text-dim);font-size:0.75rem;margin-top:8px;font-family:'Share Tech Mono',monospace;">
-            by ${tool.seller_name} [${tool.seller_rank}] · ${tool.downloads} downloads
-          </p>
+      container.innerHTML = data.tools.map(t => `
+        <div class="tool-card">
+          <h3>${t.title}</h3>
+          <p>${t.description ? t.description.substring(0, 100) : ''}...</p>
+          <span class="tool-tag">${t.category || 'TOOL'}</span>
         </div>
       `).join('');
     } catch(e) {
@@ -1022,72 +920,112 @@
     }
   }
 
-
-  async function viewTool(toolId) {
-    const res = await fetch(`${API}/marketplace/tools/${toolId}`, { headers: authHeaders() });
-    const data = await res.json();
-    const t = data.tool;
-    alert(`${t.title}\n\nBy: ${t.seller_name}\nPrice: ${t.price === 0 ? 'FREE' : '$' + t.price + ' USDT'}\nDownloads: ${t.downloads}\n\n${t.description}\n\nFile: ${t.file_url}`);
+  function submitTool() {
+    alert('Tool submission coming soon!');
   }
 
-  async function submitTool() {
-    const title = prompt('Tool title:');
-    if (!title) return;
-    const description = prompt('Description:');
-    if (!description) return;
-    const price = prompt('Price in USDT (0 for free):');
-    const file_url = prompt('File/GitHub URL:');
-    if (!file_url) return;
-    const res = await fetch(`${API}/marketplace/tools`, {
-      method: 'POST', headers: authHeaders(),
-      body: JSON.stringify({ title, description, price: parseFloat(price) || 0, file_url, category_id: 8 })
-    });
-    const data = await res.json();
-    alert(data.tool_id ? 'Tool submitted for review!' : (data.error || 'Failed'));
-    if (data.tool_id) loadMarketplace();
+  // —— AI TOOLS ——
+  function openTool(name) {
+    document.getElementById('modal-' + name).classList.add('active');
   }
 
-  // ─── PROFILE ─────────────────────────────────
-  async function loadProfile() {
+  function closeTool(name) {
+    document.getElementById('modal-' + name).classList.remove('active');
+  }
+
+  async function generateReport() {
+    const btn = document.getElementById('report-btn');
+    const output = document.getElementById('report-output');
+    const copy = document.getElementById('report-copy');
+    btn.disabled = true;
+    btn.textContent = '[ GENERATING... ]';
+    output.style.display = 'none';
+
+    const prompt = `Write a professional HackerOne bug bounty report:
+Vulnerability: ${document.getElementById('r-vuln').value}
+Target: ${document.getElementById('r-target').value}
+Severity: ${document.getElementById('r-severity').value}
+Findings: ${document.getElementById('r-findings').value}
+Steps: ${document.getElementById('r-steps').value}`;
+
     try {
-      const res = await fetch(`${API}/auth/profile`, { headers: authHeaders() });
+      const res = await fetch(`${API}/vault-ai`, {
+        method: 'POST',
+        headers: authHeaders(),
+        body: JSON.stringify({ message: prompt, rank: currentUser.rank || 'Ghost' })
+      });
       const data = await res.json();
-      const u = data.user;
-
-      document.getElementById('profile-card').innerHTML = `
-        <div class="profile-avatar">${u.username[0].toUpperCase()}</div>
-        <div class="profile-username">${u.username}</div>
-        <div class="profile-rank">[ ${u.rank} ]</div>
-        <div class="profile-stats">
-          <div class="profile-stat"><div class="val">${data.followers}</div><div class="lbl">Followers</div></div>
-          <div class="profile-stat"><div class="val">${data.following}</div><div class="lbl">Following</div></div>
-          <div class="profile-stat"><div class="val">${data.tools_sold}</div><div class="lbl">Tools</div></div>
-        </div>
-        <p style="color:var(--text-dim);font-size:0.75rem;margin-top:16px;font-family:'Share Tech Mono',monospace;letter-spacing:1px;">
-          Referral: ${u.referral_code}
-        </p>
-      `;
-
-      const nres = await fetch(`${API}/notifications`, {
-  headers: { 'Authorization': `Bearer ${token}` }
-});
-      const ndata = await nres.json();
-      const container = document.getElementById('notifications-container');
-
-      if (!ndata.notifications || ndata.notifications.length === 0) {
-        container.innerHTML = '<div class="empty">// No notifications.</div>';
-      } else {
-        container.innerHTML = ndata.notifications.map(n => `
-          <div class="notification-item">
-            <div class="notif-type">${n.type}</div>
-            ${n.message}
-          </div>
-        `).join('');
-      }
-    } catch(e) {}
+      output.textContent = data.response;
+      output.style.display = 'block';
+      copy.style.display = 'inline-block';
+    } catch(e) {
+      output.textContent = 'Failed to generate report.';
+      output.style.display = 'block';
+    }
+    btn.disabled = false;
+    btn.textContent = '[ GENERATE REPORT ]';
   }
 
-  // ─── UTILS ───────────────────────────────────
+  async function analyzeRecon() {
+    const btn = document.getElementById('recon-btn');
+    const output = document.getElementById('recon-output');
+    const copy = document.getElementById('recon-copy');
+    btn.disabled = true;
+    btn.textContent = '[ ANALYZING... ]';
+
+    const prompt = `Analyze this recon output for ${document.getElementById('recon-target').value} and identify attack surface, vulnerabilities, and priorities:\n${document.getElementById('recon-data').value}`;
+
+    try {
+      const res = await fetch(`${API}/vault-ai`, {
+        method: 'POST',
+        headers: authHeaders(),
+        body: JSON.stringify({ message: prompt, rank: currentUser.rank || 'Ghost' })
+      });
+      const data = await res.json();
+      output.textContent = data.response;
+      output.style.display = 'block';
+      copy.style.display = 'inline-block';
+    } catch(e) {
+      output.textContent = 'Failed to analyze.';
+      output.style.display = 'block';
+    }
+    btn.disabled = false;
+    btn.textContent = '[ ANALYZE ]';
+  }
+
+  async function triageXSS() {
+    const btn = document.getElementById('xss-btn');
+    const output = document.getElementById('xss-output');
+    const copy = document.getElementById('xss-copy');
+    btn.disabled = true;
+    btn.textContent = '[ TRIAGING... ]';
+
+    const prompt = `Triage these URLs for XSS vulnerabilities on ${document.getElementById('xss-target').value}. Rank by likelihood and suggest payloads:\n${document.getElementById('xss-urls').value}`;
+
+    try {
+      const res = await fetch(`${API}/vault-ai`, {
+        method: 'POST',
+        headers: authHeaders(),
+        body: JSON.stringify({ message: prompt, rank: currentUser.rank || 'Ghost' })
+      });
+      const data = await res.json();
+      output.textContent = data.response;
+      output.style.display = 'block';
+      copy.style.display = 'inline-block';
+    } catch(e) {
+      output.textContent = 'Failed to triage.';
+      output.style.display = 'block';
+    }
+    btn.disabled = false;
+    btn.textContent = '[ TRIAGE URLS ]';
+  }
+
+  function copyOutput(id) {
+    navigator.clipboard.writeText(document.getElementById(id).textContent);
+    alert('Copied!');
+  }
+
+  // —— UTILS ——
   function timeAgo(dateStr) {
     const diff = Date.now() - new Date(dateStr).getTime();
     const mins = Math.floor(diff / 60000);
@@ -1095,11 +1033,11 @@
     if (mins < 60) return `${mins}m ago`;
     const hrs = Math.floor(mins / 60);
     if (hrs < 24) return `${hrs}h ago`;
-    return `${Math.floor(hrs / 24)}d ago`;
+    return `${Math.floor(hrs/24)}d ago`;
   }
 
-  // Init
-  loadHomeStats();
+  // Boot
+  loadFeed();
 </script>
 </body>
 </html>
