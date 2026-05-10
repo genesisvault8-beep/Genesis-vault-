@@ -370,11 +370,11 @@ async function send(msg) {
         print('[ERR]: JOB TIMEOUT. IS BRIDGE RUNNING?', 'err');
       }
     } catch(e) {
-      print('[ERR]: FAILED TO DISPATCH JOB.', 'err');
-    }
-    busy = false;
-    btn.disabled = false;
-    return;
+    print('[ERR]: FAILED TO DISPATCH JOB.', 'err');
+  }
+  busy = false;
+  btn.disabled = false;
+  return;
   }
   if (msg.toLowerCase().startsWith('scan ')) {
     const target = msg.slice(5).trim();
