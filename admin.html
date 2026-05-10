@@ -903,6 +903,78 @@ ${!m.is_admin ? `<button class="btn-reject" onclick="banMember('${m.id}','${m.em
 
   // Init
   loadDashboard();
+  async function postCourse() {
+  const title = document.getElementById('c-title').value.trim();
+  const desc = document.getElementById('c-desc').value.trim();
+  const content = document.getElementById('c-content').value.trim();
+  const category = document.getElementById('c-category').value;
+  const rank = document.getElementById('c-rank').value;
+  const price = parseFloat(document.getElementById('c-price').value) || 0;
+
+  if (!title || !content) return toast('// Title and content required', 'var(--accent3)');
+
+  try {
+    const res = await fetch(`${API}/admin/courses/create`, {
+      method: 'POST',
+      headers: authHeaders(),
+      body: JSON.stringify({
+        title, description: desc, content,
+        category, rank_required: rank,
+        price, is_free: price === 0
+      })
+    });
+    const data = await res.json();
+    if (data.status === 'success') {
+      toast('// Course published!');
+      document.getElementById('c-title').value = '';
+      document.getElementById('c-desc').value = '';
+      document.getElementById('c-content').value = '';
+      document.getElementById('c-price').value = '';
+      loadCourses();
+    }
+  } catch(e) {
+    toast('// Failed to publish', 'var(--accent3)');
+  }
+}
+
+async function loadCourses() {
+  const c = document.getElementById('courses-container');
+  try {
+    const res = await fetch(`${API}/courses`);
+    const data = await res.json();
+    if (!data.courses || data.courses.length === 0) {
+      c.innerHTML = '<div class="empty">// No courses yet.</div>';
+      return;
+    }
+    c.innerHTML = data.courses.map(course => `
+      <div class="item-card">
+        <div class="item-meta">${course.category} · ${course.is_free ? 'FREE' : '$'+course.price+' USDT'} · rank: ${course.rank_required}</div>
+        <h4>${course.title}</h4>
+        <p>${course.description || ''}</p>
+      </div>
+    `).join('');
+  } catch(e) {
+    c.innerHTML = '<div class="empty">// Failed to load courses.</div>';
+  }
+}
+
+async function banMember(id, email) {
+  if (!confirm(`Ban ${email}?`)) return;
+  try {
+    const res = await fetch(`${API}/admin/ban`, {
+      method: 'POST',
+      headers: authHeaders(),
+      body: JSON.stringify({ user_id: id })
+    });
+    const data = await res.json();
+    if (data.status === 'success') {
+      toast('// Member banned.');
+      loadUsers();
+    }
+  } catch(e) {
+    toast('// Failed to ban', 'var(--accent3)');
+  }
+        }
 </script>
 </body>
 </html>
