@@ -379,7 +379,8 @@
         showError(data.error || 'Login failed');
       } else {
         localStorage.setItem('gv_token', data.token);
-        localStorage.setItem('gv_user', JSON.stringify(data.user));
+        localStorage.setItem('gv_rank', data.rank);
+        localStorage.setItem('gv_email', data.email);
         showSuccess('Access granted. Redirecting...');
         setTimeout(() => window.location.href = 'dashboard.html', 1000);
       }
