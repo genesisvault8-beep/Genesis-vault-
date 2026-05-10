@@ -350,16 +350,14 @@ async function send(msg) {
       const data = await res.json();
       const jobId = data.job[0].id;
       print(`[LOG]: JOB #${jobId} QUEUED. AWAITING BRIDGE...`, 'sys');
-
       let result = null;
       for (let i = 0; i < 24; i++) {
         await sleep(5000);
         const poll = await fetch(`${BACKEND_URL}/api/jobs/result/${jobId}`);
         const pollData = await poll.json();
         if (pollData.result) { result = pollData.result; break; }
-        print(`[LOG]: WAITING FOR BRIDGE... (${(i+1)*5}s)`, 'logc');
+        else { print(`[LOG]: WAITING FOR BRIDGE... (${(i+1)*5}s)`, 'logc'); }
       }
-
       if (result) {
         const el = document.createElement('div');
         el.className = 'line ai';
@@ -370,11 +368,11 @@ async function send(msg) {
         print('[ERR]: JOB TIMEOUT. IS BRIDGE RUNNING?', 'err');
       }
     } catch(e) {
-    print('[ERR]: FAILED TO DISPATCH JOB.', 'err');
-  }
-  busy = false;
-  btn.disabled = false;
-  return;
+      print('[ERR]: FAILED TO DISPATCH JOB.', 'err');
+    }
+    busy = false;
+    btn.disabled = false;
+    return;
   }
   if (msg.toLowerCase().startsWith('scan ')) {
     const target = msg.slice(5).trim();
