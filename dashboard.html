@@ -1068,7 +1068,9 @@
         </p>
       `;
 
-      const nres = await fetch(`${API}/community/notifications`, { headers: authHeaders() });
+      const nres = await fetch(`${API}/notifications`, {
+  headers: { 'Authorization': `Bearer ${token}` }
+});
       const ndata = await nres.json();
       const container = document.getElementById('notifications-container');
 
