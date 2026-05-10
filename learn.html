@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Genesis Vault | Learn</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #020608;
+    --bg2: #060d10;
+    --bg3: #0a1520;
+    --accent: #00f5c4;
+    --accent2: #00a8ff;
+    --accent3: #ff003c;
+    --text: #c8e6f0;
+    --text-dim: #4a7a8a;
+    --border: #0f2a35;
+    --glow: 0 0 20px rgba(0,245,196,0.2);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Rajdhani', sans-serif;
+    min-height: 100vh;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(0,245,196,0.02) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,245,196,0.02) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    background: rgba(2,6,8,0.95);
+    border-bottom: 1px solid var(--border);
+    padding: 0 20px;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    z-index: 100;
+    backdrop-filter: blur(10px);
+  }
+
+  .nav-logo {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 1rem;
+    letter-spacing: 3px;
+  }
+
+  .nav-logo span:first-child { color: var(--accent); }
+  .nav-logo span:last-child { color: white; }
+
+  .back-btn {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    padding: 4px 12px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.7rem;
+    cursor: pointer;
+    letter-spacing: 1px;
+    transition: all 0.2s;
+  }
+
+  .back-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+  main {
+    padding-top: 76px;
+    padding-bottom: 30px;
+    position: relative;
+    z-index: 1;
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .section-title {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.75rem;
+    color: var(--accent);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 8px;
+  }
+
+  /* SEARCH */
+  .search-bar {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+  }
+
+  .search-bar input {
+    flex: 1;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 10px 14px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.85rem;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .search-bar input:focus { border-color: var(--accent); }
+  .search-bar input::placeholder { color: var(--text-dim); }
+
+  .search-bar button {
+    background: var(--accent);
+    border: none;
+    color: var(--bg);
+    padding: 10px 16px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.8rem;
+    cursor: pointer;
+    letter-spacing: 1px;
+  }
+
+  /* TABS */
+  .tabs {
+    display: flex;
+    gap: 0;
+    margin-bottom: 20px;
+    border-bottom: 1px solid var(--border);
+    overflow-x: auto;
+  }
+
+  .tab {
+    padding: 8px 14px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 2px;
+    color: var(--text-dim);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    white-space: nowrap;
+    transition: all 0.2s;
+  }
+
+  .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+  /* COURSE CARDS */
+  .courses-grid {
+    display: grid;
+    gap: 12px;
+  }
+
+  .course-card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    padding: 16px;
+    cursor: pointer;
+    transition: all 0.2s;
+    animation: fadeIn 0.4s ease;
+    position: relative;
+  }
+
+  .course-card:hover { border-color: var(--accent); box-shadow: var(--glow); }
+  .course-card.locked { opacity: 0.8; }
+  .course-card.locked:hover { border-color: var(--accent3); }
+
+  .course-card .course-category {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.65rem;
+    color: var(--accent2);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+
+  .course-card h3 {
+    font-size: 1rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+    color: white;
+    margin-bottom: 6px;
+  }
+
+  .course-card p {
+    font-size: 0.8rem;
+    color: var(--text-dim);
+    line-height: 1.5;
+    margin-bottom: 10px;
+  }
+
+  .course-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .free-badge {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.65rem;
+    color: var(--accent);
+    border: 1px solid var(--accent);
+    padding: 2px 8px;
+    letter-spacing: 1px;
+  }
+
+  .price-badge {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.65rem;
+    color: var(--accent3);
+    border: 1px solid var(--accent3);
+    padding: 2px 8px;
+    letter-spacing: 1px;
+  }
+
+  .lock-icon {
+    font-size: 1rem;
+    color: var(--accent3);
+  }
+
+  /* COURSE READER */
+  .course-reader {
+    display: none;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    padding: 20px;
+    margin-top: 16px;
+    animation: fadeIn 0.3s ease;
+  }
+
+  .course-reader.active { display: block; }
+
+  .reader-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .reader-header h2 {
+    font-size: 1.1rem;
+    font-weight: 700;
+    letter-spacing: 2px;
+    color: var(--accent);
+    font-family: 'Share Tech Mono', monospace;
+  }
+
+  .close-reader {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    width: 28px;
+    height: 28px;
+    cursor: pointer;
+    font-size: 0.9rem;
+  }
+
+  .close-reader:hover { border-color: var(--accent3); color: var(--accent3); }
+
+  .reader-content {
+    font-size: 0.9rem;
+    line-height: 1.8;
+    color: var(--text);
+    white-space: pre-wrap;
+    font-family: 'Share Tech Mono', monospace;
+  }
+
+  /* PAYMENT MODAL */
+  .modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(2,6,8,0.97);
+    z-index: 200;
+    padding: 20px;
+    overflow-y: auto;
+  }
+
+  .modal.active { display: block; }
+
+  .modal-box {
+    background: var(--bg2);
+    border: 1px solid var(--accent);
+    padding: 24px;
+    max-width: 400px;
+    margin: 40px auto;
+  }
+
+  .modal-box h3 {
+    font-family: 'Share Tech Mono', monospace;
+    color: var(--accent);
+    letter-spacing: 3px;
+    font-size: 0.9rem;
+    margin-bottom: 16px;
+  }
+
+  .wallet-box {
+    background: var(--bg3);
+    border: 1px solid var(--accent);
+    padding: 12px;
+    margin-bottom: 16px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.75rem;
+    color: var(--accent);
+    word-break: break-all;
+    letter-spacing: 1px;
+  }
+
+  .payment-amount {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 1.4rem;
+    color: var(--accent);
+    text-align: center;
+    margin-bottom: 16px;
+  }
+
+  .modal-input {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 12px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.85rem;
+    outline: none;
+    margin-bottom: 12px;
+  }
+
+  .modal-input:focus { border-color: var(--accent); }
+  .modal-input::placeholder { color: var(--text-dim); }
+
+  .btn-pay {
+    width: 100%;
+    padding: 14px;
+    background: var(--accent);
+    color: var(--bg);
+    border: none;
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 700;
+    font-size: 1rem;
+    letter-spacing: 3px;
+    cursor: pointer;
+    margin-bottom: 8px;
+  }
+
+  .btn-cancel {
+    width: 100%;
+    padding: 10px;
+    background: none;
+    color: var(--text-dim);
+    border: 1px solid var(--border);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.8rem;
+    cursor: pointer;
+  }
+
+  .step {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.75rem;
+    color: var(--text-dim);
+    margin-bottom: 8px;
+    padding-left: 8px;
+    border-left: 2px solid var(--accent);
+  }
+
+  .loading {
+    text-align: center;
+    padding: 40px;
+    color: var(--text-dim);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.8rem;
+  }
+
+  .empty {
+    text-align: center;
+    padding: 40px;
+    color: var(--text-dim);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.8rem;
+  }
+
+  .spinner {
+    display: inline-block;
+    width: 16px; height: 16px;
+    border: 2px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    vertical-align: middle;
+    margin-right: 8px;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-logo"><span>GENESIS</span><span>VAULT</span></div>
+  <button class="back-btn" onclick="window.location.href='dashboard.html'">← BACK</button>
+</nav>
+
+<main>
+  <p class="section-title">// Knowledge Vault</p>
+
+  <!-- SEARCH -->
+  <div class="search-bar">
+    <input type="text" id="search-input" placeholder="Search courses..." oninput="filterCourses()">
+    <button onclick="filterCourses()">SEARCH</button>
+  </div>
+
+  <!-- TABS -->
+  <div class="tabs">
+    <div class="tab active" onclick="switchTab('all', this)">ALL</div>
+    <div class="tab" onclick="switchTab('beginner', this)">BEGINNER</div>
+    <div class="tab" onclick="switchTab('recon', this)">RECON</div>
+    <div class="tab" onclick="switchTab('web', this)">WEB HACKING</div>
+    <div class="tab" onclick="switchTab('tools', this)">TOOLS</div>
+    <div class="tab" onclick="switchTab('bugbounty', this)">BUG BOUNTY</div>
+  </div>
+
+  <!-- COURSE READER -->
+  <div class="course-reader" id="course-reader">
+    <div class="reader-header">
+      <h2 id="reader-title">// COURSE</h2>
+      <button class="close-reader" onclick="closeReader()">✕</button>
+    </div>
+    <div class="reader-content" id="reader-content"></div>
+  </div>
+
+  <!-- COURSES GRID -->
+  <div class="courses-grid" id="courses-grid">
+    <div class="loading"><span class="spinner"></span>Loading courses...</div>
+  </div>
+</main>
+
+<!-- PAYMENT MODAL -->
+<div class="modal" id="payment-modal">
+  <div class="modal-box">
+    <h3>// UNLOCK COURSE</h3>
+    <p id="pay-course-title" style="color:white;font-weight:700;letter-spacing:1px;margin-bottom:12px;"></p>
+    <div class="payment-amount" id="pay-amount">$0 USDT</div>
+
+    <div class="step">1. Send exact USDT (TRC20) amount to this address:</div>
+    <div class="wallet-box">TAFucQDbeYCMWu1dWkaAMTbmSjvAGyzoo9</div>
+
+    <div class="step">2. Copy your Transaction Hash (TX ID) from Binance</div>
+    <div class="step">3. Paste it below and submit</div>
+
+    <input class="modal-input" id="tx-hash" placeholder="Paste TX hash here...">
+    <button class="btn-pay" onclick="submitPayment()">[ SUBMIT PAYMENT ]</button>
+    <button class="btn-cancel" onclick="closePayment()">Cancel</button>
+
+    <p style="font-family:'Share Tech Mono',monospace;font-size:0.65rem;color:var(--text-dim);margin-top:12px;text-align:center;">
+      // Admin will verify and unlock within 24 hours
+    </p>
+  </div>
+</div>
+
+<script>
+  const API = 'https://genesis-vault-backend.onrender.com/api';
+  let token = localStorage.getItem('gv_token');
+  let currentUser = { rank: localStorage.getItem('gv_rank'), email: localStorage.getItem('gv_email') };
+  let allCourses = [];
+  let currentTab = 'all';
+  let selectedCourse = null;
+
+  if (!token) window.location.href = 'login.html';
+
+  function switchTab(tab, el) {
+    currentTab = tab;
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    el.classList.add('active');
+    closeReader();
+    renderCourses();
+  }
+
+  function filterCourses() {
+    renderCourses();
+  }
+
+  function renderCourses() {
+    const search = document.getElementById('search-input').value.toLowerCase();
+    const grid = document.getElementById('courses-grid');
+
+    let filtered = allCourses.filter(c => {
+      const matchTab = currentTab === 'all' || c.category === currentTab;
+      const matchSearch = !search ||
+        c.title.toLowerCase().includes(search) ||
+        (c.description || '').toLowerCase().includes(search);
+      return matchTab && matchSearch;
+    });
+
+    if (filtered.length === 0) {
+      grid.innerHTML = '<div class="empty">// No courses found.</div>';
+      return;
+    }
+
+    grid.innerHTML = filtered.map(c => {
+      const isFree = c.is_free || c.price === 0;
+      return `
+        <div class="course-card ${isFree ? '' : 'locked'}" onclick="${isFree ? `openCourse('${c.id}')` : `openPayment('${c.id}')`}">
+          <div class="course-category">${c.category || 'general'}</div>
+          <h3>${c.title}</h3>
+          <p>${c.description || ''}</p>
+          <div class="course-footer">
+            ${isFree ? '<span class="free-badge">FREE</span>' : `<span class="price-badge">🔒 $${c.price} USDT</span>`}
+            ${isFree ? '<span style="color:var(--accent);font-size:0.7rem;font-family:Share Tech Mono,monospace;">READ →</span>' : '<span class="lock-icon">🔒</span>'}
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  function openCourse(id) {
+    const course = allCourses.find(c => c.id == id);
+    if (!course) return;
+    document.getElementById('reader-title').textContent = `// ${course.title}`;
+    document.getElementById('reader-content').textContent = course.content || 'No content available.';
+    document.getElementById('course-reader').classList.add('active');
+    document.getElementById('course-reader').scrollIntoView({ behavior: 'smooth' });
+  }
+
+  function closeReader() {
+    document.getElementById('course-reader').classList.remove('active');
+  }
+
+  function openPayment(id) {
+    const course = allCourses.find(c => c.id == id);
+    if (!course) return;
+    selectedCourse = course;
+    document.getElementById('pay-course-title').textContent = course.title;
+    document.getElementById('pay-amount').textContent = `$${course.price} USDT`;
+    document.getElementById('tx-hash').value = '';
+    document.getElementById('payment-modal').classList.add('active');
+  }
+
+  function closePayment() {
+    document.getElementById('payment-modal').classList.remove('active');
+    selectedCourse = null;
+  }
+
+  async function submitPayment() {
+    const txHash = document.getElementById('tx-hash').value.trim();
+    if (!txHash) return alert('Please paste your TX hash');
+    if (!selectedCourse) return;
+
+    try {
+      const res = await fetch(`${API}/payments/submit`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({
+          course_id: selectedCourse.id,
+          tx_hash: txHash,
+          amount: selectedCourse.price
+        })
+      });
+      const data = await res.json();
+      if (data.status === 'success') {
+        closePayment();
+        alert('✅ Payment submitted! Admin will verify within 24 hours.');
+      } else {
+        alert('Failed to submit payment. Try again.');
+      }
+    } catch(e) {
+      alert('Connection error. Try again.');
+    }
+  }
+
+  async function loadCourses() {
+    try {
+      const res = await fetch(`${API}/courses`);
+      const data = await res.json();
+      allCourses = data.courses || [];
+      renderCourses();
+    } catch(e) {
+      document.getElementById('courses-grid').innerHTML = '<div class="empty">// Failed to load courses.</div>';
+    }
+  }
+
+  loadCourses();
+</script>
+</body>
+</html>
