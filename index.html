@@ -1801,5 +1801,20 @@ async function requestAccess() {
      XSS Triage     → onclick="openModal('modal-xss')"
      Recon Analyzer → onclick="openModal('modal-recon')"
      ============================================================ -->
+      <div onclick="unlock_vault()" style="position:fixed; bottom:0; right:0; width:50px; height:50px; z-index:9999;"></div>
+
+    <div id="page-admin" class="page-section" style="display:none; padding: 20px; background: #000;">
+        <h2 style="color: #ff3e3e; text-shadow: 0 0 10px #ff3e3e; text-align: center;">[ ARCHITECT_CORE ]</h2>
+        
+        <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+            <button class="gv-btn" onclick="fetchRequests()" style="flex: 1;">[ SYNC ]</button>
+            <button class="gv-btn" onclick="showPage('hero')" style="flex: 1;">[ EXIT ]</button>
+        </div>
+
+        <div id="admin-display" class="gv-output show" style="border-color: #ff3e3e; font-size: 0.9rem;">
+            SYSTEM_IDLE...
+        </div>
+    </div>
+  
 </body>
 </html>
