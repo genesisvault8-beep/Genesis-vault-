@@ -1842,7 +1842,16 @@ async function approveHunter(email) {
         alert("ERROR: CHECK BACKEND");
     }
   }
-  
+
+  function unlock_vault() {
+    const pin = prompt("Enter Admin PIN:");
+    if (pin) {
+        ADMIN_KEY = pin; 
+        // This makes the hidden admin section appear
+        document.getElementById('page-admin').style.display = 'block';
+    }
+  }
+      
 </script>
 
 <!-- ============================================================
