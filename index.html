@@ -1700,7 +1700,34 @@
       btn.textContent = origText;
     }
   }
+// --- USER ACCESS GATEKEEPER ---
+async function requestAccess() {
+    const emailInput = document.getElementById('emailInput');
+    const email = emailInput.value.trim();
 
+    if (!email) {
+        alert("ACCESS DENIED: Neural link requires an email address.");
+        return;
+    }
+
+    // This alert confirms they've read the Constitution (Article 0)
+    const termsAgreed = confirm("By proceeding, you agree to the Genesis Vault Constitution (Article 0: The Shield). Continue?");
+    
+    if (!termsAgreed) return;
+
+    try {
+        // Calls your backend engine at line 1674
+        const data = await callBackend('/api/auth/request-access', { email: email });
+        
+        if (data.status === "success") {
+            emailInput.value = ""; 
+            alert("TRANSMISSION SUCCESSFUL. THE ARCHITECT HAS BEEN NOTIFIED.");
+        }
+    } catch (err) {
+        console.error("Vault Gateway Error:", err);
+    }
+  }
+  
   // ── TOOL 1: REPORT WRITER ──
   function runReportWriter() {
     const vulnType = document.getElementById("rw-type").value.trim();
