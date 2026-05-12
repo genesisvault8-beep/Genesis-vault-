@@ -1795,34 +1795,51 @@ async function unlock_vault() {
     const pin = prompt("IDENTIFY YOURSELF, ARCHITECT:");
     if (!pin) return;
     sessionStorage.setItem('admin_key', pin);
-    showPage('admin');
+    document.getElementById('page-admin').style.display = 'block';
+    document.getElementById('page-admin').scrollIntoView({behavior: 'smooth'});
     await fetchRequests();
 }
 
 async function fetchRequests() {
     const display = document.getElementById('admin-display');
     const key = sessionStorage.getItem('admin_key');
-    display.innerHTML = "[ ACCESSING ENCRYPTED DATA... ]";
+
+    if (!key) {
+        display.innerHTML = "ERROR: NO KEY IN SESSION";
+        return;
+    }
+
+    display.innerHTML = "[ ACCESSING... ]";
+
     try {
         const response = await fetch('https://genesis-vault-backend.onrender.com/api/admin/list-requests', {
             headers: { 'Authorization': key }
         });
-        if (response.status === 403) throw new Error("UNAUTHORIZED");
-        const data = await response.json();
+
+        const text = await response.text();
+
+        if (response.status === 403) {
+            display.innerHTML = "403 - WRONG KEY";
+            return;
+        }
+
+        const data = JSON.parse(text);
         if (data.length === 0) {
             display.innerHTML = "NO PENDING REQUESTS.";
             return;
         }
+
         let html = '';
         data.forEach(req => {
-            html += `<div style="border-bottom: 1px solid #333; padding: 10px 0;">
-                <span style="color: #0f0; display:block; margin-bottom:5px;">${req.email}</span>
+            html += `<div style="border-bottom:1px solid #333; padding:10px 0;">
+                <span style="color:#0f0; display:block; margin-bottom:5px;">${req.email}</span>
                 <button class="gv-btn" onclick="approveHunter('${req.email}')">[ APPROVE ]</button>
             </div>`;
         });
         display.innerHTML = html;
+
     } catch (e) {
-        display.innerHTML = "ACCESS DENIED: KEY_REJECTED";
+        display.innerHTML = "CATCH ERROR: " + e.message;
     }
 }
 
@@ -1837,54 +1854,11 @@ async function approveHunter(email) {
     const result = await response.json();
     if (result.status === "success") {
         alert("INVITE DISPATCHED");
-        fetchRequests(); 
+        fetchRequests();
     } else {
         alert("ERROR: CHECK BACKEND");
     }
   }
-
-  async function fetchRequests() {
-    const display = document.getElementById('admin-display');
-    const key = sessionStorage.getItem('admin_key');
-    
-    if (!key) {
-        display.innerHTML = "ERROR: NO KEY IN SESSION";
-        return;
-    }
-    
-    display.innerHTML = "[ ACCESSING... ] KEY: " + key.substring(0,4) + "...";
-    
-    try {
-        const response = await fetch('https://genesis-vault-backend.onrender.com/api/admin/list-requests', {
-            headers: { 'Authorization': key }
-        });
-        
-        const text = await response.text();
-        
-        if (response.status === 403) {
-            display.innerHTML = "403 - WRONG KEY. GOT: " + text;
-            return;
-        }
-        
-        const data = JSON.parse(text);
-        if (data.length === 0) {
-            display.innerHTML = "NO PENDING REQUESTS.";
-            return;
-        }
-        
-        let html = '';
-        data.forEach(req => {
-            html += `<div style="border-bottom:1px solid #333; padding:10px 0;">
-                <span style="color:#0f0; display:block; margin-bottom:5px;">${req.email}</span>
-                <button class="gv-btn" onclick="approveHunter('${req.email}')">[ APPROVE ]</button>
-            </div>`;
-        });
-        display.innerHTML = html;
-        
-    } catch (e) {
-        display.innerHTML = "CATCH ERROR: " + e.message;
-    }
-}
   
 </script>
 
