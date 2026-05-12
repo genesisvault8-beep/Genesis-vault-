@@ -142,6 +142,36 @@
     font-family: 'Share Tech Mono', monospace;
   }
 
+  /* Password wrapper for show/hide toggle */
+  .input-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+
+  .input-wrapper input {
+    width: 100%;
+    padding-right: 44px;
+  }
+
+  .toggle-pw {
+    position: absolute;
+    right: 12px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--text-dim);
+    font-size: 1rem;
+    padding: 0;
+    line-height: 1;
+    transition: color 0.2s;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 1px;
+  }
+
+  .toggle-pw:hover { color: var(--accent); }
+
   input {
     width: 100%;
     background: var(--bg);
@@ -197,6 +227,7 @@
     font-size: 0.8rem;
     margin-bottom: 16px;
     display: none;
+    line-height: 1.5;
   }
 
   .success {
@@ -262,6 +293,29 @@
     0% { top: 0; opacity: 1; }
     100% { top: 100vh; opacity: 0; }
   }
+
+  /* Password strength bar */
+  .strength-bar {
+    height: 3px;
+    background: var(--border);
+    margin-top: 6px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .strength-fill {
+    height: 100%;
+    width: 0%;
+    transition: width 0.3s, background 0.3s;
+  }
+
+  .strength-label {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 2px;
+    margin-top: 4px;
+    color: var(--text-dim);
+  }
 </style>
 </head>
 <body>
@@ -290,11 +344,14 @@
     <div id="panel-login" class="form-panel active">
       <div class="form-group">
         <label>Email</label>
-        <input type="email" id="login-email" placeholder="hunter@email.com">
+        <input type="email" id="login-email" placeholder="hunter@email.com" autocomplete="email">
       </div>
       <div class="form-group">
         <label>Password</label>
-        <input type="password" id="login-password" placeholder="••••••••">
+        <div class="input-wrapper">
+          <input type="password" id="login-password" placeholder="••••••••" autocomplete="current-password">
+          <button class="toggle-pw" type="button" onclick="togglePw('login-password', this)">SHOW</button>
+        </div>
       </div>
       <button class="btn" onclick="handleLogin()" id="login-btn">[ ACCESS VAULT ]</button>
     </div>
@@ -303,22 +360,30 @@
     <div id="panel-register" class="form-panel">
       <div class="form-group">
         <label>Username</label>
-        <input type="text" id="reg-username" placeholder="your_handle">
+        <input type="text" id="reg-username" placeholder="your_handle" autocomplete="username">
       </div>
       <div class="form-group">
         <label>Email</label>
-        <input type="email" id="reg-email" placeholder="hunter@email.com">
+        <input type="email" id="reg-email" placeholder="hunter@email.com" autocomplete="email">
       </div>
       <div class="form-group">
         <label>Password</label>
-        <input type="password" id="reg-password" placeholder="min 8 characters">
+        <div class="input-wrapper">
+          <input type="password" id="reg-password" placeholder="min 8 characters"
+            autocomplete="new-password" oninput="checkStrength(this.value)">
+          <button class="toggle-pw" type="button" onclick="togglePw('reg-password', this)">SHOW</button>
+        </div>
+        <div class="strength-bar"><div class="strength-fill" id="strength-fill"></div></div>
+        <div class="strength-label" id="strength-label"></div>
       </div>
       <div class="form-group">
-        <label>Referral Code (optional)</label>
-        <input type="text" id="reg-referral" placeholder="XXXXXXXX">
+        <label>Invite Code</label>
+        <input type="text" id="reg-referral" placeholder="XXXXXXXX"
+          oninput="this.value = this.value.toUpperCase()"
+          maxlength="8" autocomplete="off">
       </div>
       <button class="btn" onclick="handleRegister()" id="reg-btn">[ JOIN THE VAULT ]</button>
-      <p class="referral-note">// Invite only. You need a referral code or admin approval.</p>
+      <p class="referral-note">// Invite only. Request access to receive a code.</p>
     </div>
   </div>
 
@@ -330,6 +395,7 @@
 <script>
   const API = 'https://genesis-vault-backend.onrender.com/api';
 
+  // ── TAB SWITCHING ──
   function switchTab(tab) {
     document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
     document.querySelectorAll('.form-panel').forEach(p => p.classList.remove('active'));
@@ -338,6 +404,7 @@
     hideMessages();
   }
 
+  // ── MESSAGES ──
   function showError(msg) {
     const el = document.getElementById('error-msg');
     el.textContent = '// ERROR: ' + msg;
@@ -357,15 +424,74 @@
     document.getElementById('success-msg').style.display = 'none';
   }
 
+  // ── SHOW/HIDE PASSWORD ──
+  function togglePw(inputId, btn) {
+    const input = document.getElementById(inputId);
+    if (input.type === 'password') {
+      input.type = 'text';
+      btn.textContent = 'HIDE';
+      btn.style.color = 'var(--accent)';
+    } else {
+      input.type = 'password';
+      btn.textContent = 'SHOW';
+      btn.style.color = 'var(--text-dim)';
+    }
+  }
+
+  // ── PASSWORD STRENGTH ──
+  function checkStrength(val) {
+    const fill = document.getElementById('strength-fill');
+    const label = document.getElementById('strength-label');
+    let strength = 0;
+    if (val.length >= 8) strength++;
+    if (val.length >= 12) strength++;
+    if (/[A-Z]/.test(val)) strength++;
+    if (/[0-9]/.test(val)) strength++;
+    if (/[^A-Za-z0-9]/.test(val)) strength++;
+
+    const levels = [
+      { pct: '0%',   color: 'transparent', text: '' },
+      { pct: '25%',  color: '#ff003c',     text: '// WEAK' },
+      { pct: '50%',  color: '#ff9500',     text: '// FAIR' },
+      { pct: '75%',  color: '#00a8ff',     text: '// GOOD' },
+      { pct: '90%',  color: '#00f5c4',     text: '// STRONG' },
+      { pct: '100%', color: '#00f5c4',     text: '// STRONG' },
+    ];
+
+    const lvl = levels[strength] || levels[0];
+    fill.style.width = lvl.pct;
+    fill.style.background = lvl.color;
+    label.textContent = lvl.text;
+    label.style.color = lvl.color;
+  }
+
+  // ── FRIENDLY ERROR MESSAGES ──
+  function friendlyError(code) {
+    const map = {
+      'AUTH_FAILED': 'Invalid email or password.',
+      'ACCOUNT_BANNED': 'This account has been suspended.',
+      'INVALID_INVITE_CODE': 'Invalid invite code. Contact the Architect for a valid code.',
+      'INVITE_CODE_REQUIRED': 'An invite code is required to register.',
+      'ALREADY_REQUESTED': 'This email has already requested access.',
+      'ALREADY_APPROVED': 'This email is already approved. Check your invite code.',
+      'EMAIL_REQUIRED': 'Email is required.',
+      'INVALID_EMAIL': 'Please enter a valid email address.',
+      'PASSWORD_TOO_SHORT': 'Password must be at least 8 characters.',
+    };
+    return map[code] || code;
+  }
+
+  // ── LOGIN ──
   async function handleLogin() {
     const email = document.getElementById('login-email').value.trim();
     const password = document.getElementById('login-password').value;
     const btn = document.getElementById('login-btn');
 
-    if (!email || !password) return showError('All fields required');
+    if (!email || !password) return showError('All fields required.');
 
     btn.disabled = true;
     btn.textContent = '[ AUTHENTICATING... ]';
+    hideMessages();
 
     try {
       const res = await fetch(`${API}/auth/login`, {
@@ -376,7 +502,9 @@
       const data = await res.json();
 
       if (!res.ok) {
-        showError(data.error || 'Login failed');
+        showError(friendlyError(data.message || 'Login failed.'));
+        btn.disabled = false;
+        btn.textContent = '[ ACCESS VAULT ]';
       } else {
         localStorage.setItem('gv_token', data.token);
         localStorage.setItem('gv_rank', data.rank);
@@ -386,59 +514,64 @@
       }
     } catch (e) {
       showError('Connection failed. Try again.');
+      btn.disabled = false;
+      btn.textContent = '[ ACCESS VAULT ]';
     }
-
-    btn.disabled = false;
-    btn.textContent = '[ ACCESS VAULT ]';
   }
 
+  // ── REGISTER ──
   async function handleRegister() {
     const username = document.getElementById('reg-username').value.trim();
     const email = document.getElementById('reg-email').value.trim();
     const password = document.getElementById('reg-password').value;
-    const referral_code = document.getElementById('reg-referral').value.trim();
+    const referral_code = document.getElementById('reg-referral').value.trim().toUpperCase();
     const btn = document.getElementById('reg-btn');
 
-    if (!username || !email || !password) return showError('All fields required');
-    if (password.length < 8) return showError('Password must be at least 8 characters');
+    if (!username || !email || !password) return showError('All fields required.');
+    if (password.length < 8) return showError('Password must be at least 8 characters.');
+    if (!referral_code) return showError('An invite code is required to register.');
 
     btn.disabled = true;
     btn.textContent = '[ PROCESSING... ]';
+    hideMessages();
 
     try {
       const res = await fetch(`${API}/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password })
+        body: JSON.stringify({ email, password, username, referral_code })
       });
       const data = await res.json();
 
       if (!res.ok) {
-        showError(data.error || 'Registration failed');
+        showError(friendlyError(data.message || 'Registration failed.'));
+        btn.disabled = false;
+        btn.textContent = '[ JOIN THE VAULT ]';
       } else {
         localStorage.setItem('gv_token', data.token);
+        localStorage.setItem('gv_rank', data.rank || 'Ghost');
+        localStorage.setItem('gv_email', data.email);
         showSuccess('Account created! Welcome to the Vault.');
         setTimeout(() => window.location.href = 'dashboard.html', 1500);
       }
     } catch (e) {
       showError('Connection failed. Try again.');
+      btn.disabled = false;
+      btn.textContent = '[ JOIN THE VAULT ]';
     }
-
-    btn.disabled = false;
-    btn.textContent = '[ JOIN THE VAULT ]';
   }
 
-  // Check if already logged in
+  // ── REDIRECT IF ALREADY LOGGED IN ──
   if (localStorage.getItem('gv_token')) {
     window.location.href = 'dashboard.html';
   }
 
-  // Enter key support
+  // ── ENTER KEY SUPPORT ──
   document.addEventListener('keydown', e => {
     if (e.key === 'Enter') {
       const activePanel = document.querySelector('.form-panel.active');
-      if (activePanel.id === 'panel-login') handleLogin();
-      else handleRegister();
+      if (activePanel && activePanel.id === 'panel-login') handleLogin();
+      else if (activePanel && activePanel.id === 'panel-register') handleRegister();
     }
   });
 </script>
