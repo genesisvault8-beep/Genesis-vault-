@@ -1847,24 +1847,44 @@ async function approveHunter(email) {
     const display = document.getElementById('admin-display');
     const key = sessionStorage.getItem('admin_key');
     
-    // DEBUG: show what key we have
-    display.innerHTML = "KEY: " + (key ? key.substring(0,4)+"..." : "NULL");
+    if (!key) {
+        display.innerHTML = "ERROR: NO KEY IN SESSION";
+        return;
+    }
     
-    await new Promise(r => setTimeout(r, 2000)); // pause 2 seconds so you can read it
+    display.innerHTML = "[ ACCESSING... ] KEY: " + key.substring(0,4) + "...";
     
-    display.innerHTML = "[ ACCESSING... ]";
     try {
         const response = await fetch('https://genesis-vault-backend.onrender.com/api/admin/list-requests', {
             headers: { 'Authorization': key }
         });
-        display.innerHTML = "STATUS: " + response.status;
-        await new Promise(r => setTimeout(r, 2000));
+        
         const text = await response.text();
-        display.innerHTML = "RESPONSE: " + text;
+        
+        if (response.status === 403) {
+            display.innerHTML = "403 - WRONG KEY. GOT: " + text;
+            return;
+        }
+        
+        const data = JSON.parse(text);
+        if (data.length === 0) {
+            display.innerHTML = "NO PENDING REQUESTS.";
+            return;
+        }
+        
+        let html = '';
+        data.forEach(req => {
+            html += `<div style="border-bottom:1px solid #333; padding:10px 0;">
+                <span style="color:#0f0; display:block; margin-bottom:5px;">${req.email}</span>
+                <button class="gv-btn" onclick="approveHunter('${req.email}')">[ APPROVE ]</button>
+            </div>`;
+        });
+        display.innerHTML = html;
+        
     } catch (e) {
-        display.innerHTML = "ERROR: " + e.message;
+        display.innerHTML = "CATCH ERROR: " + e.message;
     }
-  }
+}
   
 </script>
 
