@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>GENESIS VAULT // ADMIN LOGIN</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@700;900&display=swap');
+
+  :root {
+    --bg:      #050a0a;
+    --bg2:     #0a1010;
+    --cyan:    #00ffcc;
+    --blue:    #00bfff;
+    --red:     #ff3333;
+    --green:   #00ff88;
+    --text:    #a0c8c0;
+    --border:  #1a3a3a;
+    --mono:    'Share Tech Mono', monospace;
+    --head:    'Orbitron', monospace;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--cyan);
+    font-family: var(--mono);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow-x: hidden;
+  }
+
+  /* scanlines */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0,255,204,0.015) 2px,
+      rgba(0,255,204,0.015) 4px
+    );
+    pointer-events: none;
+    z-index: 999;
+  }
+
+  /* grid */
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(0,255,204,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,255,204,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* ── NAV ── */
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 20px;
+    background: rgba(5,10,10,0.95);
+    border-bottom: 1px solid var(--border);
+    z-index: 100;
+    backdrop-filter: blur(8px);
+  }
+
+  .nav-logo {
+    font-family: var(--head);
+    font-size: 1rem;
+    letter-spacing: 3px;
+    color: var(--cyan);
+  }
+  .nav-logo span { color: var(--blue); }
+
+  .nav-status {
+    font-size: 0.6rem;
+    letter-spacing: 2px;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .status-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--red);
+    animation: pulse-red 1.5s ease infinite;
+  }
+
+  @keyframes pulse-red {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(255,51,51,0.4); }
+    50%       { box-shadow: 0 0 0 6px rgba(255,51,51,0); }
+  }
+
+  /* ── MAIN ── */
+  main {
+    position: relative;
+    z-index: 1;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 100px 20px 60px;
+  }
+
+  /* ── LOGO BLOCK ── */
+  .logo-block {
+    text-align: center;
+    margin-bottom: 32px;
+    animation: fadeDown 0.5s ease both;
+  }
+
+  @keyframes fadeDown {
+    from { opacity: 0; transform: translateY(-16px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .logo-main {
+    font-family: var(--head);
+    font-size: 1.3rem;
+    letter-spacing: 5px;
+    color: var(--cyan);
+    margin-bottom: 4px;
+  }
+
+  .logo-main span { color: var(--blue); }
+
+  .logo-sub {
+    font-size: 0.6rem;
+    letter-spacing: 3px;
+    color: var(--text);
+  }
+
+  /* ── CARD ── */
+  .card {
+    width: 100%;
+    max-width: 420px;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    padding: 32px 24px;
+    position: relative;
+    animation: fadeUp 0.5s 0.1s ease both;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* top glow line */
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--red), transparent);
+  }
+
+  .card-title {
+    font-family: var(--head);
+    font-size: 0.75rem;
+    letter-spacing: 4px;
+    color: var(--red);
+    text-align: center;
+    margin-bottom: 28px;
+  }
+
+  /* ── ATTEMPT TRACKER ── */
+  .attempt-bar {
+    display: flex;
+    gap: 6px;
+    justify-content: center;
+    margin-bottom: 24px;
+  }
+
+  .attempt-pip {
+    width: 28px; height: 4px;
+    background: var(--border);
+    transition: background 0.3s;
+  }
+
+  .attempt-pip.used { background: var(--red); }
+
+  /* ── FIELDS ── */
+  .field {
+    margin-bottom: 16px;
+  }
+
+  .field label {
+    display: block;
+    font-size: 0.6rem;
+    letter-spacing: 2px;
+    color: var(--text);
+    margin-bottom: 8px;
+  }
+
+  .field input {
+    width: 100%;
+    background: rgba(0,0,0,0.6);
+    border: 1px solid var(--border);
+    color: var(--cyan);
+    font-family: var(--mono);
+    font-size: 0.9rem;
+    padding: 13px 14px;
+    outline: none;
+    transition: border-color 0.3s, box-shadow 0.3s;
+    letter-spacing: 1px;
+  }
+
+  .field input::placeholder { color: #1a4040; }
+
+  .field input:focus {
+    border-color: var(--cyan);
+    box-shadow: 0 0 0 1px var(--cyan), 0 0 20px rgba(0,255,204,0.08);
+  }
+
+  .field input.shake {
+    animation: shake 0.4s ease;
+    border-color: var(--red);
+  }
+
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    20%       { transform: translateX(-8px); }
+    40%       { transform: translateX(8px); }
+    60%       { transform: translateX(-6px); }
+    80%       { transform: translateX(6px); }
+  }
+
+  /* ── BUTTON ── */
+  .btn {
+    width: 100%;
+    background: var(--cyan);
+    color: #050a0a;
+    border: none;
+    font-family: var(--head);
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 4px;
+    padding: 16px;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-top: 8px;
+  }
+
+  .btn:hover:not(:disabled) {
+    background: #00ffd5;
+    box-shadow: 0 0 30px rgba(0,255,204,0.35);
+    transform: translateY(-1px);
+  }
+
+  .btn:active:not(:disabled) { transform: translateY(0); }
+
+  .btn:disabled {
+    background: #1a3a3a;
+    color: #2a5a5a;
+    cursor: not-allowed;
+  }
+
+  .btn.locked {
+    background: transparent;
+    border: 2px solid var(--red);
+    color: var(--red);
+    cursor: not-allowed;
+  }
+
+  /* ── OUTPUT ── */
+  .output {
+    margin-top: 16px;
+    border: 1px solid var(--red);
+    background: rgba(255,51,51,0.04);
+    padding: 14px 16px;
+    font-size: 0.72rem;
+    letter-spacing: 1px;
+    line-height: 1.7;
+    display: none;
+  }
+
+  .output.show  { display: block; }
+  .output.error { border-color: var(--red);   color: var(--red);   background: rgba(255,51,51,0.04); }
+  .output.success { border-color: var(--green); color: var(--green); background: rgba(0,255,136,0.04); }
+  .output.info  { border-color: var(--blue);  color: var(--blue);  background: rgba(0,191,255,0.04); }
+
+  /* ── LOCKOUT SCREEN ── */
+  #lockout-screen {
+    display: none;
+    text-align: center;
+    padding: 20px 0;
+  }
+
+  .lockout-icon {
+    font-size: 2.5rem;
+    display: block;
+    margin-bottom: 14px;
+    filter: drop-shadow(0 0 12px var(--red));
+  }
+
+  .lockout-title {
+    font-family: var(--head);
+    font-size: 0.8rem;
+    letter-spacing: 3px;
+    color: var(--red);
+    margin-bottom: 10px;
+  }
+
+  .lockout-timer {
+    font-size: 1.4rem;
+    color: var(--cyan);
+    letter-spacing: 4px;
+    margin: 14px 0;
+    font-family: var(--head);
+  }
+
+  .lockout-sub {
+    font-size: 0.62rem;
+    color: var(--text);
+    letter-spacing: 1px;
+    line-height: 1.7;
+  }
+
+  /* ── DIVIDER ── */
+  .divider {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 20px 0 0;
+    font-size: 0.55rem;
+    letter-spacing: 2px;
+    color: #1a4040;
+  }
+  .divider::before, .divider::after {
+    content: ''; flex: 1; height: 1px; background: var(--border);
+  }
+
+  /* ── FOOTER ── */
+  footer {
+    position: relative;
+    z-index: 1;
+    text-align: center;
+    padding: 20px;
+    font-size: 0.58rem;
+    letter-spacing: 2px;
+    color: #1a4040;
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-logo">GENESIS<span>VAULT</span></div>
+  <div class="nav-status">
+    <div class="status-dot"></div>
+    RESTRICTED ACCESS
+  </div>
+</nav>
+
+<main>
+
+  <div class="logo-block">
+    <div class="logo-main">GENESIS<span>VAULT</span></div>
+    <div class="logo-sub">// ADMIN AUTHENTICATION REQUIRED</div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">[ ARCHITECT_CORE ]</div>
+
+    <!-- attempt pips -->
+    <div class="attempt-bar">
+      <div class="attempt-pip" id="pip-1"></div>
+      <div class="attempt-pip" id="pip-2"></div>
+      <div class="attempt-pip" id="pip-3"></div>
+    </div>
+
+    <!-- login form -->
+    <div id="login-form">
+      <div class="field">
+        <label>USERNAME</label>
+        <input type="text" id="username" placeholder="Enter admin username"
+               autocomplete="off" autocorrect="off" spellcheck="false"/>
+      </div>
+
+      <div class="field">
+        <label>PASSWORD</label>
+        <input type="password" id="password" placeholder="Enter password"
+               autocomplete="off"/>
+      </div>
+
+      <button class="btn" id="login-btn" onclick="doLogin()">
+        [ ACCESS VAULT ]
+      </button>
+
+      <div class="output" id="output"></div>
+
+      <div class="divider">AUTHORIZED PERSONNEL ONLY</div>
+    </div>
+
+    <!-- lockout screen -->
+    <div id="lockout-screen">
+      <span class="lockout-icon">🔒</span>
+      <div class="lockout-title">ACCESS SUSPENDED</div>
+      <div class="lockout-sub">Too many failed attempts.<br/>Try again in:</div>
+      <div class="lockout-timer" id="countdown">10:00</div>
+      <div class="lockout-sub">
+        This device has been temporarily locked.<br/>
+        All attempts are logged.
+      </div>
+    </div>
+
+  </div>
+
+</main>
+
+<footer>GENESIS VAULT // ADMIN MODULE // v2.0 // UNAUTHORIZED ACCESS IS PROHIBITED</footer>
+
+<script>
+  const API          = 'https://genesis-vault-backend.onrender.com';
+  const MAX_ATTEMPTS = 3;
+  const LOCKOUT_MS   = 10 * 60 * 1000; // 10 minutes
+  const FAKE_DELAY   = 2000;            // 2s delay on every attempt
+
+  let attempts    = 0;
+  let locked      = false;
+  let lockTimer   = null;
+
+  // ── CHECK EXISTING TOKEN ─────────────────────────────────────────────
+  window.addEventListener('load', () => {
+    const token = localStorage.getItem('gv_admin_token');
+    if (token) {
+      // Already logged in — go straight to admin panel
+      window.location.href = 'admin.html';
+    }
+    checkLockout();
+  });
+
+  // ── LOCKOUT PERSISTENCE ──────────────────────────────────────────────
+  function checkLockout() {
+    const lockUntil = localStorage.getItem('gv_lock_until');
+    if (!lockUntil) return;
+    const remaining = parseInt(lockUntil) - Date.now();
+    if (remaining > 0) {
+      engageLockout(remaining);
+    } else {
+      clearLockout();
+    }
+  }
+
+  function engageLockout(ms) {
+    locked = true;
+    document.getElementById('login-form').style.display    = 'none';
+    document.getElementById('lockout-screen').style.display = 'block';
+    localStorage.setItem('gv_lock_until', Date.now() + ms);
+
+    let remaining = Math.ceil(ms / 1000);
+    updateCountdown(remaining);
+
+    lockTimer = setInterval(() => {
+      remaining--;
+      updateCountdown(remaining);
+      if (remaining <= 0) {
+        clearLockout();
+      }
+    }, 1000);
+  }
+
+  function clearLockout() {
+    locked   = false;
+    attempts = 0;
+    clearInterval(lockTimer);
+    localStorage.removeItem('gv_lock_until');
+    document.getElementById('login-form').style.display    = 'block';
+    document.getElementById('lockout-screen').style.display = 'none';
+    resetPips();
+  }
+
+  function updateCountdown(secs) {
+    const m = String(Math.floor(secs / 60)).padStart(2, '0');
+    const s = String(secs % 60).padStart(2, '0');
+    document.getElementById('countdown').textContent = `${m}:${s}`;
+  }
+
+  // ── ATTEMPT PIPS ─────────────────────────────────────────────────────
+  function markPip() {
+    const pip = document.getElementById(`pip-${attempts}`);
+    if (pip) pip.classList.add('used');
+  }
+
+  function resetPips() {
+    for (let i = 1; i <= 3; i++) {
+      document.getElementById(`pip-${i}`).classList.remove('used');
+    }
+  }
+
+  // ── LOGIN ─────────────────────────────────────────────────────────────
+  async function doLogin() {
+    if (locked) return;
+
+    const username = document.getElementById('username').value.trim();
+    const password = document.getElementById('password').value;
+
+    if (!username || !password) {
+      showOutput('error', 'USERNAME AND PASSWORD REQUIRED');
+      shake();
+      return;
+    }
+
+    const btn = document.getElementById('login-btn');
+    btn.textContent = '[ AUTHENTICATING... ]';
+    btn.disabled    = true;
+
+    // Fake delay — slows down manual brute force
+    await sleep(FAKE_DELAY);
+
+    try {
+      const res = await fetch(`${API}/api/admin/auth`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
+      });
+
+      const data = await res.json();
+
+      if (data.status === 'success') {
+        // Save token and admin info
+        localStorage.setItem('gv_admin_token',    data.token);
+        localStorage.setItem('gv_admin_username', data.username);
+        localStorage.setItem('gv_admin_id',       data.admin_id);
+
+        showOutput('success', `ACCESS GRANTED\n> WELCOME, ${data.username.toUpperCase()}\n> REDIRECTING...`);
+
+        // Status dot goes green
+        document.querySelector('.status-dot').style.background  = '#00ff88';
+        document.querySelector('.status-dot').style.animation   = 'none';
+        document.querySelector('.status-dot').style.boxShadow   = '0 0 8px #00ff88';
+
+        setTimeout(() => {
+          window.location.href = 'admin.html';
+        }, 1200);
+
+      } else {
+        // Failed attempt
+        attempts++;
+        markPip();
+        shake();
+
+        if (attempts >= MAX_ATTEMPTS) {
+          showOutput('error', `ACCESS DENIED\n> MAX ATTEMPTS REACHED\n> DEVICE LOCKED FOR 10 MINUTES`);
+          setTimeout(() => engageLockout(LOCKOUT_MS), 800);
+        } else {
+          const left = MAX_ATTEMPTS - attempts;
+          showOutput('error', `AUTH_FAILED\n> INVALID CREDENTIALS\n> ${left} ATTEMPT${left !== 1 ? 'S' : ''} REMAINING`);
+          btn.textContent = '[ ACCESS VAULT ]';
+          btn.disabled    = false;
+        }
+      }
+
+    } catch (err) {
+      showOutput('error', 'CATCH ERROR: Failed to reach server\n> Check connection and try again');
+      btn.textContent = '[ ACCESS VAULT ]';
+      btn.disabled    = false;
+    }
+  }
+
+  // ── HELPERS ───────────────────────────────────────────────────────────
+  function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
+  function shake() {
+    ['username', 'password'].forEach(id => {
+      const el = document.getElementById(id);
+      el.classList.remove('shake');
+      void el.offsetWidth; // reflow
+      el.classList.add('shake');
+    });
+  }
+
+  function showOutput(type, msg) {
+    const el = document.getElementById('output');
+    el.className = `output show ${type}`;
+    el.innerHTML = msg.split('\n').map((line, i) =>
+      i === 0
+        ? `<span style="margin-right:6px;opacity:0.6">//</span> ${line}`
+        : `<span style="margin-right:6px;opacity:0.3">&nbsp;&nbsp;</span>${line}`
+    ).join('<br/>');
+  }
+
+  // ── ENTER KEY ─────────────────────────────────────────────────────────
+  ['username', 'password'].forEach(id => {
+    document.getElementById(id).addEventListener('keydown', e => {
+      if (e.key === 'Enter') doLogin();
+    });
+  });
+</script>
+</body>
+</html>
