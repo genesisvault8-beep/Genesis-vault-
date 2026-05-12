@@ -1719,21 +1719,24 @@ async function requestAccess() {
         return;
     }
 
-    // This alert confirms they've read the Constitution (Article 0)
     const termsAgreed = confirm("By proceeding, you agree to the Genesis Vault Constitution (Article 0: The Shield). Continue?");
-    
     if (!termsAgreed) return;
 
     try {
-        // Calls your backend engine at line 1674
-        const data = await callBackend('/api/auth/request-access', { email: email });
-        
+        const response = await fetch('https://genesis-vault-backend.onrender.com/api/auth/request-access', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: email })
+        });
+        const data = await response.json();
         if (data.status === "success") {
-            emailInput.value = ""; 
+            emailInput.value = "";
             alert("TRANSMISSION SUCCESSFUL. THE ARCHITECT HAS BEEN NOTIFIED.");
+        } else {
+            alert("ERROR: " + (data.message || "Try again."));
         }
     } catch (err) {
-        console.error("Vault Gateway Error:", err);
+        alert("CONNECTION FAILED: " + err.message);
     }
   }
   
