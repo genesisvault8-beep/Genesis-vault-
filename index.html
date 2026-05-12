@@ -1868,10 +1868,10 @@ async function approveHunter(email) {
         body: JSON.stringify({ email: email, admin_key: key })
     });
     const result = await response.json();
-    if (result.status === "success") {
-        alert("INVITE DISPATCHED");
-        fetchRequests();
-    } else {
+   if (result.status === "success") {
+    alert("APPROVED. CODE: " + result.code);
+    fetchRequests();
+} else {
         alert("ERROR: CHECK BACKEND");
     }
   }
