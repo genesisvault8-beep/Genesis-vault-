@@ -135,9 +135,26 @@
     margin-bottom: 12px;
     border-bottom: 1px solid var(--border);
     padding-bottom: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
   }
 
-  /* DASHBOARD STATS */
+  .refresh-btn {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.6rem;
+    padding: 2px 8px;
+    cursor: pointer;
+    letter-spacing: 1px;
+    transition: all 0.2s;
+  }
+
+  .refresh-btn:hover { border-color: var(--accent3); color: var(--accent3); }
+
+  /* STATS */
   .stats-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -154,8 +171,10 @@
   }
 
   .stat-card.green { border-left-color: var(--accent); }
-  .stat-card.blue { border-left-color: var(--accent2); }
-  .stat-card.yellow { border-left-color: var(--accent4); }
+  .stat-card.blue  { border-left-color: var(--accent2); }
+  .stat-card.yellow{ border-left-color: var(--accent4); }
+  .stat-card.red   { border-left-color: var(--accent3); }
+  .stat-card.wide  { grid-column: 1 / -1; }
 
   .stat-value {
     font-size: 1.8rem;
@@ -164,8 +183,9 @@
     color: var(--accent);
   }
 
-  .stat-card.red .stat-value { color: var(--accent3); }
+  .stat-card.red    .stat-value { color: var(--accent3); }
   .stat-card.yellow .stat-value { color: var(--accent4); }
+  .stat-card.blue   .stat-value { color: var(--accent2); }
 
   .stat-label {
     font-size: 0.65rem;
@@ -228,6 +248,7 @@
   }
 
   .btn-approve:hover { background: white; }
+  .btn-approve:disabled { opacity: 0.4; cursor: not-allowed; }
 
   .btn-reject {
     background: none;
@@ -243,6 +264,7 @@
   }
 
   .btn-reject:hover { background: var(--accent3); color: white; }
+  .btn-reject:disabled { opacity: 0.4; cursor: not-allowed; }
 
   .btn-action {
     background: none;
@@ -283,11 +305,35 @@
     margin-bottom: 8px;
   }
 
-  .badge-safe { border: 1px solid var(--accent); color: var(--accent); }
+  .badge-safe    { border: 1px solid var(--accent);  color: var(--accent); }
   .badge-flagged { border: 1px solid var(--accent3); color: var(--accent3); }
   .badge-pending { border: 1px solid var(--accent4); color: var(--accent4); }
+  .badge-admin   { border: 1px solid var(--accent2); color: var(--accent2); }
 
-  /* PROMOTE MODAL */
+  /* INPUTS */
+  input[type="text"],
+  input[type="number"],
+  textarea,
+  select {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 10px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.85rem;
+    outline: none;
+    margin-bottom: 10px;
+    transition: border-color 0.2s;
+  }
+
+  input:focus, textarea:focus, select:focus {
+    border-color: var(--accent3);
+  }
+
+  textarea { resize: vertical; min-height: 80px; }
+
+  /* MODAL */
   .modal {
     display: none;
     position: fixed;
@@ -315,18 +361,6 @@
     letter-spacing: 3px;
     font-size: 0.9rem;
     margin-bottom: 20px;
-  }
-
-  select {
-    width: 100%;
-    background: var(--bg);
-    border: 1px solid var(--border);
-    color: var(--text);
-    padding: 12px 16px;
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 0.85rem;
-    outline: none;
-    margin-bottom: 16px;
   }
 
   .modal-actions { display: flex; gap: 10px; }
@@ -361,6 +395,57 @@
 
   .btn-cancel:hover { border-color: var(--accent3); color: var(--accent3); }
 
+  /* VOTE CARD */
+  .vote-card {
+    background: var(--bg3);
+    border: 1px solid var(--accent4);
+    padding: 16px;
+    margin-bottom: 10px;
+    animation: fadeIn 0.4s ease;
+  }
+
+  .vote-card h4 {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.85rem;
+    color: var(--accent4);
+    margin-bottom: 8px;
+    letter-spacing: 2px;
+  }
+
+  .vote-bar {
+    display: flex;
+    gap: 4px;
+    margin: 10px 0;
+  }
+
+  .vote-yes, .vote-no {
+    height: 6px;
+    border-radius: 2px;
+    transition: width 0.4s;
+  }
+
+  .vote-yes { background: var(--accent); }
+  .vote-no  { background: var(--accent3); }
+
+  .vote-counts {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--text-dim);
+    margin-bottom: 10px;
+  }
+
+  .vote-counts .yes { color: var(--accent); }
+  .vote-counts .no  { color: var(--accent3); }
+
+  /* PAYOUT */
+  .payout-amount {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 1.2rem;
+    color: var(--accent);
+    margin-bottom: 4px;
+  }
+
+  /* UTILS */
   .loading {
     text-align: center;
     padding: 40px;
@@ -408,25 +493,38 @@
     margin-right: 6px;
   }
 
-  @keyframes spin { to { transform: rotate(360deg); } }
-  @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(8px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
+  @keyframes spin    { to { transform: rotate(360deg); } }
+  @keyframes fadeIn  { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 
-  .ai-scan {
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 0.7rem;
-    padding: 4px 8px;
+  /* ADMIN PANEL */
+  .admin-row {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    padding: 14px 16px;
     margin-bottom: 8px;
-    display: inline-block;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    animation: fadeIn 0.3s ease;
   }
 
-  .payout-amount {
+  .admin-row .admin-name {
     font-family: 'Share Tech Mono', monospace;
-    font-size: 1.2rem;
-    color: var(--accent);
-    margin-bottom: 4px;
+    font-size: 0.85rem;
+    color: var(--accent2);
+    letter-spacing: 1px;
+  }
+
+  .admin-row .admin-meta {
+    font-size: 0.65rem;
+    color: var(--text-dim);
+    margin-top: 2px;
+  }
+
+  .divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 20px 0;
   }
 </style>
 </head>
@@ -442,80 +540,118 @@
 
 <main>
 
-  <!-- DASHBOARD -->
+  <!-- ══ DASHBOARD ══ -->
   <div class="page active" id="page-dashboard">
-    <p class="section-title">// System Overview</p>
+
+    <div class="section-title">
+      // System Overview
+      <button class="refresh-btn" onclick="loadDashboard()">↻ REFRESH</button>
+    </div>
     <div class="stats-grid" id="stats-grid">
       <div class="loading" style="grid-column:1/-1"><span class="spinner"></span>Loading...</div>
     </div>
+
+    <hr class="divider">
+
+    <div class="section-title">// Admin Panel
+      <button class="refresh-btn" onclick="loadAdmins()">↻ REFRESH</button>
+    </div>
+    <div id="admins-container">
+      <div class="loading"><span class="spinner"></span>Loading...</div>
+    </div>
+
+    <div id="vote-section" style="margin-top:20px;">
+      <div class="section-title">// Active Revoke Motions</div>
+      <div id="motions-container">
+        <div class="loading"><span class="spinner"></span>Loading...</div>
+      </div>
+    </div>
+
   </div>
 
-  <!-- PENDING TOOLS -->
+  <!-- ══ TOOLS ══ -->
   <div class="page" id="page-tools">
-    <p class="section-title">// Pending Tool Reviews</p>
+    <div class="section-title">
+      // Pending Tool Reviews
+      <button class="refresh-btn" onclick="loadPendingTools()">↻ REFRESH</button>
+    </div>
     <div id="tools-container">
       <div class="loading"><span class="spinner"></span>Loading...</div>
     </div>
   </div>
 
-  <!-- PAYMENTS -->
+  <!-- ══ PAYMENTS ══ -->
   <div class="page" id="page-payments">
-    <p class="section-title">// Pending Payments</p>
+    <div class="section-title">
+      // Pending Payments
+      <button class="refresh-btn" onclick="loadPayments()">↻ REFRESH</button>
+    </div>
     <div id="payments-container">
       <div class="loading"><span class="spinner"></span>Loading...</div>
     </div>
 
-    <p class="section-title" style="margin-top:20px;">// Payout Requests</p>
+    <hr class="divider">
+
+    <div class="section-title">// Payout Requests</div>
     <div id="payouts-container">
       <div class="loading"><span class="spinner"></span>Loading...</div>
     </div>
   </div>
 
-  <!-- USERS -->
+  <!-- ══ USERS ══ -->
   <div class="page" id="page-users">
-    <p class="section-title">// Flagged Posts</p>
+    <div class="section-title">
+      // Flagged Posts
+      <button class="refresh-btn" onclick="loadUsers()">↻ REFRESH</button>
+    </div>
     <div id="posts-container">
       <div class="loading"><span class="spinner"></span>Loading...</div>
     </div>
 
-    <p class="section-title" style="margin-top:20px;">// Member Management</p>
+    <hr class="divider">
+
+    <div class="section-title">// Member Management</div>
     <div id="members-container">
       <div class="loading"><span class="spinner"></span>Loading...</div>
     </div>
   </div>
-</div>
-  <!-- COURSES PAGE -->
-<div class="page" id="page-courses">
-  <p class="section-title">// Post New Course</p>
-  <div class="item-card">
-    <input type="text" id="c-title" placeholder="Course title..." style="width:100%;background:#020608;border:1px solid #0f2a35;color:#c8e6f0;padding:10px;font-family:'Share Tech Mono',monospace;font-size:0.85rem;outline:none;margin-bottom:10px;">
-    <textarea id="c-desc" placeholder="Short description..." style="width:100%;background:#020608;border:1px solid #0f2a35;color:#c8e6f0;padding:10px;font-family:'Share Tech Mono',monospace;font-size:0.8rem;outline:none;resize:vertical;min-height:80px;margin-bottom:10px;"></textarea>
-    <textarea id="c-content" placeholder="Full course content (markdown supported)..." style="width:100%;background:#020608;border:1px solid #0f2a35;color:#c8e6f0;padding:10px;font-family:'Share Tech Mono',monospace;font-size:0.8rem;outline:none;resize:vertical;min-height:150px;margin-bottom:10px;"></textarea>
-    <select id="c-category" style="width:100%;background:#020608;border:1px solid #0f2a35;color:#c8e6f0;padding:10px;font-family:'Share Tech Mono',monospace;margin-bottom:10px;outline:none;">
-      <option value="beginner">Beginner</option>
-      <option value="recon">Recon</option>
-      <option value="web">Web Hacking</option>
-      <option value="tools">Tools</option>
-      <option value="bugbounty">Bug Bounty</option>
-    </select>
-    <select id="c-rank" style="width:100%;background:#020608;border:1px solid #0f2a35;color:#c8e6f0;padding:10px;font-family:'Share Tech Mono',monospace;margin-bottom:10px;outline:none;">
-      <option value="Ghost">Ghost (Free)</option>
-      <option value="Scout">Scout+</option>
-      <option value="Hunter">Hunter+</option>
-    </select>
-    <input type="number" id="c-price" placeholder="Price in USDT (0 = free)..." style="width:100%;background:#020608;border:1px solid #0f2a35;color:#c8e6f0;padding:10px;font-family:'Share Tech Mono',monospace;font-size:0.85rem;outline:none;margin-bottom:10px;">
-    <button class="btn-approve" onclick="postCourse()" style="width:100%;">[ PUBLISH COURSE ]</button>
-  </div>
 
-  <p class="section-title" style="margin-top:20px;">// Published Courses</p>
-  <div id="courses-container">
-    <div class="loading"><span class="spinner"></span>Loading...</div>
+  <!-- ══ COURSES ══ -->
+  <div class="page" id="page-courses">
+    <div class="section-title">// Post New Course</div>
+    <div class="item-card">
+      <input type="text" id="c-title" placeholder="Course title...">
+      <textarea id="c-desc" placeholder="Short description..." style="min-height:70px;"></textarea>
+      <textarea id="c-content" placeholder="Full course content (markdown supported)..." style="min-height:150px;"></textarea>
+      <select id="c-category">
+        <option value="Beginner">Beginner</option>
+        <option value="Recon">Recon</option>
+        <option value="Web">Web Hacking</option>
+        <option value="Tools">Tools</option>
+        <option value="BugBounty">Bug Bounty</option>
+      </select>
+      <select id="c-rank">
+        <option value="Ghost">Ghost (All members)</option>
+        <option value="Operator">Operator+</option>
+        <option value="Phantom">Phantom+</option>
+        <option value="Spectre">Spectre only</option>
+      </select>
+      <input type="number" id="c-price" placeholder="Price in USDT (0 = free)" min="0" step="0.01">
+      <button class="btn-approve" onclick="postCourse()" style="width:100%;">[ PUBLISH COURSE ]</button>
+    </div>
+
+    <div class="section-title" style="margin-top:20px;">
+      // Published Courses
+      <button class="refresh-btn" onclick="loadCourses()">↻ REFRESH</button>
+    </div>
+    <div id="courses-container">
+      <div class="loading"><span class="spinner"></span>Loading...</div>
+    </div>
   </div>
-</div>
 
 </main>
 
-<!-- BOTTOM NAV -->
+<!-- ══ BOTTOM NAV ══ -->
 <div class="bottom-nav">
   <div class="nav-item active" onclick="showPage('dashboard', this)">
     <span class="nav-icon">◈</span>
@@ -534,24 +670,21 @@
     <span class="nav-label">Users</span>
   </div>
   <div class="nav-item" onclick="showPage('courses', this)">
-  <span class="nav-icon">📚</span>
-  <span class="nav-label">Courses</span>
-</div>
+    <span class="nav-icon">▣</span>
+    <span class="nav-label">Courses</span>
+  </div>
 </div>
 
-<!-- PROMOTE MODAL -->
+<!-- ══ PROMOTE MODAL ══ -->
 <div class="modal" id="promote-modal">
   <div class="modal-box">
     <h3>// PROMOTE MEMBER</h3>
     <p style="color:var(--text-dim);font-size:0.8rem;margin-bottom:16px;font-family:'Share Tech Mono',monospace;" id="promote-username-label"></p>
     <select id="promote-rank">
       <option value="Ghost">Ghost</option>
-      <option value="Scout">Scout</option>
-      <option value="Hunter">Hunter</option>
-      <option value="Predator">Predator</option>
+      <option value="Operator">Operator</option>
       <option value="Phantom">Phantom</option>
-      <option value="Architect">Architect</option>
-      <option value="Guardian">Guardian</option>
+      <option value="Spectre">Spectre</option>
     </select>
     <div class="modal-actions">
       <button class="btn-full" onclick="confirmPromote()">[ PROMOTE ]</button>
@@ -560,32 +693,55 @@
   </div>
 </div>
 
-<!-- TOAST -->
+<!-- ══ REVOKE MODAL ══ -->
+<div class="modal" id="revoke-modal">
+  <div class="modal-box">
+    <h3>// PROPOSE REVOKE</h3>
+    <p style="color:var(--text-dim);font-size:0.8rem;margin-bottom:16px;font-family:'Share Tech Mono',monospace;" id="revoke-target-label"></p>
+    <p style="color:var(--accent4);font-size:0.75rem;margin-bottom:20px;font-family:'Share Tech Mono',monospace;line-height:1.6;">
+      This will open a vote. 2/3 admins must vote YES to permanently remove this admin. Motion expires in 48 hours.
+    </p>
+    <div class="modal-actions">
+      <button class="btn-full" style="background:var(--accent3);" onclick="confirmRevoke()">[ PROPOSE ]</button>
+      <button class="btn-cancel" onclick="closeRevokeModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ TOAST ══ -->
 <div class="toast" id="toast"></div>
 
 <script>
   const API = 'https://genesis-vault-backend.onrender.com/api';
-  let token = localStorage.getItem('gv_token');
-  let currentUser = { 
-  rank: localStorage.getItem('gv_rank'), 
-  email: localStorage.getItem('gv_email'),
-  is_admin: true
-};
+  let token = localStorage.getItem('gv_admin_token');
+  let adminId = localStorage.getItem('gv_admin_id');
   let promoteUserId = null;
+  let revokeTargetId = null;
+  let revokeTargetName = '';
 
-  if (!token) window.location.href = 'login.html';
-  if (!currentUser.is_admin) {
-    window.location.href = 'dashboard.html';
-  }
+  // ── Auth guard ──────────────────────────────────────────────────────
+  if (!token) window.location.href = 'admin-login.html';
 
   function authHeaders() {
     return { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` };
   }
 
+  // ── 401 handler — redirects on expired token ────────────────────────
+  async function apiFetch(url, options = {}) {
+    const res = await fetch(url, { ...options, headers: authHeaders() });
+    if (res.status === 401) {
+      localStorage.removeItem('gv_admin_token');
+      localStorage.removeItem('gv_admin_id');
+      window.location.href = 'admin-login.html';
+      return null;
+    }
+    return res;
+  }
+
   function logout() {
-    localStorage.removeItem('gv_token');
-    localStorage.removeItem('gv_user');
-    window.location.href = 'login.html';
+    localStorage.removeItem('gv_admin_token');
+    localStorage.removeItem('gv_admin_id');
+    window.location.href = 'admin-login.html';
   }
 
   function showPage(name, el) {
@@ -593,87 +749,253 @@
     document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
     document.getElementById(`page-${name}`).classList.add('active');
     el.classList.add('active');
-
-    if (name === 'dashboard') loadDashboard();
-    if (name === 'tools') loadPendingTools();
-    if (name === 'payments') loadPayments();
-    if (name === 'users') loadUsers();
-    if (name === 'courses') loadCourses();
+    if (name === 'dashboard') { loadDashboard(); loadAdmins(); loadMotions(); }
+    if (name === 'tools')     loadPendingTools();
+    if (name === 'payments')  loadPayments();
+    if (name === 'users')     loadUsers();
+    if (name === 'courses')   { loadCourses(); }
   }
 
   function toast(msg, color = 'var(--accent)') {
     const el = document.getElementById('toast');
     el.textContent = msg;
     el.style.background = color;
-    el.style.color = color === 'var(--accent)' ? 'var(--bg)' : 'white';
+    el.style.color = (color === 'var(--accent)') ? 'var(--bg)' : 'white';
     el.classList.add('show');
-    setTimeout(() => el.classList.remove('show'), 2500);
+    setTimeout(() => el.classList.remove('show'), 2800);
   }
 
-  // ─── DASHBOARD ───────────────────────────────
+  function timeAgo(dateStr) {
+    if (!dateStr) return 'unknown';
+    const diff = Date.now() - new Date(dateStr).getTime();
+    const mins = Math.floor(diff / 60000);
+    if (mins < 1)  return 'just now';
+    if (mins < 60) return `${mins}m ago`;
+    const hrs = Math.floor(mins / 60);
+    if (hrs < 24)  return `${hrs}h ago`;
+    return `${Math.floor(hrs / 24)}d ago`;
+  }
+
+  function timeLeft(dateStr) {
+    if (!dateStr) return 'expired';
+    const diff = new Date(dateStr).getTime() - Date.now();
+    if (diff <= 0) return 'expired';
+    const hrs = Math.floor(diff / 3600000);
+    const mins = Math.floor((diff % 3600000) / 60000);
+    return `${hrs}h ${mins}m left`;
+  }
+
+  // ══════════════════════════════════════════════════════════════════
+  // DASHBOARD
+  // ══════════════════════════════════════════════════════════════════
+
   async function loadDashboard() {
+    const grid = document.getElementById('stats-grid');
+    grid.innerHTML = '<div class="loading" style="grid-column:1/-1"><span class="spinner"></span>Loading...</div>';
     try {
-      const res = await fetch(`${API}/admin/dashboard`, { headers: authHeaders() });
-      const data = await res.json();
-      document.getElementById('stats-grid').innerHTML = `
+      const res = await apiFetch(`${API}/admin/dashboard`);
+      if (!res) return;
+      const d = await res.json();
+      grid.innerHTML = `
         <div class="stat-card green">
-          <div class="stat-value">${data.total_users}</div>
+          <div class="stat-value">${d.total_members ?? 0}</div>
           <div class="stat-label">Total Members</div>
         </div>
         <div class="stat-card blue">
-          <div class="stat-value">${data.total_tools}</div>
-          <div class="stat-label">Live Tools</div>
+          <div class="stat-value">${d.total_admins ?? 0}/3</div>
+          <div class="stat-label">Admins Active</div>
         </div>
         <div class="stat-card yellow">
-          <div class="stat-value">${data.pending_tools}</div>
-          <div class="stat-label">Pending Review</div>
+          <div class="stat-value">${d.pending_requests ?? 0}</div>
+          <div class="stat-label">Access Requests</div>
         </div>
         <div class="stat-card red">
-          <div class="stat-value">${data.flagged_posts}</div>
-          <div class="stat-label">Flagged Posts</div>
+          <div class="stat-value">${d.active_votes ?? 0}</div>
+          <div class="stat-label">Active Votes</div>
         </div>
-        <div class="stat-card green" style="grid-column:1/-1">
-          <div class="stat-value">$${parseFloat(data.total_revenue || 0).toFixed(2)}</div>
-          <div class="stat-label">Platform Revenue (USDT)</div>
+        <div class="stat-card yellow wide">
+          <div class="stat-value">${d.pending_payments ?? 0}</div>
+          <div class="stat-label">Pending Payments</div>
         </div>
-        <div class="stat-card yellow" style="grid-column:1/-1">
-          <div class="stat-value">${data.pending_payouts}</div>
-          <div class="stat-label">Pending Payout Requests</div>
+        <div class="stat-card green wide">
+          <div class="stat-value">${d.pending_payouts ?? 0}</div>
+          <div class="stat-label">Pending Payouts</div>
         </div>
       `;
     } catch(e) {
-      document.getElementById('stats-grid').innerHTML = '<div class="empty">// Failed to load stats.</div>';
+      grid.innerHTML = '<div class="empty">// Failed to load stats.</div>';
     }
   }
 
-  // ─── TOOLS ───────────────────────────────────
+  // ══════════════════════════════════════════════════════════════════
+  // ADMINS + VOTE-REVOKE
+  // ══════════════════════════════════════════════════════════════════
+
+  async function loadAdmins() {
+    const c = document.getElementById('admins-container');
+    c.innerHTML = '<div class="loading"><span class="spinner"></span>Loading...</div>';
+    try {
+      const res = await apiFetch(`${API}/admin/admins`);
+      if (!res) return;
+      const d = await res.json();
+      const admins = d.admins || [];
+      if (!admins.length) {
+        c.innerHTML = '<div class="empty">// No admins found.</div>';
+        return;
+      }
+      c.innerHTML = admins.map(a => {
+        const isSelf = String(a.id) === String(adminId);
+        return `
+          <div class="admin-row">
+            <div>
+              <div class="admin-name">${a.username} ${isSelf ? '<span style="color:var(--accent4);font-size:0.6rem;">[YOU]</span>' : ''}</div>
+              <div class="admin-meta">joined ${timeAgo(a.created_at)}</div>
+            </div>
+            ${!isSelf ? `<button class="btn-reject" style="font-size:0.65rem;padding:4px 10px;" onclick="openRevokeModal('${a.id}','${a.username}')">[ REVOKE ]</button>` : '<span class="badge badge-admin">SELF</span>'}
+          </div>
+        `;
+      }).join('');
+    } catch(e) {
+      c.innerHTML = '<div class="empty">// Failed to load admins.</div>';
+    }
+  }
+
+  async function loadMotions() {
+    const c = document.getElementById('motions-container');
+    c.innerHTML = '<div class="loading"><span class="spinner"></span>Loading...</div>';
+    try {
+      const res = await apiFetch(`${API}/admin/vote-revoke`, {
+        method: 'POST',
+        body: JSON.stringify({ action: 'status' })
+      });
+      if (!res) return;
+      const d = await res.json();
+      const motions = d.motions || [];
+      if (!motions.length) {
+        c.innerHTML = '<div class="empty">// No active motions. ✓</div>';
+        return;
+      }
+      c.innerHTML = motions.map(m => {
+        const totalVotes = m.votes_yes + m.votes_no;
+        const yesWidth = totalVotes > 0 ? (m.votes_yes / 2) * 100 : 0;
+        const noWidth  = totalVotes > 0 ? (m.votes_no  / 2) * 100 : 0;
+        const voters = m.voters || [];
+        const alreadyVoted = voters.includes(String(adminId));
+        const isSelf = String(m.target_admin_id) === String(adminId);
+        return `
+          <div class="vote-card" id="motion-${m.id}">
+            <h4>// MOTION TO REVOKE</h4>
+            <div class="item-meta">Target: <span>${m.target_admin_id}</span> · ${timeLeft(m.expires_at)}</div>
+            <div class="vote-bar">
+              <div class="vote-yes" style="width:${yesWidth}%;flex:${m.votes_yes}"></div>
+              <div class="vote-no"  style="width:${noWidth}%;flex:${m.votes_no}"></div>
+            </div>
+            <div class="vote-counts">
+              <span class="yes">YES: ${m.votes_yes}</span> &nbsp;·&nbsp; <span class="no">NO: ${m.votes_no}</span> &nbsp;·&nbsp; need 2 to pass
+            </div>
+            ${alreadyVoted ? '<div class="badge badge-pending">VOTED</div>' : ''}
+            ${isSelf ? '<div class="badge badge-flagged">CANNOT VOTE ON OWN</div>' : ''}
+            ${(!alreadyVoted && !isSelf) ? `
+              <div class="actions">
+                <button class="btn-approve" onclick="castVote(${m.id}, 'yes')">[ VOTE YES ]</button>
+                <button class="btn-reject"  onclick="castVote(${m.id}, 'no')">[ VOTE NO ]</button>
+              </div>
+            ` : ''}
+          </div>
+        `;
+      }).join('');
+    } catch(e) {
+      c.innerHTML = '<div class="empty">// Failed to load motions.</div>';
+    }
+  }
+
+  function openRevokeModal(id, username) {
+    revokeTargetId   = id;
+    revokeTargetName = username;
+    document.getElementById('revoke-target-label').textContent = `// Target: ${username}`;
+    document.getElementById('revoke-modal').classList.add('active');
+  }
+
+  function closeRevokeModal() {
+    document.getElementById('revoke-modal').classList.remove('active');
+    revokeTargetId = null;
+  }
+
+  async function confirmRevoke() {
+    if (!revokeTargetId) return;
+    closeRevokeModal();
+    try {
+      const res = await apiFetch(`${API}/admin/vote-revoke`, {
+        method: 'POST',
+        body: JSON.stringify({ action: 'propose', target_admin_id: revokeTargetId })
+      });
+      if (!res) return;
+      const d = await res.json();
+      if (d.status === 'success') {
+        toast(`// Motion proposed against ${revokeTargetName}. Your YES vote counted.`);
+        loadMotions();
+        loadDashboard();
+      } else {
+        toast(`// ${d.message}`, 'var(--accent3)');
+      }
+    } catch(e) {
+      toast('// Failed to propose motion.', 'var(--accent3)');
+    }
+  }
+
+  async function castVote(motionId, vote) {
+    try {
+      const res = await apiFetch(`${API}/admin/vote-revoke`, {
+        method: 'POST',
+        body: JSON.stringify({ action: 'vote', motion_id: motionId, vote })
+      });
+      if (!res) return;
+      const d = await res.json();
+      if (d.status === 'success') {
+        if (d.outcome === 'passed') {
+          toast('// MOTION PASSED — Admin removed.', 'var(--accent3)');
+        } else if (d.outcome === 'rejected') {
+          toast('// Motion rejected — Admin keeps access.');
+        } else {
+          toast(`// Vote cast. YES: ${d.votes_yes} NO: ${d.votes_no}`);
+        }
+        loadMotions();
+        loadAdmins();
+        loadDashboard();
+      } else {
+        toast(`// ${d.message}`, 'var(--accent3)');
+      }
+    } catch(e) {
+      toast('// Failed to cast vote.', 'var(--accent3)');
+    }
+  }
+
+  // ══════════════════════════════════════════════════════════════════
+  // TOOLS
+  // ══════════════════════════════════════════════════════════════════
+
   async function loadPendingTools() {
     const c = document.getElementById('tools-container');
     c.innerHTML = '<div class="loading"><span class="spinner"></span>Loading...</div>';
     try {
-      const res = await fetch(`${API}/admin/pending-tools`, { headers: authHeaders() });
-      const data = await res.json();
-      if (!data.tools || data.tools.length === 0) {
+      const res = await apiFetch(`${API}/admin/pending-tools`);
+      if (!res) return;
+      const d = await res.json();
+      if (!d.tools || !d.tools.length) {
         c.innerHTML = '<div class="empty">// No tools pending review. ✓</div>';
         return;
       }
-      c.innerHTML = data.tools.map(t => `
-        <div class="item-card" id="tool-card-${t.id}">
-          <div class="item-meta">
-            <span>${t.seller_name}</span> · submitted ${timeAgo(t.created_at)}
-            ${t.is_ai_powered ? ' · <span>AI POWERED</span>' : ''}
-          </div>
+      c.innerHTML = d.tools.map(t => `
+        <div class="item-card" id="tool-${t.id}">
+          <div class="item-meta">By: <span>${t.seller_name || 'Unknown'}</span> · ${timeAgo(t.created_at)}</div>
           <h4>${t.title}</h4>
-          <p>${t.description.substring(0, 120)}...</p>
-          <div class="badge ${t.ai_scan_result === 'SAFE' ? 'badge-safe' : t.ai_scan_result === 'FLAGGED' ? 'badge-flagged' : 'badge-pending'}">
-            AI SCAN: ${t.ai_scan_result || 'NOT SCANNED'}
-          </div>
-          <p style="font-family:'Share Tech Mono',monospace;font-size:0.75rem;color:var(--accent2);">
-            Price: ${t.price === 0 ? 'FREE' : '$' + t.price + ' USDT'}
+          <p>${(t.description || '').substring(0, 140)}...</p>
+          <p style="font-family:'Share Tech Mono',monospace;font-size:0.75rem;color:var(--accent2);margin-bottom:10px;">
+            Price: ${!t.price || t.price === 0 ? 'FREE' : '$' + t.price + ' USDT'}
           </p>
-          <div class="actions" style="margin-top:12px;">
-            <button class="btn-approve" onclick="approveTool(${t.id})">[ APPROVE ]</button>
-            <button class="btn-reject" onclick="rejectTool(${t.id})">[ REJECT ]</button>
+          <div class="actions">
+            <button class="btn-approve" onclick="approveTool(${t.id}, this)">[ APPROVE ]</button>
+            <button class="btn-reject"  onclick="rejectTool(${t.id}, this)">[ REJECT ]</button>
           </div>
         </div>
       `).join('');
@@ -682,57 +1004,78 @@
     }
   }
 
-  async function approveTool(id) {
+  async function approveTool(id, btn) {
+    btn.disabled = true;
+    btn.textContent = '...';
     try {
-      const res = await fetch(`${API}/admin/tools/${id}/approve`, { method: 'POST', headers: authHeaders() });
+      const res = await apiFetch(`${API}/admin/tools/${id}/approve`, { method: 'POST' });
+      if (!res) return;
       if (res.ok) {
-        document.getElementById(`tool-card-${id}`).remove();
+        document.getElementById(`tool-${id}`).remove();
         toast('// Tool approved and live!');
         loadDashboard();
+      } else {
+        toast('// Approval failed.', 'var(--accent3)');
+        btn.disabled = false;
+        btn.textContent = '[ APPROVE ]';
       }
-    } catch(e) {}
+    } catch(e) {
+      toast('// Network error.', 'var(--accent3)');
+      btn.disabled = false;
+      btn.textContent = '[ APPROVE ]';
+    }
   }
 
-  async function rejectTool(id) {
-    const reason = prompt('Rejection reason (optional):') || 'Does not meet guidelines';
+  async function rejectTool(id, btn) {
+    btn.disabled = true;
+    btn.textContent = '...';
     try {
-      const res = await fetch(`${API}/admin/tools/${id}/reject`, {
-        method: 'POST', headers: authHeaders(),
-        body: JSON.stringify({ reason })
-      });
+      const res = await apiFetch(`${API}/admin/tools/${id}/reject`, { method: 'POST' });
+      if (!res) return;
       if (res.ok) {
-        document.getElementById(`tool-card-${id}`).remove();
+        document.getElementById(`tool-${id}`).remove();
         toast('// Tool rejected.', 'var(--accent3)');
+      } else {
+        toast('// Rejection failed.', 'var(--accent3)');
+        btn.disabled = false;
+        btn.textContent = '[ REJECT ]';
       }
-    } catch(e) {}
+    } catch(e) {
+      toast('// Network error.', 'var(--accent3)');
+      btn.disabled = false;
+      btn.textContent = '[ REJECT ]';
+    }
   }
 
-  // ─── PAYMENTS ────────────────────────────────
-  async function loadPayments() {
-    const pc = document.getElementById('payments-container');
-    const pyc = document.getElementById('payouts-container');
+  // ══════════════════════════════════════════════════════════════════
+  // PAYMENTS
+  // ══════════════════════════════════════════════════════════════════
 
-    pc.innerHTML = '<div class="loading"><span class="spinner"></span>Loading...</div>';
+  async function loadPayments() {
+    const pc  = document.getElementById('payments-container');
+    const pyc = document.getElementById('payouts-container');
+    pc.innerHTML  = '<div class="loading"><span class="spinner"></span>Loading...</div>';
     pyc.innerHTML = '<div class="loading"><span class="spinner"></span>Loading...</div>';
 
-    // Pending payments (awaiting confirmation)
+    // Pending payments
     try {
-      const res = await fetch(`${API}/admin/pending-payments`, { headers: authHeaders() });
-      const data = await res.json();
-      if (!data.purchases || data.purchases.length === 0) {
+      const res = await apiFetch(`${API}/admin/pending-payments`);
+      if (!res) return;
+      const d = await res.json();
+      if (!d.purchases || !d.purchases.length) {
         pc.innerHTML = '<div class="empty">// No payments awaiting confirmation. ✓</div>';
       } else {
-        pc.innerHTML = data.purchases.map(p => `
+        pc.innerHTML = d.purchases.map(p => `
           <div class="item-card" id="payment-${p.id}">
             <div class="item-meta">Buyer: <span>${p.buyer_name}</span> · ${timeAgo(p.purchased_at)}</div>
-            <h4>${p.title}</h4>
-            <p class="payout-amount">$${p.amount_paid} USDT</p>
-            <p style="font-family:'Share Tech Mono',monospace;font-size:0.7rem;color:var(--accent4);">
+            <h4>${p.title || 'Tool Purchase'}</h4>
+            <p class="payout-amount">$${parseFloat(p.amount_paid || 0).toFixed(2)} USDT</p>
+            <p style="font-family:'Share Tech Mono',monospace;font-size:0.7rem;color:var(--accent4);margin-bottom:10px;word-break:break-all;">
               TX: ${p.binance_tx_id || 'Not provided'}
             </p>
-            <div class="actions" style="margin-top:10px;">
-              <button class="btn-approve" onclick="confirmPayment(${p.id})">[ CONFIRM PAYMENT ]</button>
-              <button class="btn-reject" onclick="rejectPayment(${p.id})">[ REJECT ]</button>
+            <div class="actions">
+              <button class="btn-approve" onclick="confirmPayment(${p.id}, this)">[ CONFIRM ]</button>
+              <button class="btn-reject"  onclick="rejectPayment(${p.id}, this)">[ REJECT ]</button>
             </div>
           </div>
         `).join('');
@@ -741,22 +1084,23 @@
       pc.innerHTML = '<div class="empty">// Failed to load payments.</div>';
     }
 
-    // Payout requests
+    // Payouts
     try {
-      const res = await fetch(`${API}/admin/payouts`, { headers: authHeaders() });
-      const data = await res.json();
-      if (!data.payouts || data.payouts.length === 0) {
+      const res = await apiFetch(`${API}/admin/payouts`);
+      if (!res) return;
+      const d = await res.json();
+      if (!d.payouts || !d.payouts.length) {
         pyc.innerHTML = '<div class="empty">// No payout requests. ✓</div>';
       } else {
-        pyc.innerHTML = data.payouts.map(p => `
+        pyc.innerHTML = d.payouts.map(p => `
           <div class="item-card" id="payout-${p.id}">
             <div class="item-meta">Seller: <span>${p.username}</span> · ${timeAgo(p.created_at)}</div>
-            <p class="payout-amount">$${parseFloat(p.amount).toFixed(2)} USDT</p>
-            <p style="font-family:'Share Tech Mono',monospace;font-size:0.7rem;color:var(--text-dim);word-break:break-all;">
+            <p class="payout-amount">$${parseFloat(p.amount || 0).toFixed(2)} USDT</p>
+            <p style="font-family:'Share Tech Mono',monospace;font-size:0.7rem;color:var(--text-dim);word-break:break-all;margin-bottom:10px;">
               → ${p.binance_address}
             </p>
-            <div class="actions" style="margin-top:10px;">
-              <button class="btn-approve" onclick="markPayoutSent(${p.id})">[ MARK SENT ]</button>
+            <div class="actions">
+              <button class="btn-approve" onclick="markPayoutSent(${p.id}, this)">[ MARK SENT ]</button>
             </div>
           </div>
         `).join('');
@@ -766,102 +1110,197 @@
     }
   }
 
-  async function confirmPayment(id) {
+  async function confirmPayment(id, btn) {
+    if (!confirm('Confirm this payment? This will unlock the tool for the buyer.')) return;
+    btn.disabled = true;
+    btn.textContent = '...';
     try {
-      const res = await fetch(`${API}/payments/admin-confirm/${id}`, { method: 'POST', headers: authHeaders() });
+      const res = await apiFetch(`${API}/payments/admin-confirm/${id}`, { method: 'POST' });
+      if (!res) return;
       if (res.ok) {
         document.getElementById(`payment-${id}`).remove();
         toast('// Payment confirmed! Tool unlocked for buyer.');
+        loadDashboard();
+      } else {
+        const d = await res.json();
+        toast(`// ${d.message || 'Confirm failed.'}`, 'var(--accent3)');
+        btn.disabled = false;
+        btn.textContent = '[ CONFIRM ]';
       }
-    } catch(e) {}
+    } catch(e) {
+      toast('// Network error.', 'var(--accent3)');
+      btn.disabled = false;
+      btn.textContent = '[ CONFIRM ]';
+    }
   }
 
-  async function rejectPayment(id) {
-    toast('// Payment rejected.', 'var(--accent3)');
-    document.getElementById(`payment-${id}`).remove();
-  }
-
-  async function markPayoutSent(id) {
+  async function rejectPayment(id, btn) {
+    if (!confirm('Reject this payment?')) return;
+    btn.disabled = true;
+    btn.textContent = '...';
     try {
-      const res = await fetch(`${API}/admin/payouts/${id}/mark-sent`, { method: 'POST', headers: authHeaders() });
+      const res = await apiFetch(`${API}/payments/admin-reject/${id}`, { method: 'POST' });
+      if (!res) return;
+      if (res.ok) {
+        document.getElementById(`payment-${id}`).remove();
+        toast('// Payment rejected.', 'var(--accent3)');
+      } else {
+        const d = await res.json();
+        toast(`// ${d.message || 'Reject failed.'}`, 'var(--accent3)');
+        btn.disabled = false;
+        btn.textContent = '[ REJECT ]';
+      }
+    } catch(e) {
+      toast('// Network error.', 'var(--accent3)');
+      btn.disabled = false;
+      btn.textContent = '[ REJECT ]';
+    }
+  }
+
+  async function markPayoutSent(id, btn) {
+    if (!confirm('Mark this payout as sent? Only confirm after you have transferred the USDT.')) return;
+    btn.disabled = true;
+    btn.textContent = '...';
+    try {
+      const res = await apiFetch(`${API}/admin/payouts/${id}/mark-sent`, { method: 'POST' });
+      if (!res) return;
       if (res.ok) {
         document.getElementById(`payout-${id}`).remove();
         toast('// Payout marked as sent!');
         loadDashboard();
+      } else {
+        const d = await res.json();
+        toast(`// ${d.message || 'Failed.'}`, 'var(--accent3)');
+        btn.disabled = false;
+        btn.textContent = '[ MARK SENT ]';
       }
-    } catch(e) {}
+    } catch(e) {
+      toast('// Network error.', 'var(--accent3)');
+      btn.disabled = false;
+      btn.textContent = '[ MARK SENT ]';
+    }
   }
 
-  // ─── USERS ───────────────────────────────────
+  // ══════════════════════════════════════════════════════════════════
+  // USERS
+  // ══════════════════════════════════════════════════════════════════
+
   async function loadUsers() {
     const pc = document.getElementById('posts-container');
     const mc = document.getElementById('members-container');
-
     pc.innerHTML = '<div class="loading"><span class="spinner"></span>Loading...</div>';
     mc.innerHTML = '<div class="loading"><span class="spinner"></span>Loading...</div>';
 
     // Flagged posts
     try {
-      const res = await fetch(`${API}/admin/flagged-posts`, { headers: authHeaders() });
-      const data = await res.json();
-      if (!data.posts || data.posts.length === 0) {
+      const res = await apiFetch(`${API}/admin/flagged-posts`);
+      if (!res) return;
+      const d = await res.json();
+      if (!d.posts || !d.posts.length) {
         pc.innerHTML = '<div class="empty">// No flagged posts. ✓</div>';
       } else {
-        pc.innerHTML = data.posts.map(p => `
+        pc.innerHTML = d.posts.map(p => `
           <div class="item-card" id="post-${p.id}">
             <div class="item-meta">By: <span>${p.username}</span> · ${timeAgo(p.created_at)}</div>
             <p>${p.content}</p>
             <div class="actions" style="margin-top:10px;">
-              <button class="btn-action" onclick="clearPost(${p.id})">[ CLEAR ]</button>
-              <button class="btn-reject" onclick="deletePost(${p.id})">[ DELETE ]</button>
+              <button class="btn-action" onclick="clearPost(${p.id}, this)">[ CLEAR FLAG ]</button>
+              <button class="btn-reject" onclick="deletePost(${p.id}, this)">[ DELETE ]</button>
             </div>
           </div>
         `).join('');
       }
-    } catch(e) {}
+    } catch(e) {
+      pc.innerHTML = '<div class="empty">// Failed to load posts.</div>';
+    }
 
     // Members
     try {
-    const res = await fetch(`${API}/admin/members`, { headers: authHeaders() });
-const data = await res.json();
-if (!data.members || data.members.length === 0) {
-  mc.innerHTML = '<div class="empty">// No members yet.</div>';
-} else {
-  mc.innerHTML = data.members.map(m => `
-    <div class="item-card">
-      <div class="item-meta">
-        <span>${m.email}</span> · joined ${timeAgo(m.created_at)}
-      </div>
-      <div class="actions">
-        <span class="badge ${m.is_admin ? 'badge-safe' : 'badge-pending'}">${m.is_admin ? 'ADMIN' : m.rank}</span>
-${!m.is_admin ? `<button class="btn-reject" onclick="banMember('${m.id}','${m.email}')" style="font-size:0.65rem;padding:4px 10px;">[ BAN ]</button>` : ''}
-      </div>
-    </div>
-  `).join('');
-  }
-    } catch(e) {}
-  }
-
-  async function clearPost(id) {
-    try {
-      const res = await fetch(`${API}/admin/posts/${id}/clear`, { method: 'POST', headers: authHeaders() });
-      if (res.ok) { document.getElementById(`post-${id}`).remove(); toast('// Post cleared.'); }
-    } catch(e) {}
+      const res = await apiFetch(`${API}/admin/members`);
+      if (!res) return;
+      const d = await res.json();
+      if (!d.members || !d.members.length) {
+        mc.innerHTML = '<div class="empty">// No members yet.</div>';
+      } else {
+        mc.innerHTML = d.members.map(m => `
+          <div class="item-card">
+            <div class="item-meta"><span>${m.email}</span> · joined ${timeAgo(m.created_at)}</div>
+            <div class="actions" style="flex-wrap:wrap;gap:6px;">
+              <span class="badge ${m.is_banned ? 'badge-flagged' : 'badge-safe'}">${m.is_banned ? 'BANNED' : m.rank || 'Ghost'}</span>
+              ${!m.is_banned ? `
+                <button class="btn-action" style="font-size:0.65rem;padding:4px 10px;" onclick="openPromoteModal('${m.id}','${m.username || m.email}')">[ PROMOTE ]</button>
+                <button class="btn-reject" style="font-size:0.65rem;padding:4px 10px;" onclick="banMember('${m.id}','${m.email}', this)">[ BAN ]</button>
+              ` : ''}
+            </div>
+          </div>
+        `).join('');
+      }
+    } catch(e) {
+      mc.innerHTML = '<div class="empty">// Failed to load members.</div>';
+    }
   }
 
-  async function deletePost(id) {
+  async function clearPost(id, btn) {
+    btn.disabled = true;
     try {
-      const res = await fetch(`${API}/admin/posts/${id}/delete`, { method: 'POST', headers: authHeaders() });
-      if (res.ok) { document.getElementById(`post-${id}`).remove(); toast('// Post deleted.', 'var(--accent3)'); }
-    } catch(e) {}
+      const res = await apiFetch(`${API}/admin/posts/${id}/clear`, { method: 'POST' });
+      if (!res) return;
+      if (res.ok) {
+        document.getElementById(`post-${id}`).remove();
+        toast('// Post flag cleared.');
+      } else {
+        toast('// Failed to clear post.', 'var(--accent3)');
+        btn.disabled = false;
+      }
+    } catch(e) {
+      toast('// Network error.', 'var(--accent3)');
+      btn.disabled = false;
+    }
   }
 
-  async function banUser(id, username) {
-    if (!confirm(`Ban ${username}? This will block their access.`)) return;
+  async function deletePost(id, btn) {
+    if (!confirm('Permanently delete this post?')) return;
+    btn.disabled = true;
     try {
-      const res = await fetch(`${API}/admin/users/${id}/ban`, { method: 'POST', headers: authHeaders() });
-      if (res.ok) { toast(`// ${username} banned.`, 'var(--accent3)'); loadUsers(); }
-    } catch(e) {}
+      const res = await apiFetch(`${API}/admin/posts/${id}/delete`, { method: 'POST' });
+      if (!res) return;
+      if (res.ok) {
+        document.getElementById(`post-${id}`).remove();
+        toast('// Post deleted.', 'var(--accent3)');
+      } else {
+        toast('// Failed to delete post.', 'var(--accent3)');
+        btn.disabled = false;
+      }
+    } catch(e) {
+      toast('// Network error.', 'var(--accent3)');
+      btn.disabled = false;
+    }
+  }
+
+  async function banMember(id, email, btn) {
+    if (!confirm(`Ban ${email}? This blocks their access immediately.`)) return;
+    btn.disabled = true;
+    btn.textContent = '...';
+    try {
+      const res = await apiFetch(`${API}/admin/ban`, {
+        method: 'POST',
+        body: JSON.stringify({ user_id: id })
+      });
+      if (!res) return;
+      const d = await res.json();
+      if (d.status === 'success') {
+        toast(`// ${email} banned.`, 'var(--accent3)');
+        loadUsers();
+      } else {
+        toast(`// ${d.message || 'Ban failed.'}`, 'var(--accent3)');
+        btn.disabled = false;
+        btn.textContent = '[ BAN ]';
+      }
+    } catch(e) {
+      toast('// Network error.', 'var(--accent3)');
+      btn.disabled = false;
+      btn.textContent = '[ BAN ]';
+    }
   }
 
   function openPromoteModal(id, username) {
@@ -877,104 +1316,116 @@ ${!m.is_admin ? `<button class="btn-reject" onclick="banMember('${m.id}','${m.em
 
   async function confirmPromote() {
     const rank = document.getElementById('promote-rank').value;
+    closePromoteModal();
     try {
-      const res = await fetch(`${API}/admin/users/${promoteUserId}/promote`, {
-        method: 'POST', headers: authHeaders(),
+      const res = await apiFetch(`${API}/admin/users/${promoteUserId}/promote`, {
+        method: 'POST',
         body: JSON.stringify({ rank })
       });
-      if (res.ok) {
+      if (!res) return;
+      const d = await res.json();
+      if (d.status === 'success') {
         toast(`// Member promoted to ${rank}!`);
-        closePromoteModal();
         loadUsers();
+      } else {
+        toast(`// ${d.message || 'Promote failed.'}`, 'var(--accent3)');
       }
-    } catch(e) {}
-  }
-
-  function timeAgo(dateStr) {
-    if (!dateStr) return 'unknown';
-    const diff = Date.now() - new Date(dateStr).getTime();
-    const mins = Math.floor(diff / 60000);
-    if (mins < 1) return 'just now';
-    if (mins < 60) return `${mins}m ago`;
-    const hrs = Math.floor(mins / 60);
-    if (hrs < 24) return `${hrs}h ago`;
-    return `${Math.floor(hrs / 24)}d ago`;
-  }
-
-  // Init
-  loadDashboard();
-  async function postCourse() {
-  const title = document.getElementById('c-title').value.trim();
-  const desc = document.getElementById('c-desc').value.trim();
-  const content = document.getElementById('c-content').value.trim();
-  const category = document.getElementById('c-category').value;
-  const rank = document.getElementById('c-rank').value;
-  const price = parseFloat(document.getElementById('c-price').value) || 0;
-
-  if (!title || !content) return toast('// Title and content required', 'var(--accent3)');
-
-  try {
-    const res = await fetch(`${API}/admin/courses/create`, {
-      method: 'POST',
-      headers: authHeaders(),
-      body: JSON.stringify({
-        title, description: desc, content,
-        category, rank_required: rank,
-        price, is_free: price === 0
-      })
-    });
-    const data = await res.json();
-    if (data.status === 'success') {
-      toast('// Course published!');
-      document.getElementById('c-title').value = '';
-      document.getElementById('c-desc').value = '';
-      document.getElementById('c-content').value = '';
-      document.getElementById('c-price').value = '';
-      loadCourses();
+    } catch(e) {
+      toast('// Network error.', 'var(--accent3)');
     }
-  } catch(e) {
-    toast('// Failed to publish', 'var(--accent3)');
   }
-}
 
-async function loadCourses() {
-  const c = document.getElementById('courses-container');
-  try {
-    const res = await fetch(`${API}/courses`);
-    const data = await res.json();
-    if (!data.courses || data.courses.length === 0) {
-      c.innerHTML = '<div class="empty">// No courses yet.</div>';
+  // ══════════════════════════════════════════════════════════════════
+  // COURSES
+  // ══════════════════════════════════════════════════════════════════
+
+  async function postCourse() {
+    const title   = document.getElementById('c-title').value.trim();
+    const desc    = document.getElementById('c-desc').value.trim();
+    const content = document.getElementById('c-content').value.trim();
+    const category= document.getElementById('c-category').value;
+    const rank    = document.getElementById('c-rank').value;
+    const price   = parseFloat(document.getElementById('c-price').value) || 0;
+
+    if (!title || !content) {
+      toast('// Title and content are required.', 'var(--accent3)');
       return;
     }
-    c.innerHTML = data.courses.map(course => `
-      <div class="item-card">
-        <div class="item-meta">${course.category} · ${course.is_free ? 'FREE' : '$'+course.price+' USDT'} · rank: ${course.rank_required}</div>
-        <h4>${course.title}</h4>
-        <p>${course.description || ''}</p>
-      </div>
-    `).join('');
-  } catch(e) {
-    c.innerHTML = '<div class="empty">// Failed to load courses.</div>';
-  }
-}
 
-async function banMember(id, email) {
-  if (!confirm(`Ban ${email}?`)) return;
-  try {
-    const res = await fetch(`${API}/admin/ban`, {
-      method: 'POST',
-      headers: authHeaders(),
-      body: JSON.stringify({ user_id: id })
-    });
-    const data = await res.json();
-    if (data.status === 'success') {
-      toast('// Member banned.');
-      loadUsers();
+    try {
+      const res = await apiFetch(`${API}/admin/courses/create`, {
+        method: 'POST',
+        body: JSON.stringify({ title, description: desc, content, category, rank_required: rank, price, is_free: price === 0 })
+      });
+      if (!res) return;
+      const d = await res.json();
+      if (d.status === 'success') {
+        toast('// Course published!');
+        document.getElementById('c-title').value   = '';
+        document.getElementById('c-desc').value    = '';
+        document.getElementById('c-content').value = '';
+        document.getElementById('c-price').value   = '';
+        loadCourses();
+      } else {
+        toast(`// ${d.message || 'Publish failed.'}`, 'var(--accent3)');
+      }
+    } catch(e) {
+      toast('// Network error.', 'var(--accent3)');
     }
-  } catch(e) {
-    toast('// Failed to ban', 'var(--accent3)');
   }
-        }
+
+  async function loadCourses() {
+    const c = document.getElementById('courses-container');
+    c.innerHTML = '<div class="loading"><span class="spinner"></span>Loading...</div>';
+    try {
+      const res = await fetch(`${API}/courses`);
+      const d   = await res.json();
+      if (!d.courses || !d.courses.length) {
+        c.innerHTML = '<div class="empty">// No courses yet.</div>';
+        return;
+      }
+      c.innerHTML = d.courses.map(course => `
+        <div class="item-card" id="course-${course.id}">
+          <div class="item-meta">${course.category} · ${course.is_free ? 'FREE' : '$' + course.price + ' USDT'} · ${course.rank_required}</div>
+          <h4>${course.title}</h4>
+          <p>${course.description || ''}</p>
+          <div class="actions" style="margin-top:10px;">
+            <button class="btn-reject" style="font-size:0.7rem;padding:5px 12px;" onclick="deleteCourse(${course.id}, this)">[ DELETE ]</button>
+          </div>
+        </div>
+      `).join('');
+    } catch(e) {
+      c.innerHTML = '<div class="empty">// Failed to load courses.</div>';
+    }
+  }
+
+  async function deleteCourse(id, btn) {
+    if (!confirm('Permanently delete this course? This cannot be undone.')) return;
+    btn.disabled = true;
+    btn.textContent = '...';
+    try {
+      const res = await apiFetch(`${API}/admin/courses/${id}/delete`, { method: 'POST' });
+      if (!res) return;
+      if (res.ok) {
+        document.getElementById(`course-${id}`).remove();
+        toast('// Course deleted.', 'var(--accent3)');
+      } else {
+        const d = await res.json();
+        toast(`// ${d.message || 'Delete failed.'}`, 'var(--accent3)');
+        btn.disabled = false;
+        btn.textContent = '[ DELETE ]';
+      }
+    } catch(e) {
+      toast('// Network error.', 'var(--accent3)');
+      btn.disabled = false;
+      btn.textContent = '[ DELETE ]';
+    }
+  }
+
+  // ── Init ────────────────────────────────────────────────────────────
+  loadDashboard();
+  loadAdmins();
+  loadMotions();
 </script>
 </body>
 </html>
