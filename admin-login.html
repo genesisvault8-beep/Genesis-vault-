@@ -611,7 +611,7 @@
   // ── BACKGROUND PING — warms server silently on page load ─────────────
   async function warmBackend() {
     try {
-      await fetch(`${API}/api/ping`, { method: 'GET', signal: AbortSignal.timeout(60000) });
+      await fetch(`https://genesis-vault-backend.onrender.com/ping`, { method: 'GET', signal: AbortSignal.timeout(60000) });
       backendReady = true;
     } catch(e) {
       backendReady = false;
@@ -631,7 +631,7 @@
       msgIndex++;
 
       try {
-        const res = await fetch(`${API}/api/ping`, {
+        const res = await fetch(`https://genesis-vault-backend.onrender.com/ping`, {
           method: 'GET',
           signal: AbortSignal.timeout(8000)
         });
