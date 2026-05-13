@@ -317,6 +317,104 @@
     margin-top: 4px;
     color: var(--text-dim);
   }
+
+  /* ── WAKE-UP OVERLAY ── */
+  #wakeup-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: var(--bg);
+    z-index: 1000;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  #wakeup-overlay.active { display: flex; }
+
+  .wakeup-logo {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 1.1rem;
+    letter-spacing: 5px;
+    color: var(--accent);
+    margin-bottom: 6px;
+  }
+  .wakeup-logo span { color: white; }
+
+  .wakeup-sub {
+    font-size: 0.58rem;
+    letter-spacing: 3px;
+    color: var(--text-dim);
+    margin-bottom: 48px;
+  }
+
+  .wakeup-bars {
+    display: flex;
+    gap: 5px;
+    margin-bottom: 40px;
+  }
+
+  .wakeup-bar {
+    width: 3px;
+    height: 32px;
+    background: var(--border);
+    animation: barPulse 1.2s ease-in-out infinite;
+  }
+  .wakeup-bar:nth-child(1) { animation-delay: 0s; }
+  .wakeup-bar:nth-child(2) { animation-delay: 0.1s; }
+  .wakeup-bar:nth-child(3) { animation-delay: 0.2s; }
+  .wakeup-bar:nth-child(4) { animation-delay: 0.3s; }
+  .wakeup-bar:nth-child(5) { animation-delay: 0.4s; }
+  .wakeup-bar:nth-child(6) { animation-delay: 0.5s; }
+  .wakeup-bar:nth-child(7) { animation-delay: 0.6s; }
+  .wakeup-bar:nth-child(8) { animation-delay: 0.7s; }
+
+  @keyframes barPulse {
+    0%, 100% { background: var(--border); transform: scaleY(1); }
+    50% { background: var(--accent); transform: scaleY(1.8); }
+  }
+
+  .wakeup-status {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.72rem;
+    color: var(--accent);
+    letter-spacing: 2px;
+    text-align: center;
+    min-height: 20px;
+    margin-bottom: 12px;
+  }
+
+  .wakeup-log {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.58rem;
+    color: var(--text-dim);
+    letter-spacing: 1px;
+    width: 100%;
+    max-width: 340px;
+    min-height: 80px;
+    border: 1px solid var(--border);
+    padding: 12px;
+    background: var(--bg2);
+    line-height: 2;
+  }
+
+  .wakeup-log .log-line { display: block; animation: wFadeIn 0.3s ease; }
+  .wakeup-log .log-ok   { color: var(--accent); }
+  .wakeup-log .log-wait { color: var(--accent2); }
+  .wakeup-log .log-warn { color: #ffaa00; }
+
+  @keyframes wFadeIn {
+    from { opacity: 0; transform: translateX(-6px); }
+    to   { opacity: 1; transform: translateX(0); }
+  }
+
+  .wakeup-timer {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.58rem;
+    color: #1a3a3a;
+    letter-spacing: 2px;
+    margin-top: 16px;
+  }
 </style>
 </head>
 <body>
@@ -393,10 +491,124 @@
   </div>
 </div>
 
+<!-- ── WAKE-UP OVERLAY ── -->
+<div id="wakeup-overlay">
+  <div class="wakeup-logo">GENESIS<span>VAULT</span></div>
+  <div class="wakeup-sub">// CONNECTING TO SECURE NODE</div>
+  <div class="wakeup-bars">
+    <div class="wakeup-bar"></div>
+    <div class="wakeup-bar"></div>
+    <div class="wakeup-bar"></div>
+    <div class="wakeup-bar"></div>
+    <div class="wakeup-bar"></div>
+    <div class="wakeup-bar"></div>
+    <div class="wakeup-bar"></div>
+    <div class="wakeup-bar"></div>
+  </div>
+  <div class="wakeup-status" id="wakeup-status">Initializing...</div>
+  <div class="wakeup-log" id="wakeup-log"></div>
+  <div class="wakeup-timer" id="wakeup-timer"></div>
+</div>
+
 <script>
   const API = 'https://genesis-vault-backend.onrender.com/api';
 
-  // ── TAB SWITCHING ──
+  let backendReady = false;
+  let wakeTimerInterval = null;
+  let wakeStartTime = null;
+
+  // ── WAKE-UP MESSAGES ────────────────────────────────────────────────
+  const WAKE_MESSAGES = [
+    'Connecting to vault node...',
+    'Initializing secure tunnel...',
+    'Syncing authentication layer...',
+    'Verifying node integrity...',
+    'Loading access protocols...',
+    'Establishing session...',
+    'Almost ready...',
+    'Finalizing connection...'
+  ];
+
+  // ── WAKE-UP OVERLAY HELPERS ─────────────────────────────────────────
+  function showWakeup() {
+    document.getElementById('wakeup-overlay').classList.add('active');
+    wakeStartTime = Date.now();
+    wakeTimerInterval = setInterval(() => {
+      const secs = Math.floor((Date.now() - wakeStartTime) / 1000);
+      document.getElementById('wakeup-timer').textContent = `ELAPSED: ${secs}s`;
+    }, 1000);
+  }
+
+  function hideWakeup() {
+    document.getElementById('wakeup-overlay').classList.remove('active');
+    clearInterval(wakeTimerInterval);
+  }
+
+  function setWakeupStatus(msg) {
+    document.getElementById('wakeup-status').textContent = msg;
+  }
+
+  function addLog(msg, type = 'log-wait') {
+    const log = document.getElementById('wakeup-log');
+    const line = document.createElement('span');
+    line.className = `log-line ${type}`;
+    line.textContent = `> ${msg}`;
+    log.appendChild(line);
+    log.scrollTop = log.scrollHeight;
+    const lines = log.querySelectorAll('.log-line');
+    if (lines.length > 5) lines[0].remove();
+  }
+
+  // ── BACKGROUND PING — warms server silently on page load ────────────
+  async function warmBackend() {
+    try {
+      await fetch(`${API}/ping`, { method: 'GET', signal: AbortSignal.timeout(60000) });
+      backendReady = true;
+    } catch(e) {
+      backendReady = false;
+    }
+  }
+
+  // ── WAIT FOR BACKEND WITH VISUAL FEEDBACK ───────────────────────────
+  async function waitForBackend() {
+    if (backendReady) return true;
+    showWakeup();
+    let msgIndex = 0;
+
+    for (let attempt = 0; attempt < 12; attempt++) {
+      const msg = WAKE_MESSAGES[Math.min(msgIndex, WAKE_MESSAGES.length - 1)];
+      setWakeupStatus(msg);
+      addLog(msg, 'log-wait');
+      msgIndex++;
+
+      try {
+        const res = await fetch(`${API}/ping`, {
+          method: 'GET',
+          signal: AbortSignal.timeout(8000)
+        });
+        if (res.ok || res.status < 500) {
+          addLog('Vault online!', 'log-ok');
+          setWakeupStatus('Connection established. Proceeding...');
+          await sleep(800);
+          hideWakeup();
+          backendReady = true;
+          return true;
+        }
+      } catch(e) {
+        addLog(`Retry ${attempt + 1}/12...`, 'log-warn');
+      }
+      await sleep(5000);
+    }
+
+    hideWakeup();
+    return false;
+  }
+
+  function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
+  // ── TAB SWITCHING ────────────────────────────────────────────────────
   function switchTab(tab) {
     document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
     document.querySelectorAll('.form-panel').forEach(p => p.classList.remove('active'));
@@ -405,7 +617,7 @@
     hideMessages();
   }
 
-  // ── MESSAGES ──
+  // ── MESSAGES ─────────────────────────────────────────────────────────
   function showError(msg) {
     const el = document.getElementById('error-msg');
     el.textContent = '// ERROR: ' + msg;
@@ -425,7 +637,7 @@
     document.getElementById('success-msg').style.display = 'none';
   }
 
-  // ── SHOW/HIDE PASSWORD ──
+  // ── SHOW/HIDE PASSWORD ────────────────────────────────────────────────
   function togglePw(inputId, btn) {
     const input = document.getElementById(inputId);
     if (input.type === 'password') {
@@ -439,7 +651,7 @@
     }
   }
 
-  // ── PASSWORD STRENGTH ──
+  // ── PASSWORD STRENGTH ─────────────────────────────────────────────────
   function checkStrength(val) {
     const fill = document.getElementById('strength-fill');
     const label = document.getElementById('strength-label');
@@ -466,7 +678,7 @@
     label.style.color = lvl.color;
   }
 
-  // ── FRIENDLY ERROR MESSAGES ──
+  // ── FRIENDLY ERROR MESSAGES ───────────────────────────────────────────
   function friendlyError(code) {
     const map = {
       'AUTH_FAILED': 'Invalid email or password.',
@@ -482,7 +694,7 @@
     return map[code] || code;
   }
 
-  // ── LOGIN ──
+  // ── LOGIN ─────────────────────────────────────────────────────────────
   async function handleLogin() {
     const email = document.getElementById('login-email').value.trim();
     const password = document.getElementById('login-password').value;
@@ -493,6 +705,17 @@
     btn.disabled = true;
     btn.textContent = '[ AUTHENTICATING... ]';
     hideMessages();
+
+    // Show wake-up screen if backend isn't warm yet
+    if (!backendReady) {
+      const ready = await waitForBackend();
+      if (!ready) {
+        showError('Server unreachable. Please try again in a moment.');
+        btn.disabled = false;
+        btn.textContent = '[ ACCESS VAULT ]';
+        return;
+      }
+    }
 
     try {
       const res = await fetch(`${API}/auth/login`, {
@@ -514,13 +737,31 @@
         setTimeout(() => window.location.href = 'dashboard.html', 1000);
       }
     } catch (e) {
-      showError('Connection failed. Try again.');
+      // Auto-retry once on network error
+      try {
+        await sleep(4000);
+        const retry = await fetch(`${API}/auth/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password })
+        });
+        const data = await retry.json();
+        if (retry.ok) {
+          localStorage.setItem('gv_token', data.token);
+          localStorage.setItem('gv_rank', data.rank);
+          localStorage.setItem('gv_email', data.email);
+          showSuccess('Access granted. Redirecting...');
+          setTimeout(() => window.location.href = 'dashboard.html', 1000);
+          return;
+        }
+      } catch(e2) {}
+      showError('Connection failed. Server may be starting up — please try again.');
       btn.disabled = false;
       btn.textContent = '[ ACCESS VAULT ]';
     }
   }
 
-  // ── REGISTER ──
+  // ── REGISTER ──────────────────────────────────────────────────────────
   async function handleRegister() {
     const username = document.getElementById('reg-username').value.trim();
     const email = document.getElementById('reg-email').value.trim();
@@ -535,6 +776,17 @@
     btn.disabled = true;
     btn.textContent = '[ PROCESSING... ]';
     hideMessages();
+
+    // Show wake-up screen if backend isn't warm yet
+    if (!backendReady) {
+      const ready = await waitForBackend();
+      if (!ready) {
+        showError('Server unreachable. Please try again in a moment.');
+        btn.disabled = false;
+        btn.textContent = '[ JOIN THE VAULT ]';
+        return;
+      }
+    }
 
     try {
       const res = await fetch(`${API}/auth/register`, {
@@ -556,18 +808,21 @@
         setTimeout(() => window.location.href = 'dashboard.html', 1500);
       }
     } catch (e) {
-      showError('Connection failed. Try again.');
+      showError('Connection failed. Server may be starting up — please try again.');
       btn.disabled = false;
       btn.textContent = '[ JOIN THE VAULT ]';
     }
   }
 
-  // ── REDIRECT IF ALREADY LOGGED IN ──
+  // ── REDIRECT IF ALREADY LOGGED IN ────────────────────────────────────
   if (localStorage.getItem('gv_token')) {
     window.location.href = 'dashboard.html';
   }
 
-  // ── ENTER KEY SUPPORT ──
+  // ── WARM BACKEND SILENTLY ON PAGE LOAD ───────────────────────────────
+  warmBackend();
+
+  // ── ENTER KEY SUPPORT ─────────────────────────────────────────────────
   document.addEventListener('keydown', e => {
     if (e.key === 'Enter') {
       const activePanel = document.querySelector('.form-panel.active');
