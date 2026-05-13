@@ -75,16 +75,18 @@ def make_token():
 
 def token_expiry():
     dt = datetime.now(timezone.utc) + timedelta(days=TOKEN_EXPIRY_DAYS)
-    return dt.strftime("%Y-%m-%dT%H:%M:%S+00:00")
+    return dt.isoformat()  # proper ISO format for timestamptz column
 
 def is_token_expired(expires_at):
     if not expires_at:
         return True
     try:
-        exp = datetime.fromisoformat(str(expires_at).replace("Z", "+00:00"))
-        if exp.tzinfo is None:
-            exp = exp.replace(tzinfo=timezone.utc)
-        return datetime.now(timezone.utc) > exp
+        expires = expires_at
+        if isinstance(expires, str):
+            expires = datetime.fromisoformat(expires.replace("Z", "+00:00"))
+        if expires.tzinfo is None:
+            expires = expires.replace(tzinfo=timezone.utc)
+        return datetime.now(timezone.utc) > expires
     except Exception:
         return False  # If we can't parse it, assume valid — never wipe token on parse error
 
