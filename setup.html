@@ -31,7 +31,6 @@
     overflow-x: hidden;
   }
 
-  /* ── scanline overlay ── */
   body::before {
     content: '';
     position: fixed;
@@ -47,7 +46,6 @@
     z-index: 999;
   }
 
-  /* ── grid bg ── */
   body::after {
     content: '';
     position: fixed;
@@ -60,7 +58,6 @@
     z-index: 0;
   }
 
-  /* ── NAV ── */
   nav {
     position: fixed;
     top: 0; left: 0; right: 0;
@@ -97,7 +94,6 @@
     50%       { opacity: 0.3; }
   }
 
-  /* ── MAIN ── */
   main {
     position: relative;
     z-index: 1;
@@ -106,7 +102,6 @@
     margin: 0 auto;
   }
 
-  /* ── HEADER ── */
   .header {
     text-align: center;
     margin-bottom: 36px;
@@ -132,7 +127,6 @@
     letter-spacing: 2px;
   }
 
-  /* ── COUNTER ── */
   .slot-counter {
     display: flex;
     justify-content: center;
@@ -171,7 +165,6 @@
 
   .slot.filled span { display: none; }
 
-  /* ── CARD ── */
   .card {
     background: var(--bg2);
     border: 1px solid var(--border);
@@ -211,10 +204,7 @@
     background: var(--border);
   }
 
-  /* ── INPUTS ── */
-  .field {
-    margin-bottom: 18px;
-  }
+  .field { margin-bottom: 18px; }
 
   .field label {
     display: block;
@@ -250,7 +240,20 @@
     color: var(--red);
   }
 
-  /* ── BUTTONS ── */
+  /* password strength bar */
+  .strength-bar {
+    height: 3px;
+    background: var(--border);
+    margin-top: 6px;
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .strength-fill {
+    height: 100%;
+    width: 0%;
+    transition: width 0.3s, background 0.3s;
+  }
+
   .btn {
     width: 100%;
     background: var(--cyan);
@@ -301,7 +304,6 @@
     box-shadow: 0 0 30px rgba(255,51,51,0.4);
   }
 
-  /* ── OUTPUT BOX ── */
   .output {
     border: 1px solid var(--red);
     background: rgba(255,51,51,0.04);
@@ -313,6 +315,7 @@
     display: none;
     animation: fadeUp 0.3s ease both;
     position: relative;
+    margin-top: 12px;
   }
 
   .output.show { display: block; }
@@ -339,11 +342,9 @@
     margin-right: 6px;
   }
 
-  /* ── LOCKED SCREEN ── */
   #locked-screen { display: block; }
   #setup-screen  { display: none;  }
 
-  /* ── LOCKED STATE ── */
   .locked-info {
     text-align: center;
     padding: 20px 0 10px;
@@ -372,7 +373,6 @@
     line-height: 1.6;
   }
 
-  /* ── DIVIDER ── */
   .divider {
     display: flex;
     align-items: center;
@@ -386,7 +386,6 @@
     content: ''; flex: 1; height: 1px; background: var(--border);
   }
 
-  /* ── ADMIN SLOTS DISPLAY ── */
   .slots-label {
     text-align: center;
     font-size: 0.6rem;
@@ -395,7 +394,6 @@
     margin-bottom: 10px;
   }
 
-  /* ── LOADING DOT ── */
   .loading::after {
     content: '';
     display: inline-block;
@@ -408,7 +406,16 @@
     100% { content: '...'; }
   }
 
-  /* ── FOOTER ── */
+  /* cooldown timer */
+  .cooldown-msg {
+    font-size: 0.65rem;
+    color: var(--text);
+    letter-spacing: 1px;
+    text-align: center;
+    margin-top: 10px;
+    display: none;
+  }
+
   footer {
     position: relative;
     z-index: 1;
@@ -434,7 +441,7 @@
     <div class="header-sub">// ADMIN INITIALIZATION PROTOCOL</div>
   </div>
 
-  <!-- ── LOCKED SCREEN ── -->
+  <!-- LOCKED SCREEN -->
   <div id="locked-screen">
     <div class="card">
       <div class="card-label">ACCESS CONTROL</div>
@@ -452,12 +459,12 @@
         <input type="password" id="secret-input" class="secret-field"
                placeholder="Enter secret key..." autocomplete="off"/>
       </div>
-      <button class="btn btn-unlock" onclick="unlock()">[ UNLOCK SETUP ]</button>
+      <button class="btn btn-unlock" id="unlock-btn" onclick="unlock()">[ UNLOCK SETUP ]</button>
       <div class="output" id="lock-output"></div>
     </div>
   </div>
 
-  <!-- ── SETUP SCREEN ── -->
+  <!-- SETUP SCREEN -->
   <div id="setup-screen">
 
     <div class="slots-label">ADMIN SLOTS</div>
@@ -481,7 +488,11 @@
         <label>PASSWORD</label>
         <input type="password" id="password-input"
                placeholder="Minimum 8 characters"
-               autocomplete="new-password"/>
+               autocomplete="new-password"
+               oninput="updateStrength(this.value)"/>
+        <div class="strength-bar">
+          <div class="strength-fill" id="strength-fill"></div>
+        </div>
       </div>
 
       <div class="field">
@@ -494,7 +505,7 @@
       <button class="btn" id="create-btn" onclick="createAdmin()">
         [ CREATE ADMIN ]
       </button>
-
+      <div class="cooldown-msg" id="cooldown-msg"></div>
       <div class="output" id="setup-output"></div>
     </div>
 
@@ -502,47 +513,68 @@
 
 </main>
 
-<footer>GENESIS VAULT // SETUP MODULE // v2.0</footer>
+<footer>GENESIS VAULT // SETUP MODULE // v2.1</footer>
 
 <script>
-  const API = 'https://genesis-vault-backend.onrender.com';
+  // ── CONFIG ───────────────────────────────────────────────────────────
+  const API = 'https://genesis-vault-backend.onrender.com'; // FIXED URL
   let SETUP_SECRET = '';
   let adminCount   = 0;
+  let unlockAttempts = 0;
+  const MAX_UNLOCK_ATTEMPTS = 5;
 
   // ── UNLOCK ──────────────────────────────────────────────────────────
   async function unlock() {
     const key = document.getElementById('secret-input').value.trim();
     if (!key) { showOutput('lock-output', 'error', 'SECRET KEY REQUIRED'); return; }
 
-    const btn = document.querySelector('.btn-unlock');
+    // Brute-force protection on frontend
+    if (unlockAttempts >= MAX_UNLOCK_ATTEMPTS) {
+      showOutput('lock-output', 'error', 'TOO MANY ATTEMPTS — REFRESH TO RETRY');
+      return;
+    }
+
+    const btn = document.getElementById('unlock-btn');
     btn.textContent = '[ VERIFYING... ]';
     btn.disabled    = true;
 
     try {
-      // Test the secret by calling setup with dummy data — we check for
-      // INVALID_SETUP_SECRET vs any other response to validate the key.
-      const res = await fetch(`${API}/api/admin/setup`, {
+      const res = await fetchWithTimeout(`${API}/api/admin/setup`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ setup_secret: key, username: '__probe__', password: '__probe__' })
-      });
+      }, 10000);
+
       const data = await res.json();
 
       if (data.message === 'INVALID_SETUP_SECRET') {
-        showOutput('lock-output', 'error', 'ACCESS DENIED — INVALID SECRET KEY');
+        unlockAttempts++;
+        const remaining = MAX_UNLOCK_ATTEMPTS - unlockAttempts;
+        showOutput('lock-output', 'error',
+          `ACCESS DENIED — INVALID SECRET KEY\n> ${remaining} attempt(s) remaining`);
         btn.textContent = '[ UNLOCK SETUP ]';
         btn.disabled    = false;
         return;
       }
 
-      // Key is valid — any other response means we're through
+      if (res.status === 429) {
+        showOutput('lock-output', 'error', 'RATE LIMITED — WAIT 1 HOUR AND RETRY');
+        btn.textContent = '[ UNLOCK SETUP ]';
+        btn.disabled    = false;
+        return;
+      }
+
+      // Key valid
       SETUP_SECRET = key;
       await loadAdminCount();
       document.getElementById('locked-screen').style.display = 'none';
       document.getElementById('setup-screen').style.display  = 'block';
 
     } catch (err) {
-      showOutput('lock-output', 'error', 'CATCH ERROR: Failed to reach server');
+      const msg = err.name === 'AbortError'
+        ? 'REQUEST TIMED OUT — SERVER MAY BE COLD STARTING, WAIT 60s AND RETRY'
+        : 'FAILED TO REACH SERVER — CHECK CONNECTION';
+      showOutput('lock-output', 'error', msg);
       btn.textContent = '[ UNLOCK SETUP ]';
       btn.disabled    = false;
     }
@@ -551,18 +583,16 @@
   // ── LOAD COUNT ───────────────────────────────────────────────────────
   async function loadAdminCount() {
     try {
-      // We probe setup with an obviously bad username to get count feedback
-      const res  = await fetch(`${API}/api/admin/setup`, {
+      const res  = await fetchWithTimeout(`${API}/api/admin/setup`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ setup_secret: SETUP_SECRET, username: '', password: '' })
-      });
+      }, 10000);
       const data = await res.json();
 
       if (data.message === 'MAX_ADMINS_REACHED') {
         adminCount = 3;
       } else {
-        // Parse remaining slots from success message: "X slot(s) remaining"
         const match = data.message ? data.message.match(/(\d+) slot/) : null;
         adminCount  = match ? 3 - parseInt(match[1]) : 0;
       }
@@ -574,19 +604,32 @@
   function updateSlots(count) {
     for (let i = 1; i <= 3; i++) {
       const el = document.getElementById(`slot-${i}`);
-      if (i <= count) {
-        el.classList.add('filled');
-      } else {
-        el.classList.remove('filled');
-      }
+      if (i <= count) el.classList.add('filled');
+      else el.classList.remove('filled');
     }
     const btn = document.getElementById('create-btn');
     if (count >= 3) {
       btn.disabled    = true;
       btn.textContent = '[ VAULT SEALED ]';
       showOutput('setup-output', 'info',
-        'MAX_ADMINS_REACHED\nAll 3 admin slots are filled.\nVault will reopen when a slot is freed.');
+        'MAX_ADMINS_REACHED\nAll 3 admin slots are filled.\nVault reopens when a slot is freed.');
     }
+  }
+
+  // ── PASSWORD STRENGTH ────────────────────────────────────────────────
+  function updateStrength(val) {
+    const fill = document.getElementById('strength-fill');
+    let score = 0;
+    if (val.length >= 8)  score++;
+    if (val.length >= 12) score++;
+    if (/[A-Z]/.test(val)) score++;
+    if (/[0-9]/.test(val)) score++;
+    if (/[^A-Za-z0-9]/.test(val)) score++;
+
+    const pct    = (score / 5) * 100;
+    const colors = ['#ff3333','#ff8800','#ffcc00','#00ff88','#00ffcc'];
+    fill.style.width      = pct + '%';
+    fill.style.background = colors[score - 1] || '#1a3a3a';
   }
 
   // ── CREATE ADMIN ─────────────────────────────────────────────────────
@@ -598,14 +641,14 @@
     if (!username || !password || !confirm) {
       showOutput('setup-output', 'error', 'ALL FIELDS ARE REQUIRED'); return;
     }
-    if (password !== confirm) {
-      showOutput('setup-output', 'error', 'PASSWORDS DO NOT MATCH'); return;
+    if (!/^\w{3,20}$/.test(username)) {
+      showOutput('setup-output', 'error', 'INVALID USERNAME — 3-20 CHARS, LETTERS/NUMBERS/_'); return;
     }
     if (password.length < 8) {
       showOutput('setup-output', 'error', 'PASSWORD TOO SHORT — MINIMUM 8 CHARACTERS'); return;
     }
-    if (!/^\w{3,20}$/.test(username)) {
-      showOutput('setup-output', 'error', 'INVALID USERNAME — 3-20 CHARS, LETTERS/NUMBERS/_'); return;
+    if (password !== confirm) {
+      showOutput('setup-output', 'error', 'PASSWORDS DO NOT MATCH'); return;
     }
 
     const btn = document.getElementById('create-btn');
@@ -613,15 +656,19 @@
     btn.disabled    = true;
 
     try {
-      const res = await fetch(`${API}/api/admin/setup`, {
+      const res = await fetchWithTimeout(`${API}/api/admin/setup`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          setup_secret: SETUP_SECRET,
-          username,
-          password
-        })
-      });
+        body: JSON.stringify({ setup_secret: SETUP_SECRET, username, password })
+      }, 15000);
+
+      // Handle rate limit explicitly
+      if (res.status === 429) {
+        showOutput('setup-output', 'error', 'RATE LIMITED\n> Too many attempts. Wait 1 hour.');
+        startCooldown(3600);
+        return;
+      }
+
       const data = await res.json();
 
       if (data.status === 'success') {
@@ -632,13 +679,17 @@
         document.getElementById('username-input').value = '';
         document.getElementById('password-input').value = '';
         document.getElementById('confirm-input').value  = '';
+        document.getElementById('strength-fill').style.width = '0%';
       } else {
         showOutput('setup-output', 'error',
           `CREATION FAILED\n> ${data.message || 'UNKNOWN ERROR'}`);
       }
 
     } catch (err) {
-      showOutput('setup-output', 'error', 'CATCH ERROR: Failed to fetch');
+      const msg = err.name === 'AbortError'
+        ? 'REQUEST TIMED OUT — SERVER MAY BE WAKING UP, WAIT 60s AND RETRY'
+        : 'FAILED TO REACH SERVER';
+      showOutput('setup-output', 'error', msg);
     } finally {
       if (adminCount < 3) {
         btn.textContent = '[ CREATE ADMIN ]';
@@ -647,9 +698,38 @@
     }
   }
 
+  // ── COOLDOWN TIMER ───────────────────────────────────────────────────
+  function startCooldown(seconds) {
+    const msg = document.getElementById('cooldown-msg');
+    msg.style.display = 'block';
+    const btn = document.getElementById('create-btn');
+    btn.disabled = true;
+
+    const interval = setInterval(() => {
+      seconds--;
+      const m = Math.floor(seconds / 60);
+      const s = seconds % 60;
+      msg.textContent = `// RETRY IN ${m}:${String(s).padStart(2,'0')}`;
+      if (seconds <= 0) {
+        clearInterval(interval);
+        msg.style.display = 'none';
+        btn.disabled = false;
+        btn.textContent = '[ CREATE ADMIN ]';
+      }
+    }, 1000);
+  }
+
+  // ── FETCH WITH TIMEOUT ───────────────────────────────────────────────
+  function fetchWithTimeout(url, options, ms) {
+    const controller = new AbortController();
+    const timeout    = setTimeout(() => controller.abort(), ms);
+    return fetch(url, { ...options, signal: controller.signal })
+      .finally(() => clearTimeout(timeout));
+  }
+
   // ── OUTPUT HELPER ────────────────────────────────────────────────────
   function showOutput(id, type, msg) {
-    const el   = document.getElementById(id);
+    const el     = document.getElementById(id);
     el.className = `output show ${type}`;
     el.innerHTML = msg.split('\n').map((line, i) =>
       i === 0
