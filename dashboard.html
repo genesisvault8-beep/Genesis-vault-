@@ -18,598 +18,320 @@
     --border: #0f2a35;
     --glow: 0 0 20px rgba(0,245,196,0.2);
   }
-
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-
+  * { margin:0; padding:0; box-sizing:border-box; }
   body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: 'Rajdhani', sans-serif;
-    min-height: 100vh;
+    background:var(--bg); color:var(--text);
+    font-family:'Rajdhani',sans-serif; min-height:100vh;
   }
-
   body::before {
-    content: '';
-    position: fixed;
-    inset: 0;
+    content:''; position:fixed; inset:0;
     background-image:
-      linear-gradient(rgba(0,245,196,0.02) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(0,245,196,0.02) 1px, transparent 1px);
-    background-size: 40px 40px;
-    pointer-events: none;
-    z-index: 0;
+      linear-gradient(rgba(0,245,196,0.02) 1px,transparent 1px),
+      linear-gradient(90deg,rgba(0,245,196,0.02) 1px,transparent 1px);
+    background-size:40px 40px; pointer-events:none; z-index:0;
   }
 
   /* NAV */
   nav {
-    position: fixed;
-    top: 0; left: 0; right: 0;
-    background: rgba(2,6,8,0.95);
-    border-bottom: 1px solid var(--border);
-    padding: 0 20px;
-    height: 56px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    z-index: 100;
-    backdrop-filter: blur(10px);
+    position:fixed; top:0; left:0; right:0;
+    background:rgba(2,6,8,0.95); border-bottom:1px solid var(--border);
+    padding:0 20px; height:56px; display:flex; align-items:center;
+    justify-content:space-between; z-index:100; backdrop-filter:blur(10px);
   }
-
-  .nav-logo {
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 1rem;
-    letter-spacing: 3px;
-  }
-
-  .nav-logo span:first-child { color: var(--accent); }
-  .nav-logo span:last-child { color: white; }
-
-  .nav-right {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-  }
-
+  .nav-logo { font-family:'Share Tech Mono',monospace; font-size:1rem; letter-spacing:3px; }
+  .nav-logo span:first-child { color:var(--accent); }
+  .nav-logo span:last-child  { color:white; }
+  .nav-right { display:flex; align-items:center; gap:14px; }
   .rank-badge {
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 0.7rem;
-    color: var(--accent);
-    border: 1px solid var(--accent);
-    padding: 3px 10px;
-    letter-spacing: 2px;
+    font-family:'Share Tech Mono',monospace; font-size:0.7rem;
+    color:var(--accent); border:1px solid var(--accent);
+    padding:3px 10px; letter-spacing:2px;
   }
-
-  .nav-user {
-    font-size: 0.85rem;
-    color: var(--text-dim);
-    letter-spacing: 1px;
-  }
-
+  .nav-user { font-size:0.85rem; color:var(--text-dim); letter-spacing:1px; }
   .logout-btn {
-    background: none;
-    border: 1px solid var(--accent3);
-    color: var(--accent3);
-    padding: 4px 12px;
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 0.7rem;
-    cursor: pointer;
-    letter-spacing: 1px;
-    transition: all 0.2s;
+    background:none; border:1px solid var(--accent3); color:var(--accent3);
+    padding:4px 12px; font-family:'Share Tech Mono',monospace; font-size:0.7rem;
+    cursor:pointer; letter-spacing:1px; transition:all 0.2s;
   }
-
-  .logout-btn:hover { background: var(--accent3); color: white; }
+  .logout-btn:hover { background:var(--accent3); color:white; }
 
   /* BOTTOM NAV */
   .bottom-nav {
-    position: fixed;
-    bottom: 0; left: 0; right: 0;
-    background: rgba(2,6,8,0.97);
-    border-top: 1px solid var(--border);
-    display: flex;
-    z-index: 100;
-    backdrop-filter: blur(10px);
+    position:fixed; bottom:0; left:0; right:0;
+    background:rgba(2,6,8,0.97); border-top:1px solid var(--border);
+    display:flex; z-index:100; backdrop-filter:blur(10px);
   }
-
   .nav-item {
-    flex: 1;
-    padding: 12px 8px;
-    text-align: center;
-    cursor: pointer;
-    transition: all 0.2s;
-    border-top: 2px solid transparent;
+    flex:1; padding:12px 8px; text-align:center; cursor:pointer;
+    transition:all 0.2s; border-top:2px solid transparent;
   }
-
-  .nav-item.active { border-top-color: var(--accent); }
-  .nav-item .nav-icon { font-size: 1.2rem; display: block; }
+  .nav-item.active { border-top-color:var(--accent); }
+  .nav-item .nav-icon { font-size:1.2rem; display:block; }
   .nav-item .nav-label {
-    font-size: 0.6rem;
-    letter-spacing: 1.5px;
-    text-transform: uppercase;
-    color: var(--text-dim);
-    font-family: 'Share Tech Mono', monospace;
-    margin-top: 2px;
-    display: block;
+    font-size:0.6rem; letter-spacing:1.5px; text-transform:uppercase;
+    color:var(--text-dim); font-family:'Share Tech Mono',monospace;
+    margin-top:2px; display:block;
   }
-  .nav-item.active .nav-label { color: var(--accent); }
+  .nav-item.active .nav-label { color:var(--accent); }
 
-  /* MAIN CONTENT */
-  main {
-    padding-top: 76px;
-    padding-bottom: 80px;
-    min-height: 100vh;
-    position: relative;
-    z-index: 1;
-  }
+  /* MAIN */
+  main { padding-top:76px; padding-bottom:80px; min-height:100vh; position:relative; z-index:1; }
+  .page { display:none; padding:20px; }
+  .page.active { display:block; }
 
-  .page { display: none; padding: 20px; }
-  .page.active { display: block; }
-
-  /* PAGE: HOME */
+  /* WELCOME */
   .welcome-bar {
-    background: var(--bg2);
-    border: 1px solid var(--border);
-    border-left: 3px solid var(--accent);
-    padding: 16px 20px;
-    margin-bottom: 20px;
-    animation: fadeIn 0.5s ease;
+    background:var(--bg2); border:1px solid var(--border);
+    border-left:3px solid var(--accent); padding:16px 20px;
+    margin-bottom:20px; animation:fadeIn 0.5s ease;
   }
-
   .welcome-bar .greeting {
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 0.75rem;
-    color: var(--text-dim);
-    letter-spacing: 2px;
+    font-family:'Share Tech Mono',monospace; font-size:0.75rem;
+    color:var(--text-dim); letter-spacing:2px;
   }
+  .welcome-bar h2 { font-size:1.5rem; font-weight:700; color:white; letter-spacing:2px; margin-top:4px; }
+  .welcome-bar h2 span { color:var(--accent); }
 
-  .welcome-bar h2 {
-    font-size: 1.5rem;
-    font-weight: 700;
-    color: white;
-    letter-spacing: 2px;
-    margin-top: 4px;
-  }
-
-  .welcome-bar h2 span { color: var(--accent); }
-
-  .stats-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 12px;
-    margin-bottom: 20px;
-  }
-
+  /* STATS */
+  .stats-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:20px; }
   .stat-card {
-    background: var(--bg2);
-    border: 1px solid var(--border);
-    padding: 16px;
-    animation: fadeIn 0.5s ease;
-    position: relative;
-    overflow: hidden;
+    background:var(--bg2); border:1px solid var(--border);
+    padding:16px; animation:fadeIn 0.5s ease; position:relative; overflow:hidden;
   }
-
   .stat-card::before {
-    content: '';
-    position: absolute;
-    top: 0; left: 0;
-    width: 3px;
-    height: 100%;
-    background: var(--accent2);
+    content:''; position:absolute; top:0; left:0;
+    width:3px; height:100%; background:var(--accent2);
   }
-
   .stat-card .stat-value {
-    font-size: 1.8rem;
-    font-weight: 700;
-    color: var(--accent);
-    font-family: 'Share Tech Mono', monospace;
+    font-size:1.8rem; font-weight:700; color:var(--accent);
+    font-family:'Share Tech Mono',monospace;
   }
-
   .stat-card .stat-label {
-    font-size: 0.7rem;
-    color: var(--text-dim);
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    margin-top: 4px;
+    font-size:0.7rem; color:var(--text-dim);
+    letter-spacing:2px; text-transform:uppercase; margin-top:4px;
   }
 
   .section-title {
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 0.75rem;
-    color: var(--accent);
-    letter-spacing: 3px;
-    text-transform: uppercase;
-    margin-bottom: 12px;
-    border-bottom: 1px solid var(--border);
-    padding-bottom: 8px;
+    font-family:'Share Tech Mono',monospace; font-size:0.75rem;
+    color:var(--accent); letter-spacing:3px; text-transform:uppercase;
+    margin-bottom:12px; border-bottom:1px solid var(--border); padding-bottom:8px;
   }
 
-  /* AI TOOLS */
-  .ai-tools-grid {
-    display: grid;
-    gap: 12px;
-    margin-bottom: 20px;
-  }
-
+  /* TOOL CARDS */
+  .ai-tools-grid { display:grid; gap:12px; margin-bottom:20px; }
   .tool-card {
-    background: var(--bg2);
-    border: 1px solid var(--border);
-    padding: 18px;
-    cursor: pointer;
-    transition: all 0.2s;
-    animation: fadeIn 0.5s ease;
+    background:var(--bg2); border:1px solid var(--border);
+    padding:18px; cursor:pointer; transition:all 0.2s; animation:fadeIn 0.5s ease;
+  }
+  .tool-card:hover { border-color:var(--accent); box-shadow:var(--glow); }
+  .tool-card h3 { font-size:1rem; font-weight:700; letter-spacing:2px; color:white; margin-bottom:6px; }
+  .tool-card p  { font-size:0.8rem; color:var(--text-dim); letter-spacing:0.5px; line-height:1.5; }
+  .tool-tag {
+    display:inline-block; font-family:'Share Tech Mono',monospace; font-size:0.65rem;
+    color:var(--accent); border:1px solid var(--accent);
+    padding:2px 8px; margin-top:10px; letter-spacing:1px;
   }
 
-  .tool-card:hover {
-    border-color: var(--accent);
-    box-shadow: var(--glow);
+  /* INPUTS */
+  input, select, textarea {
+    width:100%; background:var(--bg); border:1px solid var(--border);
+    color:var(--text); padding:12px 16px;
+    font-family:'Share Tech Mono',monospace; font-size:0.85rem;
+    outline:none; transition:border-color 0.2s; margin-bottom:12px;
   }
-
-  .tool-card h3 {
-    font-size: 1rem;
-    font-weight: 700;
-    letter-spacing: 2px;
-    color: white;
-    margin-bottom: 6px;
-  }
-
-  .tool-card p {
-    font-size: 0.8rem;
-    color: var(--text-dim);
-    letter-spacing: 0.5px;
-    line-height: 1.5;
-  }
-
-  .tool-card .tool-tag {
-    display: inline-block;
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 0.65rem;
-    color: var(--accent);
-    border: 1px solid var(--accent);
-    padding: 2px 8px;
-    margin-top: 10px;
-    letter-spacing: 1px;
-  }
-
-  /* AI TOOL MODAL */
-  .modal {
-    display: none;
-    position: fixed;
-    inset: 0;
-    background: rgba(2,6,8,0.95);
-    z-index: 200;
-    padding: 20px;
-    overflow-y: auto;
-  }
-
-  .modal.active { display: flex; flex-direction: column; }
-
-  .modal-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 20px;
-    padding-bottom: 12px;
-    border-bottom: 1px solid var(--border);
-  }
-
-  .modal-header h3 {
-    font-size: 1rem;
-    letter-spacing: 3px;
-    text-transform: uppercase;
-    color: var(--accent);
-    font-family: 'Share Tech Mono', monospace;
-  }
-
-  .close-btn {
-    background: none;
-    border: 1px solid var(--border);
-    color: var(--text-dim);
-    width: 32px;
-    height: 32px;
-    cursor: pointer;
-    font-size: 1rem;
-    transition: all 0.2s;
-  }
-
-  .close-btn:hover { border-color: var(--accent3); color: var(--accent3); }
-
-  textarea {
-    width: 100%;
-    background: var(--bg);
-    border: 1px solid var(--border);
-    color: var(--text);
-    padding: 12px 16px;
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 0.8rem;
-    outline: none;
-    resize: vertical;
-    min-height: 100px;
-    transition: border-color 0.2s;
-    margin-bottom: 12px;
-  }
-
-  textarea:focus { border-color: var(--accent); }
-  textarea::placeholder { color: var(--text-dim); }
-
-  select {
-    width: 100%;
-    background: var(--bg);
-    border: 1px solid var(--border);
-    color: var(--text);
-    padding: 12px 16px;
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 0.8rem;
-    outline: none;
-    margin-bottom: 12px;
-  }
-
-  input {
-    width: 100%;
-    background: var(--bg);
-    border: 1px solid var(--border);
-    color: var(--text);
-    padding: 12px 16px;
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 0.85rem;
-    outline: none;
-    transition: border-color 0.2s;
-    margin-bottom: 12px;
-  }
-
-  input:focus { border-color: var(--accent); }
-  input::placeholder { color: var(--text-dim); }
-
+  input:focus, select:focus, textarea:focus { border-color:var(--accent); }
+  input::placeholder, textarea::placeholder { color:var(--text-dim); }
+  textarea { resize:vertical; min-height:100px; }
   label {
-    display: block;
-    font-size: 0.7rem;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    color: var(--text-dim);
-    margin-bottom: 6px;
-    font-family: 'Share Tech Mono', monospace;
+    display:block; font-size:0.7rem; letter-spacing:2px; text-transform:uppercase;
+    color:var(--text-dim); margin-bottom:6px;
+    font-family:'Share Tech Mono',monospace;
   }
 
   .btn {
-    width: 100%;
-    padding: 14px;
-    background: var(--accent);
-    color: var(--bg);
-    border: none;
-    font-family: 'Rajdhani', sans-serif;
-    font-weight: 700;
-    font-size: 1rem;
-    letter-spacing: 3px;
-    text-transform: uppercase;
-    cursor: pointer;
-    transition: all 0.2s;
-    clip-path: polygon(8px 0%, 100% 0%, calc(100% - 8px) 100%, 0% 100%);
+    width:100%; padding:14px; background:var(--accent); color:var(--bg);
+    border:none; font-family:'Rajdhani',sans-serif; font-weight:700;
+    font-size:1rem; letter-spacing:3px; text-transform:uppercase;
+    cursor:pointer; transition:all 0.2s;
+    clip-path:polygon(8px 0%,100% 0%,calc(100% - 8px) 100%,0% 100%);
   }
+  .btn:hover { background:white; }
+  .btn:disabled { opacity:0.5; cursor:not-allowed; }
 
-  .btn:hover { background: white; }
-  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  /* MODAL */
+  .modal {
+    display:none; position:fixed; inset:0;
+    background:rgba(2,6,8,0.97); z-index:200;
+    padding:20px; overflow-y:auto; flex-direction:column;
+  }
+  .modal.active { display:flex; }
+  .modal-header {
+    display:flex; align-items:center; justify-content:space-between;
+    margin-bottom:20px; padding-bottom:12px; border-bottom:1px solid var(--border);
+  }
+  .modal-header h3 {
+    font-size:1rem; letter-spacing:3px; text-transform:uppercase;
+    color:var(--accent); font-family:'Share Tech Mono',monospace;
+  }
+  .close-btn {
+    background:none; border:1px solid var(--border); color:var(--text-dim);
+    width:32px; height:32px; cursor:pointer; font-size:1rem; transition:all 0.2s;
+  }
+  .close-btn:hover { border-color:var(--accent3); color:var(--accent3); }
 
   .ai-output {
-    background: var(--bg3);
-    border: 1px solid var(--accent);
-    padding: 16px;
-    margin-top: 16px;
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 0.8rem;
-    line-height: 1.7;
-    color: var(--text);
-    white-space: pre-wrap;
-    max-height: 400px;
-    overflow-y: auto;
-    display: none;
+    background:var(--bg3); border:1px solid var(--accent); padding:16px;
+    margin-top:16px; font-family:'Share Tech Mono',monospace; font-size:0.8rem;
+    line-height:1.7; color:var(--text); white-space:pre-wrap;
+    max-height:400px; overflow-y:auto; display:none;
   }
-
   .copy-btn {
-    background: none;
-    border: 1px solid var(--accent);
-    color: var(--accent);
-    padding: 6px 16px;
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 0.7rem;
-    cursor: pointer;
-    margin-top: 8px;
-    letter-spacing: 1px;
-    display: none;
+    background:none; border:1px solid var(--accent); color:var(--accent);
+    padding:6px 16px; font-family:'Share Tech Mono',monospace; font-size:0.7rem;
+    cursor:pointer; margin-top:8px; letter-spacing:1px; display:none;
   }
-
-  .copy-btn:hover { background: var(--accent); color: var(--bg); }
+  .copy-btn:hover { background:var(--accent); color:var(--bg); }
 
   /* COMMUNITY */
-  .post-box {
-    background: var(--bg2);
-    border: 1px solid var(--border);
-    padding: 16px;
-    margin-bottom: 16px;
-  }
-
-  .post-box textarea {
-    margin-bottom: 10px;
-    min-height: 80px;
-  }
-
+  .post-box { background:var(--bg2); border:1px solid var(--border); padding:16px; margin-bottom:16px; }
+  .post-box textarea { margin-bottom:10px; min-height:80px; }
   .post-btn {
-    background: var(--accent);
-    color: var(--bg);
-    border: none;
-    padding: 10px 24px;
-    font-family: 'Rajdhani', sans-serif;
-    font-weight: 700;
-    letter-spacing: 2px;
-    cursor: pointer;
-    font-size: 0.85rem;
-    transition: all 0.2s;
+    background:var(--accent); color:var(--bg); border:none; padding:10px 24px;
+    font-family:'Rajdhani',sans-serif; font-weight:700;
+    letter-spacing:2px; cursor:pointer; font-size:0.85rem; transition:all 0.2s;
   }
-
-  .post-btn:hover { background: white; }
+  .post-btn:hover { background:white; }
 
   .post-card {
-    background: var(--bg2);
-    border: 1px solid var(--border);
-    padding: 16px;
-    margin-bottom: 12px;
-    animation: fadeIn 0.4s ease;
+    background:var(--bg2); border:1px solid var(--border);
+    padding:16px; margin-bottom:12px; animation:fadeIn 0.4s ease;
   }
+  .post-meta { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }
+  .post-author { font-family:'Share Tech Mono',monospace; font-size:0.8rem; color:var(--accent); }
+  .post-rank   { font-size:0.65rem; color:var(--text-dim); letter-spacing:1px; margin-left:8px; }
+  .post-time   { font-size:0.7rem; color:var(--text-dim); font-family:'Share Tech Mono',monospace; }
+  .post-content { font-size:0.9rem; line-height:1.6; color:var(--text); margin-bottom:12px; }
 
-  .post-meta {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 10px;
+  /* REACTIONS */
+  .post-actions { display:flex; gap:6px; flex-wrap:wrap; align-items:center; margin-bottom:8px; }
+  .react-btn {
+    background:none; border:1px solid var(--border); color:var(--text-dim);
+    font-size:0.75rem; padding:3px 8px; cursor:pointer;
+    font-family:'Share Tech Mono',monospace; transition:all 0.2s; border-radius:2px;
   }
-
-  .post-author {
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 0.8rem;
-    color: var(--accent);
+  .react-btn:hover  { border-color:var(--accent); color:var(--accent); }
+  .react-btn.active { border-color:var(--accent); color:var(--accent); background:rgba(0,245,196,0.08); }
+  .reply-toggle {
+    background:none; border:1px solid var(--border); color:var(--text-dim);
+    font-family:'Share Tech Mono',monospace; font-size:0.7rem;
+    cursor:pointer; letter-spacing:1px; padding:3px 8px; transition:all 0.2s;
   }
-
-  .post-rank {
-    font-size: 0.65rem;
-    color: var(--text-dim);
-    letter-spacing: 1px;
-    margin-left: 8px;
+  .reply-toggle:hover { color:var(--accent2); border-color:var(--accent2); }
+  .flag-btn {
+    background:none; border:none; color:var(--text-dim); font-size:0.7rem;
+    cursor:pointer; font-family:'Share Tech Mono',monospace;
+    margin-left:auto; padding:3px 6px; transition:color 0.2s;
   }
+  .flag-btn:hover { color:var(--accent3); }
 
-  .post-time {
-    font-size: 0.7rem;
-    color: var(--text-dim);
-    font-family: 'Share Tech Mono', monospace;
+  /* REPLIES */
+  .replies-section { display:none; margin-top:12px; border-top:1px solid var(--border); padding-top:12px; }
+  .replies-section.open { display:block; }
+  .reply-item {
+    padding:10px 12px; background:var(--bg3); border-left:2px solid var(--accent2);
+    margin-bottom:8px; animation:fadeIn 0.3s ease;
   }
-
-  .post-content {
-    font-size: 0.9rem;
-    line-height: 1.6;
-    color: var(--text);
-    margin-bottom: 12px;
+  .reply-meta { display:flex; justify-content:space-between; margin-bottom:4px; }
+  .reply-author { font-family:'Share Tech Mono',monospace; font-size:0.75rem; color:var(--accent2); }
+  .reply-time   { font-size:0.65rem; color:var(--text-dim); font-family:'Share Tech Mono',monospace; }
+  .reply-content { font-size:0.85rem; color:var(--text); line-height:1.5; }
+  .reply-input-row { display:flex; gap:8px; margin-top:10px; }
+  .reply-input-row input { margin-bottom:0; flex:1; font-size:0.8rem; padding:10px 12px; }
+  .reply-send {
+    background:var(--accent); color:var(--bg); border:none; padding:10px 16px;
+    font-family:'Share Tech Mono',monospace; font-size:0.75rem;
+    cursor:pointer; font-weight:700; white-space:nowrap; transition:all 0.2s;
   }
+  .reply-send:hover { background:white; }
 
-  .post-actions {
-    display: flex;
-    gap: 16px;
+  /* MARKETPLACE */
+  .market-card {
+    background:var(--bg2); border:1px solid var(--border); padding:18px;
+    margin-bottom:12px; animation:fadeIn 0.4s ease; transition:border-color 0.2s;
   }
-
-  .like-btn {
-    background: none;
-    border: none;
-    color: var(--text-dim);
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 0.75rem;
-    cursor: pointer;
-    letter-spacing: 1px;
-    transition: color 0.2s;
-    padding: 0;
+  .market-card:hover { border-color:var(--accent); }
+  .market-card h3 { font-size:1rem; font-weight:700; letter-spacing:2px; color:white; margin-bottom:6px; }
+  .market-card p  { font-size:0.8rem; color:var(--text-dim); line-height:1.5; margin-bottom:10px; }
+  .market-footer  { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px; }
+  .market-price   { font-family:'Share Tech Mono',monospace; font-size:0.9rem; color:var(--accent); letter-spacing:1px; }
+  .buy-btn {
+    background:var(--accent); color:var(--bg); border:none; padding:8px 20px;
+    font-family:'Rajdhani',sans-serif; font-weight:700;
+    font-size:0.85rem; letter-spacing:2px; cursor:pointer; transition:all 0.2s;
   }
-
-  .like-btn:hover, .like-btn.liked { color: var(--accent); }
-
-  /* LOADING */
-  .loading {
-    text-align: center;
-    padding: 40px;
-    color: var(--text-dim);
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 0.8rem;
-    letter-spacing: 2px;
+  .buy-btn:hover { background:white; }
+  .buy-btn.owned { background:none; border:1px solid var(--text-dim); color:var(--text-dim); cursor:default; }
+  .buy-btn.owned:hover { background:none; color:var(--text-dim); }
+  .market-type {
+    font-family:'Share Tech Mono',monospace; font-size:0.65rem;
+    color:var(--accent2); border:1px solid var(--accent2); padding:2px 8px; letter-spacing:1px;
   }
-
-  .empty {
-    text-align: center;
-    padding: 40px;
-    color: var(--text-dim);
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 0.8rem;
+  .market-filter { display:flex; gap:8px; margin-bottom:16px; flex-wrap:wrap; }
+  .filter-btn {
+    background:none; border:1px solid var(--border); color:var(--text-dim);
+    padding:6px 14px; font-family:'Share Tech Mono',monospace; font-size:0.7rem;
+    cursor:pointer; letter-spacing:1px; transition:all 0.2s;
   }
+  .filter-btn.active, .filter-btn:hover { border-color:var(--accent); color:var(--accent); }
 
   /* PROFILE */
   .profile-card {
-    background: var(--bg2);
-    border: 1px solid var(--border);
-    border-top: 3px solid var(--accent);
-    padding: 24px;
-    text-align: center;
-    margin-bottom: 20px;
+    background:var(--bg2); border:1px solid var(--border);
+    border-top:3px solid var(--accent); padding:24px;
+    text-align:center; margin-bottom:20px;
   }
-
   .profile-avatar {
-    width: 64px;
-    height: 64px;
-    background: var(--bg3);
-    border: 2px solid var(--accent);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 0 auto 12px;
-    font-size: 1.5rem;
-    font-family: 'Share Tech Mono', monospace;
-    color: var(--accent);
+    width:64px; height:64px; background:var(--bg3); border:2px solid var(--accent);
+    display:flex; align-items:center; justify-content:center;
+    margin:0 auto 12px; font-size:1.5rem;
+    font-family:'Share Tech Mono',monospace; color:var(--accent);
   }
-
-  .profile-username {
-    font-size: 1.3rem;
-    font-weight: 700;
-    letter-spacing: 2px;
-    color: white;
-  }
-
-  .profile-rank {
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 0.8rem;
-    color: var(--accent);
-    letter-spacing: 3px;
-    margin-top: 4px;
-  }
-
-  .profile-stats {
-    display: flex;
-    justify-content: center;
-    gap: 24px;
-    margin-top: 16px;
-  }
-
-  .profile-stat { text-align: center; }
-  .profile-stat .val { font-size: 1.2rem; font-weight: 700; color: var(--accent); }
-  .profile-stat .lbl { font-size: 0.65rem; color: var(--text-dim); letter-spacing: 1px; }
+  .profile-username { font-size:1.3rem; font-weight:700; letter-spacing:2px; color:white; }
+  .profile-rank { font-family:'Share Tech Mono',monospace; font-size:0.8rem; color:var(--accent); letter-spacing:3px; margin-top:4px; }
+  .profile-stats { display:flex; justify-content:center; gap:24px; margin-top:16px; }
+  .profile-stat .val { font-size:1.2rem; font-weight:700; color:var(--accent); }
+  .profile-stat .lbl { font-size:0.65rem; color:var(--text-dim); letter-spacing:1px; }
 
   .notification-item {
-    background: var(--bg2);
-    border: 1px solid var(--border);
-    border-left: 3px solid var(--accent2);
-    padding: 12px 16px;
-    margin-bottom: 8px;
-    font-size: 0.85rem;
-    animation: fadeIn 0.4s ease;
+    background:var(--bg2); border:1px solid var(--border);
+    border-left:3px solid var(--accent2); padding:12px 16px;
+    margin-bottom:8px; font-size:0.85rem; animation:fadeIn 0.4s ease;
+  }
+  .notif-type {
+    font-family:'Share Tech Mono',monospace; font-size:0.65rem;
+    color:var(--accent2); letter-spacing:2px; text-transform:uppercase; margin-bottom:4px;
   }
 
-  .notification-item .notif-type {
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 0.65rem;
-    color: var(--accent2);
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    margin-bottom: 4px;
+  /* STATUS */
+  .status-msg {
+    padding:10px 14px; font-family:'Share Tech Mono',monospace;
+    font-size:0.75rem; letter-spacing:1px; margin-bottom:12px; display:none;
   }
+  .status-msg.ok  { border:1px solid var(--accent);  color:var(--accent);  background:rgba(0,245,196,0.05); }
+  .status-msg.err { border:1px solid var(--accent3); color:var(--accent3); background:rgba(255,0,60,0.05); }
 
-  @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
+  .loading { text-align:center; padding:40px; color:var(--text-dim); font-family:'Share Tech Mono',monospace; font-size:0.8rem; letter-spacing:2px; }
+  .empty   { text-align:center; padding:40px; color:var(--text-dim); font-family:'Share Tech Mono',monospace; font-size:0.8rem; }
 
   .spinner {
-    display: inline-block;
-    width: 16px;
-    height: 16px;
-    border: 2px solid var(--border);
-    border-top-color: var(--accent);
-    border-radius: 50%;
-    animation: spin 0.8s linear infinite;
-    vertical-align: middle;
-    margin-right: 8px;
+    display:inline-block; width:16px; height:16px;
+    border:2px solid var(--border); border-top-color:var(--accent);
+    border-radius:50%; animation:spin 0.8s linear infinite;
+    vertical-align:middle; margin-right:8px;
   }
 
-  @keyframes spin { to { transform: rotate(360deg); } }
+  @keyframes spin   { to { transform:rotate(360deg); } }
+  @keyframes fadeIn { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
 </style>
 </head>
 <body>
@@ -619,67 +341,51 @@
   <div class="nav-logo"><span>GENESIS</span><span>VAULT</span></div>
   <div class="nav-right">
     <span class="rank-badge" id="nav-rank">GHOST</span>
-    <span class="nav-user" id="nav-username">hunter</span>
+    <span class="nav-user"   id="nav-username">hunter</span>
     <button class="logout-btn" onclick="logout()">EXIT</button>
   </div>
 </nav>
 
-<!-- MAIN -->
 <main>
 
-  <!-- HOME PAGE -->
+  <!-- HOME -->
   <div class="page active" id="page-home">
     <div class="welcome-bar">
       <p class="greeting">$ whoami</p>
       <h2>Welcome back, <span id="welcome-name">Hunter</span></h2>
     </div>
-
     <div class="stats-grid">
-      <div class="stat-card">
-        <div class="stat-value" id="stat-followers">0</div>
-        <div class="stat-label">Followers</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-value" id="stat-following">0</div>
-        <div class="stat-label">Following</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-value" id="stat-tools">0</div>
-        <div class="stat-label">Tools Sold</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-value" id="stat-earnings">$0</div>
-        <div class="stat-label">Earnings</div>
-      </div>
+      <div class="stat-card"><div class="stat-value" id="stat-tools">0</div><div class="stat-label">Tools Owned</div></div>
+      <div class="stat-card"><div class="stat-value" id="stat-notifs">0</div><div class="stat-label">Notifications</div></div>
+      <div class="stat-card"><div class="stat-value" id="stat-rank">—</div><div class="stat-label">Rank</div></div>
+      <div class="stat-card"><div class="stat-value" id="stat-since">—</div><div class="stat-label">Member Since</div></div>
     </div>
-
     <p class="section-title">// Quick Access</p>
-<div class="ai-tools-grid">
-  <div class="tool-card" onclick="window.location.href='vault-ai.html'">
-    <h3>⚡ AI TERMINAL</h3>
-    <p>Launch the Genesis Vault secure terminal. Run recon, scan targets, query the AI.</p>
-    <span class="tool-tag">LIVE</span>
-  </div>
-  <div class="tool-card" onclick="window.location.href='learn.html'">
-    <h3>📚 LEARN</h3>
-    <p>Cybersecurity courses, bug bounty guides, and hands-on labs for all ranks.</p>
-    <span class="tool-tag">COMING SOON</span>
-  </div>
+    <div class="ai-tools-grid">
+      <div class="tool-card" onclick="location.href='vault-ai.html'">
+        <h3>⚡ AI TERMINAL</h3>
+        <p>Launch the Genesis Vault secure terminal. Run recon, scan targets, query the AI.</p>
+        <span class="tool-tag">LIVE</span>
+      </div>
+      <div class="tool-card" onclick="location.href='learn.html'">
+        <h3>📚 LEARN</h3>
+        <p>Cybersecurity courses, bug bounty guides, and hands-on labs for all ranks.</p>
+        <span class="tool-tag">COMING SOON</span>
+      </div>
     </div>
-    
     <p class="section-title">// AI Tools</p>
     <div class="ai-tools-grid">
-      <div class="tool-card" onclick="openTool('report')">
+      <div class="tool-card" onclick="openModal('modal-report')">
         <h3>REPORT WRITER</h3>
         <p>Generate professional HackerOne bug bounty reports from your findings instantly.</p>
         <span class="tool-tag">AI POWERED</span>
       </div>
-      <div class="tool-card" onclick="openTool('recon')">
+      <div class="tool-card" onclick="openModal('modal-recon')">
         <h3>RECON ANALYZER</h3>
         <p>Paste your recon output and get AI-powered attack surface analysis.</p>
         <span class="tool-tag">AI POWERED</span>
       </div>
-      <div class="tool-card" onclick="openTool('xss')">
+      <div class="tool-card" onclick="openModal('modal-xss')">
         <h3>XSS TRIAGE</h3>
         <p>Feed URLs and get ranked XSS candidates with suggested payloads.</p>
         <span class="tool-tag">AI POWERED</span>
@@ -687,371 +393,592 @@
     </div>
   </div>
 
-  <!-- COMMUNITY PAGE -->
+  <!-- COMMUNITY -->
   <div class="page" id="page-community">
     <p class="section-title">// Community Feed</p>
-
     <div class="post-box">
       <textarea id="post-content" placeholder="// Share your findings, tips, or wins..."></textarea>
       <button class="post-btn" onclick="createPost()">[ POST ]</button>
     </div>
-
-    <div id="feed-container">
-      <div class="loading"><span class="spinner"></span>Loading feed...</div>
-    </div>
+    <div id="feed-container"><div class="loading"><span class="spinner"></span>Loading feed...</div></div>
   </div>
 
-  <!-- MARKETPLACE PAGE -->
+  <!-- MARKETPLACE -->
   <div class="page" id="page-marketplace">
     <p class="section-title">// Tool Marketplace</p>
-    <button class="post-btn" onclick="submitTool()" style="margin-bottom:16px;">[ LIST A TOOL ]</button>
-    <div id="marketplace-container">
-      <div class="loading"><span class="spinner"></span>Loading tools...</div>
+    <button class="post-btn" onclick="openModal('modal-submit')" style="margin-bottom:16px;">[ LIST A TOOL ]</button>
+    <div class="market-filter">
+      <button class="filter-btn active" onclick="filterMarket('',this)">ALL</button>
+      <button class="filter-btn" onclick="filterMarket('script',this)">SCRIPTS</button>
+      <button class="filter-btn" onclick="filterMarket('template',this)">TEMPLATES</button>
+      <button class="filter-btn" onclick="filterMarket('guide',this)">GUIDES</button>
     </div>
+    <div id="marketplace-container"><div class="loading"><span class="spinner"></span>Loading tools...</div></div>
   </div>
 
-  <!-- PROFILE PAGE -->
+  <!-- PROFILE -->
   <div class="page" id="page-profile">
-    <div class="profile-card" id="profile-card">
-      <div class="loading"><span class="spinner"></span>Loading...</div>
-    </div>
-
+    <div class="profile-card" id="profile-card"><div class="loading"><span class="spinner"></span>Loading...</div></div>
     <p class="section-title">// Notifications</p>
-    <div id="notifications-container">
-      <div class="loading"><span class="spinner"></span>Loading...</div>
-    </div>
+    <button class="post-btn" onclick="markAllRead()" style="margin-bottom:12px;font-size:0.75rem;padding:8px 16px;">[ MARK ALL READ ]</button>
+    <div id="notif-container"><div class="loading"><span class="spinner"></span>Loading...</div></div>
   </div>
 
 </main>
 
 <!-- BOTTOM NAV -->
 <div class="bottom-nav">
-  <div class="nav-item active" onclick="showPage('home', this)">
-    <span class="nav-icon">⌂</span>
-    <span class="nav-label">Home</span>
+  <div class="nav-item active" onclick="showPage('home',this)">
+    <span class="nav-icon">⌂</span><span class="nav-label">Home</span>
   </div>
-  <div class="nav-item" onclick="showPage('community', this)">
-    <span class="nav-icon">◈</span>
-    <span class="nav-label">Community</span>
+  <div class="nav-item" onclick="showPage('community',this)">
+    <span class="nav-icon">◈</span><span class="nav-label">Community</span>
   </div>
-  <div class="nav-item" onclick="showPage('marketplace', this)">
-    <span class="nav-icon">⊞</span>
-    <span class="nav-label">Market</span>
+  <div class="nav-item" onclick="showPage('marketplace',this)">
+    <span class="nav-icon">⊞</span><span class="nav-label">Market</span>
   </div>
-  <div class="nav-item" onclick="showPage('profile', this)">
-    <span class="nav-icon">◉</span>
-    <span class="nav-label">Profile</span>
+  <div class="nav-item" onclick="showPage('profile',this)">
+    <span class="nav-icon">◉</span><span class="nav-label">Profile</span>
   </div>
 </div>
 
-<!-- AI TOOL MODALS -->
+<!-- REPORT WRITER MODAL -->
 <div class="modal" id="modal-report">
   <div class="modal-header">
     <h3>// Report Writer</h3>
-    <button class="close-btn" onclick="closeTool('report')">✕</button>
+    <button class="close-btn" onclick="closeModal('modal-report')">✕</button>
   </div>
   <label>Vulnerability Type</label>
   <input type="text" id="r-vuln" placeholder="e.g. XSS, IDOR, CSRF">
   <label>Target</label>
   <input type="text" id="r-target" placeholder="e.g. app.example.com">
   <label>Severity</label>
-  <select id="r-severity">
-    <option>Critical</option>
-    <option selected>High</option>
-    <option>Medium</option>
-    <option>Low</option>
-  </select>
+  <select id="r-severity"><option>Critical</option><option selected>High</option><option>Medium</option><option>Low</option></select>
   <label>Your Findings</label>
   <textarea id="r-findings" placeholder="Describe what you found..."></textarea>
   <label>Steps to Reproduce</label>
-  <textarea id="r-steps" placeholder="1. Go to...\n2. Click...\n3. Observe..."></textarea>
-  <button class="btn" id="report-btn" onclick="generateReport()">[ GENERATE REPORT ]</button>
-  <div class="ai-output" id="report-output"></div>
-  <button class="copy-btn" id="report-copy" onclick="copyOutput('report-output')">[ COPY REPORT ]</button>
+  <textarea id="r-steps" placeholder="1. Go to...&#10;2. Click...&#10;3. Observe..."></textarea>
+  <button class="btn" id="btn-report" onclick="generateReport()">[ GENERATE REPORT ]</button>
+  <div class="ai-output" id="out-report"></div>
+  <button class="copy-btn" id="cpy-report" onclick="copyOut('out-report')">[ COPY REPORT ]</button>
 </div>
 
+<!-- RECON MODAL -->
 <div class="modal" id="modal-recon">
   <div class="modal-header">
     <h3>// Recon Analyzer</h3>
-    <button class="close-btn" onclick="closeTool('recon')">✕</button>
+    <button class="close-btn" onclick="closeModal('modal-recon')">✕</button>
   </div>
   <label>Target Domain</label>
   <input type="text" id="recon-target" placeholder="example.com">
-  <label>Recon Output (paste subfinder/httpx output)</label>
+  <label>Recon Output</label>
   <textarea id="recon-data" placeholder="Paste your recon data here..." style="min-height:150px;"></textarea>
-  <button class="btn" id="recon-btn" onclick="analyzeRecon()">[ ANALYZE ]</button>
-  <div class="ai-output" id="recon-output"></div>
-  <button class="copy-btn" id="recon-copy" onclick="copyOutput('recon-output')">[ COPY ANALYSIS ]</button>
+  <button class="btn" id="btn-recon" onclick="analyzeRecon()">[ ANALYZE ]</button>
+  <div class="ai-output" id="out-recon"></div>
+  <button class="copy-btn" id="cpy-recon" onclick="copyOut('out-recon')">[ COPY ANALYSIS ]</button>
 </div>
 
+<!-- XSS MODAL -->
 <div class="modal" id="modal-xss">
   <div class="modal-header">
     <h3>// XSS Triage</h3>
-    <button class="close-btn" onclick="closeTool('xss')">✕</button>
+    <button class="close-btn" onclick="closeModal('modal-xss')">✕</button>
   </div>
   <label>Target</label>
   <input type="text" id="xss-target" placeholder="example.com">
   <label>URLs (one per line)</label>
-  <textarea id="xss-urls" placeholder="https://example.com/search?q=test&#10;https://example.com/page?id=1" style="min-height:150px;"></textarea>
-  <button class="btn" id="xss-btn" onclick="triageXSS()">[ TRIAGE URLS ]</button>
-  <div class="ai-output" id="xss-output"></div>
-  <button class="copy-btn" id="xss-copy" onclick="copyOutput('xss-output')">[ COPY ANALYSIS ]</button>
+  <textarea id="xss-urls" placeholder="https://example.com/search?q=test" style="min-height:150px;"></textarea>
+  <button class="btn" id="btn-xss" onclick="triageXSS()">[ TRIAGE URLS ]</button>
+  <div class="ai-output" id="out-xss"></div>
+  <button class="copy-btn" id="cpy-xss" onclick="copyOut('out-xss')">[ COPY ANALYSIS ]</button>
 </div>
 
-  <script>
-  const API = 'https://genesis-vault-backend.onrender.com/api';
-  let token = localStorage.getItem('gv_token');
-  let currentUser = { rank: localStorage.getItem('gv_rank'), email: localStorage.getItem('gv_email') };
+<!-- BUY MODAL -->
+<div class="modal" id="modal-buy">
+  <div class="modal-header">
+    <h3>// Purchase Tool</h3>
+    <button class="close-btn" onclick="closeModal('modal-buy')">✕</button>
+  </div>
+  <div style="background:var(--bg2);border:1px solid var(--border);padding:14px;margin-bottom:16px;">
+    <div id="buy-name"  style="font-weight:700;font-size:1rem;letter-spacing:2px;color:white;margin-bottom:4px;"></div>
+    <div id="buy-price" style="font-family:'Share Tech Mono',monospace;font-size:0.9rem;color:var(--accent);"></div>
+  </div>
+  <div style="background:var(--bg3);border:1px solid var(--border);padding:14px;margin-bottom:16px;font-family:'Share Tech Mono',monospace;font-size:0.75rem;line-height:1.8;color:var(--text-dim);">
+    // Send exact USDT (BEP-20) to Vault wallet<br>
+    // Paste your Binance TX ID below<br>
+    // Admin confirms within 24h — tool unlocks automatically
+  </div>
+  <label>Binance TX ID</label>
+  <input type="text" id="buy-tx" placeholder="Transaction hash...">
+  <div class="status-msg" id="buy-status"></div>
+  <button class="btn" id="btn-buy" onclick="submitPayment()">[ SUBMIT PAYMENT ]</button>
+</div>
 
-  if (!token) window.location.href = 'login.html';
+<!-- SUBMIT TOOL MODAL -->
+<div class="modal" id="modal-submit">
+  <div class="modal-header">
+    <h3>// List Your Tool</h3>
+    <button class="close-btn" onclick="closeModal('modal-submit')">✕</button>
+  </div>
+  <label>Tool Title</label>
+  <input type="text" id="sub-title" placeholder="e.g. Subdomain Recon Script">
+  <label>Description</label>
+  <textarea id="sub-desc" placeholder="What does it do? Who is it for?"></textarea>
+  <label>Type</label>
+  <select id="sub-type">
+    <option value="script">Script</option>
+    <option value="template">Template</option>
+    <option value="guide">Guide</option>
+    <option value="other">Other</option>
+  </select>
+  <label>Price (USDT) — 0 for free</label>
+  <input type="number" id="sub-price" placeholder="0" min="0" step="0.01">
+  <label>Download / Link URL</label>
+  <input type="text" id="sub-url" placeholder="https://github.com/...">
+  <div class="status-msg" id="sub-status"></div>
+  <button class="btn" id="btn-submit" onclick="submitTool()">[ SUBMIT FOR REVIEW ]</button>
+</div>
 
-  function authHeaders() {
-    return { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` };
+<script>
+const API = 'https://genesis-vault-backend.onrender.com/api';
+
+const token = localStorage.getItem('gv_token');
+if (!token) location.href = 'login.html';
+
+let currentRank   = localStorage.getItem('gv_rank') || 'Ghost';
+let currentFilter = '';
+let buyTarget     = { id: null, title: '', price: 0 };
+
+function h() {
+  return { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` };
+}
+
+// ── BOOT ─────────────────────────────────────────────────────────────
+async function boot() {
+  try {
+    const res  = await fetch(`${API}/profile`, { headers: h() });
+    const data = await res.json();
+    if (data.status !== 'success') { logout(); return; }
+
+    const u = data.username || data.email?.split('@')[0] || 'Hunter';
+    currentRank = data.rank || 'Ghost';
+    localStorage.setItem('gv_username', u);
+    localStorage.setItem('gv_rank',     currentRank);
+
+    document.getElementById('nav-username').textContent = u;
+    document.getElementById('nav-rank').textContent     = currentRank.toUpperCase();
+    document.getElementById('welcome-name').textContent = u.charAt(0).toUpperCase() + u.slice(1);
+    document.getElementById('stat-rank').textContent    = currentRank;
+    document.getElementById('stat-tools').textContent   = data.tool_count || 0;
+    document.getElementById('stat-notifs').textContent  = data.unread_notifications || 0;
+    document.getElementById('stat-since').textContent   = data.created_at
+      ? new Date(data.created_at).toLocaleDateString('en-GB',{month:'short',year:'2-digit'})
+      : '—';
+  } catch(e) {
+    const u = localStorage.getItem('gv_username') || 'Hunter';
+    document.getElementById('nav-username').textContent = u;
+    document.getElementById('nav-rank').textContent     = currentRank.toUpperCase();
+    document.getElementById('welcome-name').textContent = u;
   }
+}
 
-  function getDisplayName() {
-    return currentUser.email ? currentUser.email.split('@')[0] : 'Hunter';
-  }
+// ── NAVIGATION ────────────────────────────────────────────────────────
+function showPage(page, el) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + page).classList.add('active');
+  el.classList.add('active');
+  if (page === 'community')   loadFeed();
+  if (page === 'marketplace') loadMarketplace();
+  if (page === 'profile')     loadProfile();
+}
 
-  // Init nav
-  document.getElementById('nav-username').textContent = getDisplayName();
-  document.getElementById('nav-rank').textContent = (currentUser.rank || 'Ghost').toUpperCase();
-  document.getElementById('welcome-name').textContent = getDisplayName().charAt(0).toUpperCase() + getDisplayName().slice(1);
+function logout() { localStorage.clear(); location.href = 'login.html'; }
 
-  function showPage(page, el) {
-    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-    document.getElementById('page-' + page).classList.add('active');
-    el.classList.add('active');
-    if (page === 'community') loadFeed();
-    if (page === 'profile') loadProfile();
-    if (page === 'marketplace') loadMarketplace();
-  }
+function openModal(id)  { document.getElementById(id).classList.add('active'); }
+function closeModal(id) { document.getElementById(id).classList.remove('active'); }
 
-  function logout() {
-    localStorage.clear();
-    window.location.href = 'login.html';
-  }
-
-  // —— PROFILE ——
-  async function loadProfile() {
-    try {
-      const res = await fetch(`${API}/profile`, { headers: authHeaders() });
-      const data = await res.json();
-      const u = data.user;
-      const name = u.email ? u.email.split('@')[0] : 'Hunter';
-
-      document.getElementById('profile-card').innerHTML = `
-        <div class="profile-avatar">${name[0].toUpperCase()}</div>
-        <div class="profile-username">${name}</div>
-        <div class="profile-rank">[ ${u.rank || 'Ghost'} ]</div>
-        <div class="profile-stats">
-          <div class="profile-stat"><div class="val">0</div><div class="lbl">Followers</div></div>
-          <div class="profile-stat"><div class="val">0</div><div class="lbl">Following</div></div>
-          <div class="profile-stat"><div class="val">0</div><div class="lbl">Tools</div></div>
-        </div>
-      `;
-
-      const nres = await fetch(`${API}/notifications`, { headers: authHeaders() });
-      const ndata = await nres.json();
-      const container = document.getElementById('notifications-container');
-
-      if (!ndata.notifications || ndata.notifications.length === 0) {
-        container.innerHTML = '<div class="empty">// No notifications yet.</div>';
-      } else {
-        container.innerHTML = ndata.notifications.map(n => `
-          <div class="notification-item">
-            <div class="notif-type">${n.type || 'INFO'}</div>
-            ${n.message}
-          </div>
-        `).join('');
-      }
-    } catch(e) {
-      document.getElementById('profile-card').innerHTML = '<div class="empty">// Failed to load profile.</div>';
-      document.getElementById('notifications-container').innerHTML = '<div class="empty">// Failed to load notifications.</div>';
+// ── COMMUNITY FEED ────────────────────────────────────────────────────
+async function loadFeed() {
+  const c = document.getElementById('feed-container');
+  c.innerHTML = '<div class="loading"><span class="spinner"></span>Loading feed...</div>';
+  try {
+    const res  = await fetch(`${API}/posts`, { headers: h() });
+    const data = await res.json();
+    if (!data.posts || !data.posts.length) {
+      c.innerHTML = '<div class="empty">// No posts yet. Be the first.</div>'; return;
     }
+    c.innerHTML = data.posts.map(renderPost).join('');
+  } catch(e) {
+    c.innerHTML = '<div class="empty">// Failed to load feed.</div>';
   }
+}
 
-  // —— COMMUNITY ——
-  async function loadFeed() {
-    const container = document.getElementById('feed-container');
-    container.innerHTML = '<div class="loading"><span class="spinner"></span>Loading feed...</div>';
-    try {
-      const res = await fetch(`${API}/posts`);
-      const data = await res.json();
-      if (!data.posts || data.posts.length === 0) {
-        container.innerHTML = '<div class="empty">// No posts yet. Be the first!</div>';
-        return;
-      }
-      container.innerHTML = data.posts.map(p => `
-        <div class="post-card">
-          <div class="post-meta">
-            <span class="post-author">${p.author_email ? p.author_email.split('@')[0] : 'Ghost'}</span>
-            <span class="post-time">${timeAgo(p.created_at)}</span>
-          </div>
-          <div class="post-content">${p.content}</div>
-        </div>
-      `).join('');
-    } catch(e) {
-      container.innerHTML = '<div class="empty">// Failed to load feed.</div>';
-    }
-  }
+function renderPost(p) {
+  const EMOJIS = ['👍','🔥','💀','👀','💯','🤝'];
+  const rx     = p.reactions || {};
+  const rxHTML = EMOJIS.map(e => {
+    const cnt = rx[e] || 0;
+    return `<button class="react-btn" onclick="reactPost(${p.id},'${e}',this)">${e}${cnt>0?' '+cnt:''}</button>`;
+  }).join('');
 
-  async function createPost() {
-    const content = document.getElementById('post-content').value.trim();
-    if (!content) return;
-    try {
-      await fetch(`${API}/posts/create`, {
-        method: 'POST',
-        headers: authHeaders(),
-        body: JSON.stringify({ content })
-      });
+  return `
+  <div class="post-card" id="post-${p.id}">
+    <div class="post-meta">
+      <div>
+        <span class="post-author">${esc(p.username||'Ghost')}</span>
+        <span class="post-rank">[${esc(p.rank||'Ghost')}]</span>
+      </div>
+      <span class="post-time">${ago(p.created_at)}</span>
+    </div>
+    <div class="post-content">${esc(p.content)}</div>
+    <div class="post-actions">
+      ${rxHTML}
+      <button class="reply-toggle" onclick="toggleReplies(${p.id},this)">💬 ${p.reply_count||0}</button>
+      <button class="flag-btn"     onclick="flagPost(${p.id})" title="Flag">⚑</button>
+    </div>
+    <div class="replies-section" id="replies-${p.id}">
+      <div id="rlist-${p.id}"><div class="loading"><span class="spinner"></span>Loading...</div></div>
+      <div class="reply-input-row">
+        <input type="text" id="rinput-${p.id}" placeholder="// write a reply...">
+        <button class="reply-send" onclick="sendReply(${p.id})">SEND</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+async function createPost() {
+  const content = document.getElementById('post-content').value.trim();
+  if (!content) return;
+  try {
+    const res  = await fetch(`${API}/posts`, {
+      method:'POST', headers:h(),
+      body: JSON.stringify({ content, category:'General' })
+    });
+    const data = await res.json();
+    if (data.status === 'success') {
       document.getElementById('post-content').value = '';
       loadFeed();
-    } catch(e) {}
-  }
+    }
+  } catch(e) {}
+}
 
-  // —— MARKETPLACE ——
-  async function loadMarketplace() {
-    const container = document.getElementById('marketplace-container');
-    container.innerHTML = '<div class="loading"><span class="spinner"></span>Loading tools...</div>';
-    try {
-      const res = await fetch(`${API}/marketplace`);
-      const data = await res.json();
-      if (!data.tools || data.tools.length === 0) {
-        container.innerHTML = '<div class="empty">// No tools listed yet.</div>';
-        return;
-      }
-      container.innerHTML = data.tools.map(t => `
-        <div class="tool-card">
-          <h3>${t.title}</h3>
-          <p>${t.description ? t.description.substring(0, 100) : ''}...</p>
-          <span class="tool-tag">${t.category || 'TOOL'}</span>
+async function reactPost(postId, emoji, btn) {
+  try {
+    const res  = await fetch(`${API}/posts/${postId}/react`, {
+      method:'POST', headers:h(),
+      body: JSON.stringify({ emoji })
+    });
+    const data = await res.json();
+    if (data.status !== 'success') return;
+    const added  = data.action === 'added';
+    const cur    = parseInt(btn.textContent.replace(emoji,'').trim()) || 0;
+    const newCnt = added ? cur+1 : Math.max(0,cur-1);
+    btn.textContent = emoji + (newCnt>0?' '+newCnt:'');
+    btn.classList.toggle('active', added);
+  } catch(e) {}
+}
+
+async function toggleReplies(postId, btn) {
+  const sec = document.getElementById(`replies-${postId}`);
+  if (sec.classList.contains('open')) { sec.classList.remove('open'); return; }
+  sec.classList.add('open');
+  await loadReplies(postId);
+}
+
+async function loadReplies(postId) {
+  const list = document.getElementById(`rlist-${postId}`);
+  list.innerHTML = '<div class="loading"><span class="spinner"></span>Loading...</div>';
+  try {
+    const res  = await fetch(`${API}/posts/${postId}/replies`, { headers:h() });
+    const data = await res.json();
+    if (!data.replies || !data.replies.length) {
+      list.innerHTML = '<div style="color:var(--text-dim);font-family:\'Share Tech Mono\',monospace;font-size:0.75rem;padding:8px 0;">// No replies yet.</div>';
+      return;
+    }
+    list.innerHTML = data.replies.map(r => `
+      <div class="reply-item">
+        <div class="reply-meta">
+          <span class="reply-author">${esc(r.username)}</span>
+          <span class="reply-time">${ago(r.created_at)}</span>
         </div>
-      `).join('');
-    } catch(e) {
-      container.innerHTML = '<div class="empty">// Failed to load marketplace.</div>';
+        <div class="reply-content">${esc(r.content)}</div>
+      </div>`).join('');
+  } catch(e) {
+    list.innerHTML = '<div style="color:var(--accent3);font-size:0.75rem;padding:8px 0;">// Failed.</div>';
+  }
+}
+
+async function sendReply(postId) {
+  const input   = document.getElementById(`rinput-${postId}`);
+  const content = input.value.trim();
+  if (!content) return;
+  try {
+    const res  = await fetch(`${API}/posts/${postId}/reply`, {
+      method:'POST', headers:h(),
+      body: JSON.stringify({ content })
+    });
+    const data = await res.json();
+    if (data.status === 'success') {
+      input.value = '';
+      await loadReplies(postId);
+      const tog = document.querySelector(`#post-${postId} .reply-toggle`);
+      if (tog) {
+        const cur = parseInt(tog.textContent.replace('💬','').trim()) || 0;
+        tog.textContent = `💬 ${cur+1}`;
+      }
     }
-  }
+  } catch(e) {}
+}
 
-  function submitTool() {
-    alert('Tool submission coming soon!');
-  }
+async function flagPost(postId) {
+  try {
+    await fetch(`${API}/posts/${postId}/flag`, { method:'POST', headers:h() });
+    toast('Post flagged for review.');
+  } catch(e) {}
+}
 
-  // —— AI TOOLS ——
-  function openTool(name) {
-    document.getElementById('modal-' + name).classList.add('active');
-  }
-
-  function closeTool(name) {
-    document.getElementById('modal-' + name).classList.remove('active');
-  }
-
-  async function generateReport() {
-    const btn = document.getElementById('report-btn');
-    const output = document.getElementById('report-output');
-    const copy = document.getElementById('report-copy');
-    btn.disabled = true;
-    btn.textContent = '[ GENERATING... ]';
-    output.style.display = 'none';
-
-    const prompt = `Write a professional HackerOne bug bounty report:
-Vulnerability: ${document.getElementById('r-vuln').value}
-Target: ${document.getElementById('r-target').value}
-Severity: ${document.getElementById('r-severity').value}
-Findings: ${document.getElementById('r-findings').value}
-Steps: ${document.getElementById('r-steps').value}`;
-
-    try {
-      const res = await fetch(`${API}/vault-ai`, {
-        method: 'POST',
-        headers: authHeaders(),
-        body: JSON.stringify({ message: prompt, rank: currentUser.rank || 'Ghost' })
-      });
-      const data = await res.json();
-      output.textContent = data.response;
-      output.style.display = 'block';
-      copy.style.display = 'inline-block';
-    } catch(e) {
-      output.textContent = 'Failed to generate report.';
-      output.style.display = 'block';
+// ── MARKETPLACE ───────────────────────────────────────────────────────
+async function loadMarketplace(type) {
+  if (type !== undefined) currentFilter = type;
+  const c = document.getElementById('marketplace-container');
+  c.innerHTML = '<div class="loading"><span class="spinner"></span>Loading tools...</div>';
+  try {
+    const url  = currentFilter ? `${API}/marketplace?type=${currentFilter}` : `${API}/marketplace`;
+    const res  = await fetch(url, { headers:h() });
+    const data = await res.json();
+    if (!data.tools || !data.tools.length) {
+      c.innerHTML = '<div class="empty">// No tools listed yet.</div>'; return;
     }
-    btn.disabled = false;
-    btn.textContent = '[ GENERATE REPORT ]';
+    c.innerHTML = data.tools.map(t => `
+      <div class="market-card">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">
+          <h3>${esc(t.title)}</h3>
+          <span class="market-type">${(t.type||'tool').toUpperCase()}</span>
+        </div>
+        <p>${esc((t.description||'').substring(0,120))}${(t.description||'').length>120?'...':''}</p>
+        <div class="market-footer">
+          <span class="market-price">${t.price>0?'$'+t.price+' USDT':'FREE'}</span>
+          ${t.owned
+            ? '<span class="buy-btn owned">✓ OWNED</span>'
+            : `<button class="buy-btn" onclick="openBuy(${JSON.stringify(t.id)},'${escAttr(t.title)}',${t.price})">[ BUY ]</button>`
+          }
+        </div>
+        ${t.creator?`<div style="margin-top:8px;font-family:'Share Tech Mono',monospace;font-size:0.65rem;color:var(--text-dim);">by ${esc(t.creator)}</div>`:''}
+      </div>`).join('');
+  } catch(e) {
+    c.innerHTML = '<div class="empty">// Failed to load marketplace.</div>';
   }
+}
 
-  async function analyzeRecon() {
-    const btn = document.getElementById('recon-btn');
-    const output = document.getElementById('recon-output');
-    const copy = document.getElementById('recon-copy');
-    btn.disabled = true;
-    btn.textContent = '[ ANALYZING... ]';
+function filterMarket(type, el) {
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  loadMarketplace(type);
+}
 
-    const prompt = `Analyze this recon output for ${document.getElementById('recon-target').value} and identify attack surface, vulnerabilities, and priorities:\n${document.getElementById('recon-data').value}`;
+function openBuy(id, title, price) {
+  buyTarget = { id, title, price };
+  document.getElementById('buy-name').textContent  = title;
+  document.getElementById('buy-price').textContent = price > 0 ? `$${price} USDT` : 'FREE';
+  document.getElementById('buy-tx').value          = '';
+  document.getElementById('buy-status').style.display = 'none';
+  document.getElementById('btn-buy').disabled    = false;
+  document.getElementById('btn-buy').textContent = '[ SUBMIT PAYMENT ]';
+  openModal('modal-buy');
+}
 
-    try {
-      const res = await fetch(`${API}/vault-ai`, {
-        method: 'POST',
-        headers: authHeaders(),
-        body: JSON.stringify({ message: prompt, rank: currentUser.rank || 'Ghost' })
-      });
-      const data = await res.json();
-      output.textContent = data.response;
-      output.style.display = 'block';
-      copy.style.display = 'inline-block';
-    } catch(e) {
-      output.textContent = 'Failed to analyze.';
-      output.style.display = 'block';
+async function submitPayment() {
+  const tx  = document.getElementById('buy-tx').value.trim();
+  const btn = document.getElementById('btn-buy');
+  const msg = document.getElementById('buy-status');
+  if (!tx && buyTarget.price > 0) { showStatus(msg,'TX ID required.',true); return; }
+  btn.disabled = true; btn.textContent = '[ SUBMITTING... ]'; msg.style.display = 'none';
+  try {
+    const res  = await fetch(`${API}/payments/submit`, {
+      method:'POST', headers:h(),
+      body: JSON.stringify({ tool_id: buyTarget.id, binance_tx_id: tx || 'FREE' })
+    });
+    const data = await res.json();
+    if (data.status === 'success') {
+      showStatus(msg,'✓ Submitted. Admin confirms within 24h.',false);
+      btn.textContent = '[ SUBMITTED ]';
+    } else {
+      showStatus(msg, data.message||'Failed.', true);
+      btn.disabled = false; btn.textContent = '[ SUBMIT PAYMENT ]';
     }
-    btn.disabled = false;
-    btn.textContent = '[ ANALYZE ]';
+  } catch(e) {
+    showStatus(msg,'Network error.',true);
+    btn.disabled = false; btn.textContent = '[ SUBMIT PAYMENT ]';
   }
+}
 
-  async function triageXSS() {
-    const btn = document.getElementById('xss-btn');
-    const output = document.getElementById('xss-output');
-    const copy = document.getElementById('xss-copy');
-    btn.disabled = true;
-    btn.textContent = '[ TRIAGING... ]';
-
-    const prompt = `Triage these URLs for XSS vulnerabilities on ${document.getElementById('xss-target').value}. Rank by likelihood and suggest payloads:\n${document.getElementById('xss-urls').value}`;
-
-    try {
-      const res = await fetch(`${API}/vault-ai`, {
-        method: 'POST',
-        headers: authHeaders(),
-        body: JSON.stringify({ message: prompt, rank: currentUser.rank || 'Ghost' })
-      });
-      const data = await res.json();
-      output.textContent = data.response;
-      output.style.display = 'block';
-      copy.style.display = 'inline-block';
-    } catch(e) {
-      output.textContent = 'Failed to triage.';
-      output.style.display = 'block';
+// ── TOOL SUBMISSION ───────────────────────────────────────────────────
+async function submitTool() {
+  const title = document.getElementById('sub-title').value.trim();
+  const desc  = document.getElementById('sub-desc').value.trim();
+  const btn   = document.getElementById('btn-submit');
+  const msg   = document.getElementById('sub-status');
+  if (!title || !desc) { showStatus(msg,'Title and description required.',true); return; }
+  btn.disabled = true; btn.textContent = '[ SUBMITTING... ]'; msg.style.display = 'none';
+  try {
+    const res = await fetch(`${API}/tools/submit`, {
+      method:'POST', headers:h(),
+      body: JSON.stringify({
+        title, description:desc,
+        type:  document.getElementById('sub-type').value,
+        price: parseFloat(document.getElementById('sub-price').value)||0,
+        download_url: document.getElementById('sub-url').value.trim()
+      })
+    });
+    const data = await res.json();
+    if (data.status === 'success') {
+      showStatus(msg,'✓ Tool submitted for review!',false);
+      btn.textContent = '[ SUBMITTED ]';
+      ['sub-title','sub-desc','sub-url','sub-price'].forEach(id => document.getElementById(id).value='');
+    } else {
+      showStatus(msg, data.message||'Failed.',true);
+      btn.disabled = false; btn.textContent = '[ SUBMIT FOR REVIEW ]';
     }
-    btn.disabled = false;
-    btn.textContent = '[ TRIAGE URLS ]';
+  } catch(e) {
+    showStatus(msg,'Network error.',true);
+    btn.disabled = false; btn.textContent = '[ SUBMIT FOR REVIEW ]';
   }
+}
 
-  function copyOutput(id) {
-    navigator.clipboard.writeText(document.getElementById(id).textContent);
-    alert('Copied!');
+// ── PROFILE ───────────────────────────────────────────────────────────
+async function loadProfile() {
+  try {
+    const res  = await fetch(`${API}/profile`, { headers:h() });
+    const data = await res.json();
+    const u    = data.username || data.email?.split('@')[0] || 'Hunter';
+    const rank = data.rank || 'Ghost';
+    document.getElementById('profile-card').innerHTML = `
+      <div class="profile-avatar">${u[0].toUpperCase()}</div>
+      <div class="profile-username">${esc(u)}</div>
+      <div class="profile-rank">[ ${rank} ]</div>
+      <div class="profile-stats">
+        <div class="profile-stat"><div class="val">${data.tool_count||0}</div><div class="lbl">Tools</div></div>
+        <div class="profile-stat"><div class="val">${data.unread_notifications||0}</div><div class="lbl">Unread</div></div>
+        <div class="profile-stat">
+          <div class="val">${data.created_at?new Date(data.created_at).toLocaleDateString('en-GB',{month:'short',year:'2-digit'}):'—'}</div>
+          <div class="lbl">Joined</div>
+        </div>
+      </div>`;
+  } catch(e) {
+    document.getElementById('profile-card').innerHTML = '<div class="empty">// Failed to load profile.</div>';
   }
+  loadNotifications();
+}
 
-  // —— UTILS ——
-  function timeAgo(dateStr) {
-    const diff = Date.now() - new Date(dateStr).getTime();
-    const mins = Math.floor(diff / 60000);
-    if (mins < 1) return 'just now';
-    if (mins < 60) return `${mins}m ago`;
-    const hrs = Math.floor(mins / 60);
-    if (hrs < 24) return `${hrs}h ago`;
-    return `${Math.floor(hrs/24)}d ago`;
+async function loadNotifications() {
+  const nc = document.getElementById('notif-container');
+  try {
+    const res  = await fetch(`${API}/notifications`, { headers:h() });
+    const data = await res.json();
+    if (!data.notifications || !data.notifications.length) {
+      nc.innerHTML = '<div class="empty">// No notifications yet.</div>'; return;
+    }
+    nc.innerHTML = data.notifications.map(n => `
+      <div class="notification-item">
+        <div class="notif-type">${esc(n.type||'INFO')}</div>
+        ${esc(n.message)}
+      </div>`).join('');
+  } catch(e) {
+    nc.innerHTML = '<div class="empty">// Failed to load notifications.</div>';
   }
+}
 
-  // Boot
-  loadFeed();
+async function markAllRead() {
+  try {
+    await fetch(`${API}/notifications/read-all`, { method:'POST', headers:h() });
+    document.getElementById('stat-notifs').textContent = '0';
+    toast('All notifications marked read.');
+    loadNotifications();
+  } catch(e) {}
+}
+
+// ── AI TOOLS ──────────────────────────────────────────────────────────
+async function callAI(prompt, btnId, outId, cpyId, label) {
+  const btn = document.getElementById(btnId);
+  const out = document.getElementById(outId);
+  const cpy = document.getElementById(cpyId);
+  btn.disabled = true; btn.textContent = '[ THINKING... ]';
+  out.style.display = 'none'; cpy.style.display = 'none';
+  try {
+    const res  = await fetch(`${API}/vault-ai`, {
+      method:'POST', headers:h(),
+      body: JSON.stringify({ message:prompt, rank:currentRank })
+    });
+    const data = await res.json();
+    out.textContent   = data.response || 'No response.';
+    out.style.display = 'block';
+    cpy.style.display = 'inline-block';
+  } catch(e) {
+    out.textContent   = '// Failed to connect to AI.';
+    out.style.display = 'block';
+  }
+  btn.disabled = false; btn.textContent = label;
+}
+
+function generateReport() {
+  callAI(
+    `Write a professional HackerOne bug bounty report:\nVulnerability: ${document.getElementById('r-vuln').value}\nTarget: ${document.getElementById('r-target').value}\nSeverity: ${document.getElementById('r-severity').value}\nFindings: ${document.getElementById('r-findings').value}\nSteps: ${document.getElementById('r-steps').value}`,
+    'btn-report','out-report','cpy-report','[ GENERATE REPORT ]'
+  );
+}
+function analyzeRecon() {
+  callAI(
+    `Analyze this recon output for ${document.getElementById('recon-target').value} and identify attack surface and priorities:\n${document.getElementById('recon-data').value}`,
+    'btn-recon','out-recon','cpy-recon','[ ANALYZE ]'
+  );
+}
+function triageXSS() {
+  callAI(
+    `Triage these URLs for XSS vulnerabilities on ${document.getElementById('xss-target').value}. Rank by likelihood and suggest payloads:\n${document.getElementById('xss-urls').value}`,
+    'btn-xss','out-xss','cpy-xss','[ TRIAGE URLS ]'
+  );
+}
+function copyOut(id) {
+  navigator.clipboard.writeText(document.getElementById(id).textContent);
+  toast('Copied!');
+}
+
+// ── UTILS ─────────────────────────────────────────────────────────────
+function esc(s) {
+  if (!s) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function escAttr(s) { return (s||'').replace(/'/g,"\\'"); }
+function ago(d) {
+  const m = Math.floor((Date.now()-new Date(d))/60000);
+  if (m<1) return 'just now';
+  if (m<60) return m+'m ago';
+  const hr = Math.floor(m/60);
+  if (hr<24) return hr+'h ago';
+  return Math.floor(hr/24)+'d ago';
+}
+function showStatus(el, msg, err) {
+  el.textContent = msg;
+  el.className   = 'status-msg '+(err?'err':'ok');
+  el.style.display = 'block';
+}
+function toast(msg) {
+  const t = document.createElement('div');
+  t.textContent = msg;
+  Object.assign(t.style,{
+    position:'fixed',bottom:'90px',left:'50%',transform:'translateX(-50%)',
+    background:'var(--bg2)',border:'1px solid var(--accent)',color:'var(--accent)',
+    padding:'8px 20px',fontFamily:'Share Tech Mono,monospace',fontSize:'0.75rem',
+    letterSpacing:'1px',zIndex:'999',pointerEvents:'none',animation:'fadeIn 0.3s ease'
+  });
+  document.body.appendChild(t);
+  setTimeout(()=>t.remove(),2000);
+}
+
+// ── INIT ──────────────────────────────────────────────────────────────
+boot();
+loadFeed();
 </script>
 </body>
 </html>
