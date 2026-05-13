@@ -777,7 +777,7 @@
     if (overlay) overlay.remove();
   }
 
-  // ── Smart apiFetch — retries on cold start, only logs out on real 401 ──
+  // ── Smart apiFetch — retries on cold start, only logs out on confirmed 401 ──
   async function apiFetch(url, options = {}) {
     const MAX_RETRIES = 3;
 
@@ -789,9 +789,15 @@
           signal: AbortSignal.timeout(15000)
         });
 
-        // Real auth failure — token is bad, logout immediately
+        // 401 — could be cold-start Supabase timeout returning None, retry first
         if (res.status === 401) {
-          // Only logout if it responds fast (real 401, not a cold-start error)
+          if (attempt < MAX_RETRIES - 1) {
+            showAdminWakeup(WAKE_MESSAGES[Math.min(attempt, WAKE_MESSAGES.length - 1)]);
+            updateAdminWakeupLog(`Auth check failed, retrying... (${attempt + 1}/${MAX_RETRIES})`, '#ffaa00');
+            await new Promise(r => setTimeout(r, 5000));
+            continue;
+          }
+          // All retries exhausted — real 401, logout
           hideAdminWakeup();
           localStorage.removeItem('gv_admin_token');
           localStorage.removeItem('gv_admin_id');
