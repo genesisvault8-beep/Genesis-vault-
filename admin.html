@@ -726,16 +726,99 @@
     return { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` };
   }
 
-  // ── 401 handler — redirects on expired token ────────────────────────
-  async function apiFetch(url, options = {}) {
-    const res = await fetch(url, { ...options, headers: authHeaders() });
-    if (res.status === 401) {
-      localStorage.removeItem('gv_admin_token');
-      localStorage.removeItem('gv_admin_id');
-      window.location.href = 'admin-login.html';
-      return null;
+  // ── Wake-up overlay helpers ──────────────────────────────────────────
+  const WAKE_MESSAGES = [
+    'Reconnecting to vault...',
+    'Server node warming up...',
+    'Establishing secure channel...',
+    'Syncing admin session...',
+    'Almost ready...'
+  ];
+
+  function showAdminWakeup(msg) {
+    let overlay = document.getElementById('admin-wakeup');
+    if (!overlay) {
+      overlay = document.createElement('div');
+      overlay.id = 'admin-wakeup';
+      overlay.style.cssText = `
+        position:fixed;inset:0;background:rgba(2,6,8,0.97);z-index:9999;
+        display:flex;flex-direction:column;align-items:center;justify-content:center;
+        font-family:'Share Tech Mono',monospace;color:#00f5c4;padding:20px;
+      `;
+      overlay.innerHTML = `
+        <div style="font-size:0.9rem;letter-spacing:4px;margin-bottom:8px;">GENESIS<span style="color:#ff003c;">VAULT</span></div>
+        <div style="font-size:0.58rem;letter-spacing:3px;color:#4a7a8a;margin-bottom:40px;">// ADMIN TERMINAL</div>
+        <div style="display:flex;gap:5px;margin-bottom:36px;" id="aw-bars">
+          ${Array(8).fill(0).map((_,i)=>`<div style="width:3px;height:28px;background:#0f2a35;animation:awBar 1.2s ease-in-out infinite;animation-delay:${i*0.1}s;"></div>`).join('')}
+        </div>
+        <style>@keyframes awBar{0%,100%{background:#0f2a35;transform:scaleY(1)}50%{background:#00f5c4;transform:scaleY(1.8)}}</style>
+        <div id="aw-status" style="font-size:0.72rem;letter-spacing:2px;margin-bottom:20px;color:#00f5c4;">${msg}</div>
+        <div id="aw-log" style="font-size:0.6rem;color:#4a7a8a;letter-spacing:1px;border:1px solid #0f2a35;padding:12px;width:100%;max-width:320px;min-height:70px;background:#060d10;line-height:2;"></div>
+      `;
+      document.body.appendChild(overlay);
+    } else {
+      document.getElementById('aw-status').textContent = msg;
     }
-    return res;
+  }
+
+  function updateAdminWakeupLog(msg, color = '#4a7a8a') {
+    const log = document.getElementById('aw-log');
+    if (!log) return;
+    const line = document.createElement('div');
+    line.style.color = color;
+    line.textContent = `> ${msg}`;
+    log.appendChild(line);
+    const lines = log.children;
+    if (lines.length > 4) lines[0].remove();
+  }
+
+  function hideAdminWakeup() {
+    const overlay = document.getElementById('admin-wakeup');
+    if (overlay) overlay.remove();
+  }
+
+  // ── Smart apiFetch — retries on cold start, only logs out on real 401 ──
+  async function apiFetch(url, options = {}) {
+    const MAX_RETRIES = 3;
+
+    for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+      try {
+        const res = await fetch(url, {
+          ...options,
+          headers: authHeaders(),
+          signal: AbortSignal.timeout(15000)
+        });
+
+        // Real auth failure — token is bad, logout immediately
+        if (res.status === 401) {
+          // Only logout if it responds fast (real 401, not a cold-start error)
+          hideAdminWakeup();
+          localStorage.removeItem('gv_admin_token');
+          localStorage.removeItem('gv_admin_id');
+          window.location.href = 'admin-login.html';
+          return null;
+        }
+
+        hideAdminWakeup();
+        return res;
+
+      } catch (err) {
+        // Network error or timeout — likely cold start
+        if (attempt < MAX_RETRIES - 1) {
+          const wakeMsg = WAKE_MESSAGES[Math.min(attempt, WAKE_MESSAGES.length - 1)];
+          showAdminWakeup(wakeMsg);
+          updateAdminWakeupLog(`Connection attempt ${attempt + 1} failed, retrying...`, '#ffaa00');
+          await new Promise(r => setTimeout(r, 6000));
+          updateAdminWakeupLog(`Retrying... (${attempt + 2}/${MAX_RETRIES})`, '#00f5c4');
+        } else {
+          hideAdminWakeup();
+          // After all retries failed, don't logout — show error in UI instead
+          console.error('apiFetch failed after retries:', err);
+          return null;
+        }
+      }
+    }
+    return null;
   }
 
   function logout() {
