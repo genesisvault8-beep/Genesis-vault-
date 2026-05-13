@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>GENESIS VAULT // ADMIN SETUP</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@700;900&display=swap');
+
+  :root {
+    --bg:        #050a0a;
+    --bg2:       #0a1010;
+    --cyan:      #00ffcc;
+    --blue:      #00bfff;
+    --red:       #ff3333;
+    --red-dim:   #ff333344;
+    --green:     #00ff88;
+    --text:      #a0c8c0;
+    --border:    #1a3a3a;
+    --mono:      'Share Tech Mono', monospace;
+    --head:      'Orbitron', monospace;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--cyan);
+    font-family: var(--mono);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0,255,204,0.015) 2px,
+      rgba(0,255,204,0.015) 4px
+    );
+    pointer-events: none;
+    z-index: 999;
+  }
+
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(0,255,204,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,255,204,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 20px;
+    background: rgba(5,10,10,0.95);
+    border-bottom: 1px solid var(--border);
+    z-index: 100;
+    backdrop-filter: blur(8px);
+  }
+
+  .nav-logo {
+    font-family: var(--head);
+    font-size: 1rem;
+    letter-spacing: 3px;
+    color: var(--cyan);
+  }
+
+  .nav-logo span { color: var(--blue); }
+
+  .nav-tag {
+    font-size: 0.65rem;
+    color: var(--red);
+    letter-spacing: 2px;
+    border: 1px solid var(--red);
+    padding: 3px 10px;
+    animation: blink 1.5s step-end infinite;
+  }
+
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50%       { opacity: 0.3; }
+  }
+
+  main {
+    position: relative;
+    z-index: 1;
+    padding: 100px 20px 60px;
+    max-width: 520px;
+    margin: 0 auto;
+  }
+
+  .header {
+    text-align: center;
+    margin-bottom: 36px;
+    animation: fadeDown 0.6s ease both;
+  }
+
+  @keyframes fadeDown {
+    from { opacity: 0; transform: translateY(-20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .header-title {
+    font-family: var(--head);
+    font-size: 1.05rem;
+    letter-spacing: 4px;
+    color: var(--red);
+    margin-bottom: 6px;
+  }
+
+  .header-sub {
+    font-size: 0.7rem;
+    color: var(--text);
+    letter-spacing: 2px;
+  }
+
+  .slot-counter {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 32px;
+    animation: fadeDown 0.6s 0.1s ease both;
+  }
+
+  .slot {
+    width: 44px;
+    height: 44px;
+    border: 2px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.6rem;
+    letter-spacing: 1px;
+    color: var(--text);
+    transition: all 0.4s;
+    position: relative;
+  }
+
+  .slot.filled {
+    border-color: var(--cyan);
+    color: var(--cyan);
+    background: rgba(0,255,204,0.05);
+    box-shadow: 0 0 12px rgba(0,255,204,0.2);
+  }
+
+  .slot.filled::after {
+    content: '✓';
+    position: absolute;
+    font-size: 1rem;
+    color: var(--cyan);
+  }
+
+  .slot.filled span { display: none; }
+
+  .card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    padding: 28px 24px;
+    margin-bottom: 16px;
+    animation: fadeUp 0.6s 0.2s ease both;
+    position: relative;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--cyan), transparent);
+  }
+
+  .card-label {
+    font-size: 0.65rem;
+    letter-spacing: 3px;
+    color: var(--text);
+    margin-bottom: 18px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .card-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  .field { margin-bottom: 18px; }
+
+  .field label {
+    display: block;
+    font-size: 0.6rem;
+    letter-spacing: 2px;
+    color: var(--text);
+    margin-bottom: 8px;
+  }
+
+  .field input {
+    width: 100%;
+    background: rgba(0,0,0,0.6);
+    border: 1px solid var(--border);
+    color: var(--cyan);
+    font-family: var(--mono);
+    font-size: 0.85rem;
+    padding: 12px 14px;
+    outline: none;
+    transition: border-color 0.3s, box-shadow 0.3s;
+    letter-spacing: 1px;
+  }
+
+  .field input::placeholder { color: #2a5050; }
+
+  .field input:focus {
+    border-color: var(--cyan);
+    box-shadow: 0 0 0 1px var(--cyan), 0 0 20px rgba(0,255,204,0.1);
+  }
+
+  .field input.secret-field:focus {
+    border-color: var(--red);
+    box-shadow: 0 0 0 1px var(--red), 0 0 20px rgba(255,51,51,0.1);
+    color: var(--red);
+  }
+
+  /* password strength bar */
+  .strength-bar {
+    height: 3px;
+    background: var(--border);
+    margin-top: 6px;
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .strength-fill {
+    height: 100%;
+    width: 0%;
+    transition: width 0.3s, background 0.3s;
+  }
+
+  .btn {
+    width: 100%;
+    background: var(--cyan);
+    color: #050a0a;
+    border: none;
+    font-family: var(--head);
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 4px;
+    padding: 16px;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-top: 6px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .btn:hover {
+    background: #00ffd5;
+    box-shadow: 0 0 30px rgba(0,255,204,0.4);
+    transform: translateY(-1px);
+  }
+
+  .btn:active { transform: translateY(0); }
+
+  .btn:disabled {
+    background: #1a3a3a;
+    color: #2a5a5a;
+    cursor: not-allowed;
+    box-shadow: none;
+    transform: none;
+  }
+
+  .btn-unlock {
+    background: transparent;
+    border: 2px solid var(--red);
+    color: var(--red);
+    font-family: var(--head);
+    font-size: 0.75rem;
+    letter-spacing: 4px;
+    padding: 14px;
+    margin-top: 6px;
+  }
+
+  .btn-unlock:hover {
+    background: var(--red);
+    color: #050a0a;
+    box-shadow: 0 0 30px rgba(255,51,51,0.4);
+  }
+
+  .output {
+    border: 1px solid var(--red);
+    background: rgba(255,51,51,0.04);
+    padding: 18px 16px;
+    font-size: 0.75rem;
+    letter-spacing: 1px;
+    line-height: 1.7;
+    min-height: 60px;
+    display: none;
+    animation: fadeUp 0.3s ease both;
+    position: relative;
+    margin-top: 12px;
+  }
+
+  .output.show { display: block; }
+
+  .output.success {
+    border-color: var(--green);
+    background: rgba(0,255,136,0.04);
+    color: var(--green);
+  }
+
+  .output.error {
+    border-color: var(--red);
+    color: var(--red);
+  }
+
+  .output.info {
+    border-color: var(--blue);
+    background: rgba(0,191,255,0.04);
+    color: var(--blue);
+  }
+
+  .output-prefix {
+    color: var(--text);
+    margin-right: 6px;
+  }
+
+  #locked-screen { display: block; }
+  #setup-screen  { display: none;  }
+
+  .locked-info {
+    text-align: center;
+    padding: 20px 0 10px;
+    animation: fadeUp 0.6s 0.3s ease both;
+  }
+
+  .locked-icon {
+    font-size: 2.5rem;
+    margin-bottom: 12px;
+    display: block;
+    filter: drop-shadow(0 0 10px var(--red));
+  }
+
+  .locked-title {
+    font-family: var(--head);
+    font-size: 0.8rem;
+    letter-spacing: 3px;
+    color: var(--red);
+    margin-bottom: 8px;
+  }
+
+  .locked-sub {
+    font-size: 0.65rem;
+    color: var(--text);
+    letter-spacing: 1px;
+    line-height: 1.6;
+  }
+
+  .divider {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 20px 0;
+    font-size: 0.6rem;
+    letter-spacing: 2px;
+    color: #2a5050;
+  }
+  .divider::before, .divider::after {
+    content: ''; flex: 1; height: 1px; background: var(--border);
+  }
+
+  .slots-label {
+    text-align: center;
+    font-size: 0.6rem;
+    letter-spacing: 3px;
+    color: var(--text);
+    margin-bottom: 10px;
+  }
+
+  .loading::after {
+    content: '';
+    display: inline-block;
+    animation: dots 1.2s steps(3, end) infinite;
+  }
+  @keyframes dots {
+    0%   { content: ''; }
+    33%  { content: '.'; }
+    66%  { content: '..'; }
+    100% { content: '...'; }
+  }
+
+  /* cooldown timer */
+  .cooldown-msg {
+    font-size: 0.65rem;
+    color: var(--text);
+    letter-spacing: 1px;
+    text-align: center;
+    margin-top: 10px;
+    display: none;
+  }
+
+  footer {
+    position: relative;
+    z-index: 1;
+    text-align: center;
+    padding: 20px;
+    font-size: 0.6rem;
+    letter-spacing: 2px;
+    color: #2a5050;
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-logo">GENESIS<span>VAULT</span></div>
+  <div class="nav-tag">RESTRICTED</div>
+</nav>
+
+<main>
+
+  <div class="header">
+    <div class="header-title">[ ARCHITECT_SETUP ]</div>
+    <div class="header-sub">// ADMIN INITIALIZATION PROTOCOL</div>
+  </div>
+
+  <!-- LOCKED SCREEN -->
+  <div id="locked-screen">
+    <div class="card">
+      <div class="card-label">ACCESS CONTROL</div>
+      <div class="locked-info">
+        <span class="locked-icon">🔒</span>
+        <div class="locked-title">SETUP LOCKED</div>
+        <div class="locked-sub">
+          Enter the setup secret key to<br/>
+          initialize admin accounts.
+        </div>
+      </div>
+      <div class="divider">AUTHENTICATE</div>
+      <div class="field">
+        <label>SETUP SECRET KEY</label>
+        <input type="password" id="secret-input" class="secret-field"
+               placeholder="Enter secret key..." autocomplete="off"/>
+      </div>
+      <button class="btn btn-unlock" id="unlock-btn" onclick="unlock()">[ UNLOCK SETUP ]</button>
+      <div class="output" id="lock-output"></div>
+    </div>
+  </div>
+
+  <!-- SETUP SCREEN -->
+  <div id="setup-screen">
+
+    <div class="slots-label">ADMIN SLOTS</div>
+    <div class="slot-counter" id="slot-counter">
+      <div class="slot" id="slot-1"><span>ADM 1</span></div>
+      <div class="slot" id="slot-2"><span>ADM 2</span></div>
+      <div class="slot" id="slot-3"><span>ADM 3</span></div>
+    </div>
+
+    <div class="card">
+      <div class="card-label">CREATE ADMIN</div>
+
+      <div class="field">
+        <label>USERNAME</label>
+        <input type="text" id="username-input"
+               placeholder="3–20 chars, letters/numbers/underscore"
+               autocomplete="off" maxlength="20"/>
+      </div>
+
+      <div class="field">
+        <label>PASSWORD</label>
+        <input type="password" id="password-input"
+               placeholder="Minimum 8 characters"
+               autocomplete="new-password"
+               oninput="updateStrength(this.value)"/>
+        <div class="strength-bar">
+          <div class="strength-fill" id="strength-fill"></div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>CONFIRM PASSWORD</label>
+        <input type="password" id="confirm-input"
+               placeholder="Repeat password"
+               autocomplete="new-password"/>
+      </div>
+
+      <button class="btn" id="create-btn" onclick="createAdmin()">
+        [ CREATE ADMIN ]
+      </button>
+      <div class="cooldown-msg" id="cooldown-msg"></div>
+      <div class="output" id="setup-output"></div>
+    </div>
+
+  </div>
+
+</main>
+
+<footer>GENESIS VAULT // SETUP MODULE // v2.2</footer>
+
+<script>
+  // ── CONFIG ───────────────────────────────────────────────────────────
+  const API = 'https://genesis-vault-backend.onrender.com';
+  let SETUP_SECRET = '';
+  let adminCount   = 0;
+  let unlockAttempts = 0;
+  const MAX_UNLOCK_ATTEMPTS = 5;
+
+  // ── UNLOCK ──────────────────────────────────────────────────────────
+  async function unlock() {
+    const key = document.getElementById('secret-input').value.trim();
+    if (!key) { showOutput('lock-output', 'error', 'SECRET KEY REQUIRED'); return; }
+
+    if (unlockAttempts >= MAX_UNLOCK_ATTEMPTS) {
+      showOutput('lock-output', 'error', 'TOO MANY ATTEMPTS — REFRESH TO RETRY');
+      return;
+    }
+
+    const btn = document.getElementById('unlock-btn');
+    btn.textContent = '[ VERIFYING... ]';
+    btn.disabled    = true;
+
+    try {
+      const res = await fetchWithTimeout(`${API}/api/admin/setup`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ setup_secret: key, username: '__probe__', password: '__probe__' })
+      }, 10000);
+
+      const data = await res.json();
+
+      if (data.message === 'INVALID_SETUP_SECRET') {
+        unlockAttempts++;
+        const remaining = MAX_UNLOCK_ATTEMPTS - unlockAttempts;
+        showOutput('lock-output', 'error',
+          `ACCESS DENIED — INVALID SECRET KEY\n> ${remaining} attempt(s) remaining`);
+        btn.textContent = '[ UNLOCK SETUP ]';
+        btn.disabled    = false;
+        return;
+      }
+
+      if (res.status === 429) {
+        showOutput('lock-output', 'error', 'RATE LIMITED — WAIT 1 HOUR AND RETRY');
+        btn.textContent = '[ UNLOCK SETUP ]';
+        btn.disabled    = false;
+        return;
+      }
+
+      // Key valid — wait 5s before loading count so backend PATCH can settle
+      SETUP_SECRET = key;
+      showOutput('lock-output', 'info', 'KEY ACCEPTED — SYNCING VAULT STATE...');
+      setTimeout(async () => {
+        await loadAdminCount();
+        document.getElementById('locked-screen').style.display = 'none';
+        document.getElementById('setup-screen').style.display  = 'block';
+      }, 5000);
+
+    } catch (err) {
+      const msg = err.name === 'AbortError'
+        ? 'REQUEST TIMED OUT — SERVER MAY BE COLD STARTING, WAIT 60s AND RETRY'
+        : 'FAILED TO REACH SERVER — CHECK CONNECTION';
+      showOutput('lock-output', 'error', msg);
+      btn.textContent = '[ UNLOCK SETUP ]';
+      btn.disabled    = false;
+    }
+  }
+
+  // ── LOAD COUNT ───────────────────────────────────────────────────────
+  // FIX: Count DB rows (actual accounts), NOT active tokens.
+  // NULL token = logged out, not a missing/hacked admin.
+  async function loadAdminCount() {
+    try {
+      const res  = await fetchWithTimeout(`${API}/api/admin/setup`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ setup_secret: SETUP_SECRET, username: '', password: '' })
+      }, 10000);
+      const data = await res.json();
+
+      // Prefer explicit total_admins count from backend
+      if (data.total_admins !== undefined) {
+        adminCount = data.total_admins;
+      } else if (data.message === 'MAX_ADMINS_REACHED') {
+        adminCount = 3;
+      } else {
+        // Fallback: parse slot count from message
+        const match = data.message ? data.message.match(/(\d+) slot/) : null;
+        adminCount  = match ? 3 - parseInt(match[1]) : 0;
+      }
+      updateSlots(adminCount);
+    } catch (_) {
+      console.error('Failed to sync architect slots.');
+    }
+  }
+
+  // ── UPDATE SLOT UI ───────────────────────────────────────────────────
+  // FIX: Graceful quorum messaging instead of binary locked/unlocked.
+  function updateSlots(count) {
+    for (let i = 1; i <= 3; i++) {
+      const el = document.getElementById(`slot-${i}`);
+      if (i <= count) el.classList.add('filled');
+      else el.classList.remove('filled');
+    }
+
+    const btn = document.getElementById('create-btn');
+
+    if (count === 0) {
+      // Bootstrap mode — vault is empty, allow first admin
+      btn.disabled    = false;
+      btn.textContent = '[ CREATE ADMIN ]';
+      showOutput('setup-output', 'info', 'VAULT EMPTY: Initialize first Architect.');
+    } else if (count < 3) {
+      // Quorum incomplete — still allow more admins
+      btn.disabled    = false;
+      btn.textContent = '[ CREATE ADMIN ]';
+      showOutput('setup-output', 'info',
+        `QUORUM INCOMPLETE: ${3 - count} slot(s) remaining.\nAdmins with NULL tokens are logged out — not revoked.`);
+    } else {
+      // All 3 slots filled — seal the vault
+      btn.disabled    = true;
+      btn.textContent = '[ VAULT SEALED ]';
+      showOutput('setup-output', 'success',
+        'TRIO ESTABLISHED: 2/3 Voting Protocol Active.\nAll admin slots are filled.');
+    }
+  }
+
+  // ── PASSWORD STRENGTH ────────────────────────────────────────────────
+  function updateStrength(val) {
+    const fill = document.getElementById('strength-fill');
+    let score = 0;
+    if (val.length >= 8)  score++;
+    if (val.length >= 12) score++;
+    if (/[A-Z]/.test(val)) score++;
+    if (/[0-9]/.test(val)) score++;
+    if (/[^A-Za-z0-9]/.test(val)) score++;
+
+    const pct    = (score / 5) * 100;
+    const colors = ['#ff3333','#ff8800','#ffcc00','#00ff88','#00ffcc'];
+    fill.style.width      = pct + '%';
+    fill.style.background = colors[score - 1] || '#1a3a3a';
+  }
+
+  // ── CREATE ADMIN ─────────────────────────────────────────────────────
+  async function createAdmin() {
+    const username = document.getElementById('username-input').value.trim();
+    const password = document.getElementById('password-input').value;
+    const confirm  = document.getElementById('confirm-input').value;
+
+    if (!username || !password || !confirm) {
+      showOutput('setup-output', 'error', 'ALL FIELDS ARE REQUIRED'); return;
+    }
+    if (!/^\w{3,20}$/.test(username)) {
+      showOutput('setup-output', 'error', 'INVALID USERNAME — 3-20 CHARS, LETTERS/NUMBERS/_'); return;
+    }
+    if (password.length < 8) {
+      showOutput('setup-output', 'error', 'PASSWORD TOO SHORT — MINIMUM 8 CHARACTERS'); return;
+    }
+    if (password !== confirm) {
+      showOutput('setup-output', 'error', 'PASSWORDS DO NOT MATCH'); return;
+    }
+
+    const btn = document.getElementById('create-btn');
+    btn.textContent = '[ INITIALIZING... ]';
+    btn.disabled    = true;
+
+    try {
+      const res = await fetchWithTimeout(`${API}/api/admin/setup`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ setup_secret: SETUP_SECRET, username, password })
+      }, 15000);
+
+      if (res.status === 429) {
+        showOutput('setup-output', 'error', 'RATE LIMITED\n> Too many attempts. Wait 1 hour.');
+        startCooldown(3600);
+        return;
+      }
+
+      const data = await res.json();
+
+      if (data.status === 'success') {
+        adminCount++;
+        updateSlots(adminCount);
+        showOutput('setup-output', 'success',
+          `ADMIN CREATED SUCCESSFULLY\n> USERNAME: ${username}\n> ${data.message}`);
+        document.getElementById('username-input').value = '';
+        document.getElementById('password-input').value = '';
+        document.getElementById('confirm-input').value  = '';
+        document.getElementById('strength-fill').style.width = '0%';
+      } else {
+        showOutput('setup-output', 'error',
+          `CREATION FAILED\n> ${data.message || 'UNKNOWN ERROR'}`);
+      }
+
+    } catch (err) {
+      const msg = err.name === 'AbortError'
+        ? 'REQUEST TIMED OUT — SERVER MAY BE WAKING UP, WAIT 60s AND RETRY'
+        : 'FAILED TO REACH SERVER';
+      showOutput('setup-output', 'error', msg);
+    } finally {
+      if (adminCount < 3) {
+        btn.textContent = '[ CREATE ADMIN ]';
+        btn.disabled    = false;
+      }
+    }
+  }
+
+  // ── COOLDOWN TIMER ───────────────────────────────────────────────────
+  function startCooldown(seconds) {
+    const msg = document.getElementById('cooldown-msg');
+    msg.style.display = 'block';
+    const btn = document.getElementById('create-btn');
+    btn.disabled = true;
+
+    const interval = setInterval(() => {
+      seconds--;
+      const m = Math.floor(seconds / 60);
+      const s = seconds % 60;
+      msg.textContent = `// RETRY IN ${m}:${String(s).padStart(2,'0')}`;
+      if (seconds <= 0) {
+        clearInterval(interval);
+        msg.style.display = 'none';
+        btn.disabled = false;
+        btn.textContent = '[ CREATE ADMIN ]';
+      }
+    }, 1000);
+  }
+
+  // ── FETCH WITH TIMEOUT ───────────────────────────────────────────────
+  function fetchWithTimeout(url, options, ms) {
+    const controller = new AbortController();
+    const timeout    = setTimeout(() => controller.abort(), ms);
+    return fetch(url, { ...options, signal: controller.signal })
+      .finally(() => clearTimeout(timeout));
+  }
+
+  // ── OUTPUT HELPER ────────────────────────────────────────────────────
+  function showOutput(id, type, msg) {
+    const el     = document.getElementById(id);
+    el.className = `output show ${type}`;
+    el.innerHTML = msg.split('\n').map((line, i) =>
+      i === 0
+        ? `<span class="output-prefix">//</span> ${line}`
+        : `<span style="color:#2a6060;margin-right:6px">&nbsp;&nbsp;</span>${line}`
+    ).join('<br/>');
+  }
+
+  // ── ENTER KEY ────────────────────────────────────────────────────────
+  document.getElementById('secret-input').addEventListener('keydown', e => {
+    if (e.key === 'Enter') unlock();
+  });
+</script>
+</body>
+</html>
