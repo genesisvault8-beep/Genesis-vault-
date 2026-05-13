@@ -1512,13 +1512,49 @@
   }
 
   // ── Init ────────────────────────────────────────────────────────────
-  // Small delay lets Render fully wake up before first auth call,
-  // preventing false 401s that kick the admin out immediately after login.
-  setTimeout(() => {
+  // Single auth ping first — prevents 3 simultaneous retry loops
+  // all writing "Auth check failed" to the overlay at the same time.
+  async function initAdmin() {
+    // One warm-up ping to let Render wake up
+    showAdminWakeup('Connecting to vault...');
+    updateAdminWakeupLog('Initializing admin session...');
+
+    try {
+      const res = await fetch(`${API}/admin/dashboard`, {
+        headers: authHeaders(),
+        signal: AbortSignal.timeout(15000)
+      });
+
+      if (res.status === 401) {
+        // Retry once after delay before giving up
+        updateAdminWakeupLog('Auth check failed, retrying... (1/1)', '#ffaa00');
+        await new Promise(r => setTimeout(r, 8000));
+        const retry = await fetch(`${API}/admin/dashboard`, {
+          headers: authHeaders(),
+          signal: AbortSignal.timeout(15000)
+        });
+        if (retry.status === 401) {
+          hideAdminWakeup();
+          localStorage.removeItem('gv_admin_token');
+          localStorage.removeItem('gv_admin_id');
+          window.location.href = 'admin-login.html';
+          return;
+        }
+      }
+    } catch(e) {
+      // Network error — give it one more try
+      updateAdminWakeupLog('Connection error, retrying...', '#ffaa00');
+      await new Promise(r => setTimeout(r, 6000));
+    }
+
+    // Auth passed — now load all sections in parallel
+    hideAdminWakeup();
     loadDashboard();
     loadAdmins();
     loadMotions();
-  }, 2000);
+  }
+
+  setTimeout(initAdmin, 1000);
 </script>
 </body>
 </html>
