@@ -513,11 +513,11 @@
 
 </main>
 
-<footer>GENESIS VAULT // SETUP MODULE // v2.1</footer>
+<footer>GENESIS VAULT // SETUP MODULE // v2.2</footer>
 
 <script>
   // ── CONFIG ───────────────────────────────────────────────────────────
-  const API = 'https://genesis-vault-backend.onrender.com'; // FIXED URL
+  const API = 'https://genesis-vault-backend.onrender.com';
   let SETUP_SECRET = '';
   let adminCount   = 0;
   let unlockAttempts = 0;
@@ -528,7 +528,6 @@
     const key = document.getElementById('secret-input').value.trim();
     if (!key) { showOutput('lock-output', 'error', 'SECRET KEY REQUIRED'); return; }
 
-    // Brute-force protection on frontend
     if (unlockAttempts >= MAX_UNLOCK_ATTEMPTS) {
       showOutput('lock-output', 'error', 'TOO MANY ATTEMPTS — REFRESH TO RETRY');
       return;
@@ -564,11 +563,14 @@
         return;
       }
 
-      // Key valid
+      // Key valid — wait 5s before loading count so backend PATCH can settle
       SETUP_SECRET = key;
-      await loadAdminCount();
-      document.getElementById('locked-screen').style.display = 'none';
-      document.getElementById('setup-screen').style.display  = 'block';
+      showOutput('lock-output', 'info', 'KEY ACCEPTED — SYNCING VAULT STATE...');
+      setTimeout(async () => {
+        await loadAdminCount();
+        document.getElementById('locked-screen').style.display = 'none';
+        document.getElementById('setup-screen').style.display  = 'block';
+      }, 5000);
 
     } catch (err) {
       const msg = err.name === 'AbortError'
@@ -581,6 +583,8 @@
   }
 
   // ── LOAD COUNT ───────────────────────────────────────────────────────
+  // FIX: Count DB rows (actual accounts), NOT active tokens.
+  // NULL token = logged out, not a missing/hacked admin.
   async function loadAdminCount() {
     try {
       const res  = await fetchWithTimeout(`${API}/api/admin/setup`, {
@@ -590,29 +594,50 @@
       }, 10000);
       const data = await res.json();
 
-      if (data.message === 'MAX_ADMINS_REACHED') {
+      // Prefer explicit total_admins count from backend
+      if (data.total_admins !== undefined) {
+        adminCount = data.total_admins;
+      } else if (data.message === 'MAX_ADMINS_REACHED') {
         adminCount = 3;
       } else {
+        // Fallback: parse slot count from message
         const match = data.message ? data.message.match(/(\d+) slot/) : null;
         adminCount  = match ? 3 - parseInt(match[1]) : 0;
       }
       updateSlots(adminCount);
-    } catch (_) {}
+    } catch (_) {
+      console.error('Failed to sync architect slots.');
+    }
   }
 
   // ── UPDATE SLOT UI ───────────────────────────────────────────────────
+  // FIX: Graceful quorum messaging instead of binary locked/unlocked.
   function updateSlots(count) {
     for (let i = 1; i <= 3; i++) {
       const el = document.getElementById(`slot-${i}`);
       if (i <= count) el.classList.add('filled');
       else el.classList.remove('filled');
     }
+
     const btn = document.getElementById('create-btn');
-    if (count >= 3) {
+
+    if (count === 0) {
+      // Bootstrap mode — vault is empty, allow first admin
+      btn.disabled    = false;
+      btn.textContent = '[ CREATE ADMIN ]';
+      showOutput('setup-output', 'info', 'VAULT EMPTY: Initialize first Architect.');
+    } else if (count < 3) {
+      // Quorum incomplete — still allow more admins
+      btn.disabled    = false;
+      btn.textContent = '[ CREATE ADMIN ]';
+      showOutput('setup-output', 'info',
+        `QUORUM INCOMPLETE: ${3 - count} slot(s) remaining.\nAdmins with NULL tokens are logged out — not revoked.`);
+    } else {
+      // All 3 slots filled — seal the vault
       btn.disabled    = true;
       btn.textContent = '[ VAULT SEALED ]';
-      showOutput('setup-output', 'info',
-        'MAX_ADMINS_REACHED\nAll 3 admin slots are filled.\nVault reopens when a slot is freed.');
+      showOutput('setup-output', 'success',
+        'TRIO ESTABLISHED: 2/3 Voting Protocol Active.\nAll admin slots are filled.');
     }
   }
 
@@ -662,7 +687,6 @@
         body: JSON.stringify({ setup_secret: SETUP_SECRET, username, password })
       }, 15000);
 
-      // Handle rate limit explicitly
       if (res.status === 429) {
         showOutput('setup-output', 'error', 'RATE LIMITED\n> Too many attempts. Wait 1 hour.');
         startCooldown(3600);
