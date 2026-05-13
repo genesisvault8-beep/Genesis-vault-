@@ -794,7 +794,7 @@
           if (attempt < MAX_RETRIES - 1) {
             showAdminWakeup(WAKE_MESSAGES[Math.min(attempt, WAKE_MESSAGES.length - 1)]);
             updateAdminWakeupLog(`Auth check failed, retrying... (${attempt + 1}/${MAX_RETRIES})`, '#ffaa00');
-            await new Promise(r => setTimeout(r, 5000));
+            await new Promise(r => setTimeout(r, 8000));
             continue;
           }
           // All retries exhausted — real 401, logout
@@ -1512,9 +1512,13 @@
   }
 
   // ── Init ────────────────────────────────────────────────────────────
-  loadDashboard();
-  loadAdmins();
-  loadMotions();
+  // Small delay lets Render fully wake up before first auth call,
+  // preventing false 401s that kick the admin out immediately after login.
+  setTimeout(() => {
+    loadDashboard();
+    loadAdmins();
+    loadMotions();
+  }, 2000);
 </script>
 </body>
 </html>
