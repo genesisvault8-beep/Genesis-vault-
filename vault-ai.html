@@ -196,7 +196,7 @@
 
 <script>
 const BACKEND_URL = 'https://genesis-ai-backend.onrender.com';
-const USER_RANK = 'Ghost';
+let USER_RANK = 'Ghost'; let USER_ID = null; let USERNAME = 'anonymous';
 let busy = false;
 let history = [];
 let histIdx = -1;
@@ -408,7 +408,7 @@ async function send(msg) {
     const res = await fetch(`${BACKEND_URL}/api/vault-ai`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ message: msg, rank: USER_RANK })
+      body: JSON.stringify({ message: msg, rank: USER_RANK, user_id: USER_ID, username: USERNAME })
     });
     const data = await res.json();
     analyzing.remove();
@@ -446,7 +446,25 @@ btn.addEventListener('click', () => {
   if (v && !busy) { history.unshift(v); histIdx = -1; inp.value = ''; send(v); }
 });
 
-boot();
+async function init() {
+  const token = localStorage.getItem("vault_token");
+  if (token) {
+    try {
+      const r = await fetch("https://genesis-vault-backend.onrender.com/api/auth/me", {
+        headers: { "Authorization": "Bearer " + token }
+      });
+      const d = await r.json();
+      if (d.status === "success" && d.user) {
+        USER_ID = d.user.id;
+        USERNAME = d.user.username;
+        USER_RANK = d.user.rank || "Ghost";
+        document.querySelector(".rank-badge").textContent = USER_RANK.toUpperCase();
+      }
+    } catch(e) {}
+  }
+  boot();
+}
+init();
 </script>
 </body>
 </html>
