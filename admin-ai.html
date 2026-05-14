@@ -2,1177 +2,465 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>VAULT-AI // Intelligence Nerve Center</title>
-<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;600&display=swap" rel="stylesheet">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>VAULT ADMIN // AI CONTROL</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;600;700&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --teal: #00f5c4;
-    --blue: #00aaff;
-    --dark-teal: #00b89a;
-    --bg: #030a0e;
-    --bg2: #060f14;
-    --bg3: #0a1a22;
-    --panel: #0d1f2a;
-    --panel2: #0f2535;
-    --border: #0d3a4a;
-    --border-glow: #00f5c440;
-    --text: #b8e8e0;
-    --text-dim: #5a8a80;
-    --danger: #ff3366;
-    --warn: #ffaa00;
-    --green: #00ff88;
-  }
-
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: 'Rajdhani', sans-serif;
-    height: 100vh;
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-  }
-
-  /* ── SCANLINE OVERLAY ── */
-  body::before {
-    content: '';
-    position: fixed;
-    inset: 0;
-    background: repeating-linear-gradient(
-      0deg,
-      transparent,
-      transparent 2px,
-      rgba(0,245,196,0.015) 2px,
-      rgba(0,245,196,0.015) 4px
-    );
-    pointer-events: none;
-    z-index: 9999;
-  }
-
-  /* ── CYBER GRID BACKGROUND ── */
-  body::after {
-    content: '';
-    position: fixed;
-    inset: 0;
-    background-image:
-      linear-gradient(rgba(0,245,196,0.03) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(0,245,196,0.03) 1px, transparent 1px);
-    background-size: 40px 40px;
-    pointer-events: none;
-    z-index: 0;
-  }
-
-  /* ══════════════════════════════════
-     INFINITY STATUS BAR
-  ══════════════════════════════════ */
-  #status-bar {
-    position: relative;
-    z-index: 100;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0 20px;
-    height: 48px;
-    background: linear-gradient(90deg, #020c10, #061520, #020c10);
-    border-bottom: 1px solid var(--border);
-    flex-shrink: 0;
-  }
-
-  .status-brand {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-
-  .brand-icon {
-    width: 24px;
-    height: 24px;
-    position: relative;
-  }
-
-  .brand-icon svg { width: 100%; height: 100%; }
-
-  .brand-name {
-    font-family: 'Orbitron', sans-serif;
-    font-size: 13px;
-    font-weight: 900;
-    color: var(--teal);
-    letter-spacing: 3px;
-    text-shadow: 0 0 12px var(--teal);
-  }
-
-  .brand-sub {
-    font-size: 9px;
-    color: var(--text-dim);
-    letter-spacing: 2px;
-    margin-top: -2px;
-  }
-
-  .status-leds {
-    display: flex;
-    align-items: center;
-    gap: 20px;
-  }
-
-  .led-item {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    cursor: default;
-  }
-
-  .led {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    position: relative;
-    flex-shrink: 0;
-  }
-
-  .led.online {
-    background: var(--teal);
-    box-shadow: 0 0 6px var(--teal), 0 0 12px var(--teal);
-    animation: pulse-led 2s ease-in-out infinite;
-  }
-
-  .led.offline {
-    background: #1a3a3a;
-    box-shadow: none;
-  }
-
-  .led.warn {
-    background: var(--warn);
-    box-shadow: 0 0 6px var(--warn);
-    animation: pulse-warn 1.5s ease-in-out infinite;
-  }
-
-  @keyframes pulse-led {
-    0%, 100% { box-shadow: 0 0 4px var(--teal), 0 0 8px var(--teal); opacity: 1; }
-    50% { box-shadow: 0 0 8px var(--teal), 0 0 20px var(--teal), 0 0 30px rgba(0,245,196,0.3); opacity: 0.8; }
-  }
-
-  @keyframes pulse-warn {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.4; }
-  }
-
-  .led-label {
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 10px;
-    color: var(--text-dim);
-    letter-spacing: 1px;
-    text-transform: uppercase;
-  }
-
-  .led-item.online .led-label { color: var(--teal); }
-
-  .status-time {
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 11px;
-    color: var(--text-dim);
-    letter-spacing: 2px;
-  }
-
-  /* ══════════════════════════════════
-     MAIN LAYOUT
-  ══════════════════════════════════ */
-  #main {
-    display: flex;
-    flex: 1;
-    overflow: hidden;
-    position: relative;
-    z-index: 1;
-  }
-
-  /* ══════════════════════════════════
-     LEFT SIDEBAR — ENGINE SELECTOR
-  ══════════════════════════════════ */
-  #sidebar {
-    width: 220px;
-    flex-shrink: 0;
-    background: linear-gradient(180deg, var(--bg2), var(--bg));
-    border-right: 1px solid var(--border);
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-  }
-
-  .sidebar-header {
-    padding: 14px 16px 10px;
-    border-bottom: 1px solid var(--border);
-  }
-
-  .sidebar-title {
-    font-family: 'Orbitron', sans-serif;
-    font-size: 9px;
-    color: var(--text-dim);
-    letter-spacing: 3px;
-    text-transform: uppercase;
-  }
-
-  .sidebar-title span {
-    color: var(--teal);
-  }
-
-  #engines-list {
-    flex: 1;
-    overflow-y: auto;
-    padding: 10px 10px;
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    scrollbar-width: thin;
-    scrollbar-color: var(--border) transparent;
-  }
-
-  .engine-card {
-    padding: 10px 12px;
-    background: var(--panel);
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    position: relative;
-    overflow: hidden;
-  }
-
-  .engine-card::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    top: 0;
-    bottom: 0;
-    width: 3px;
-    background: transparent;
-    transition: background 0.2s;
-  }
-
-  .engine-card:hover {
-    border-color: var(--dark-teal);
-    background: var(--panel2);
-  }
-
-  .engine-card.active {
-    border-color: var(--teal);
-    background: linear-gradient(135deg, rgba(0,245,196,0.08), rgba(0,170,255,0.04));
-    box-shadow: 0 0 16px rgba(0,245,196,0.15), inset 0 0 20px rgba(0,245,196,0.04);
-  }
-
-  .engine-card.active::before {
-    background: linear-gradient(180deg, var(--teal), var(--blue));
-  }
-
-  .engine-name {
-    font-family: 'Orbitron', sans-serif;
-    font-size: 10px;
-    font-weight: 700;
-    color: var(--text);
-    letter-spacing: 1.5px;
-    margin-bottom: 3px;
-    transition: color 0.2s;
-  }
-
-  .engine-card.active .engine-name { color: var(--teal); text-shadow: 0 0 8px rgba(0,245,196,0.5); }
-
-  .engine-specialty {
-    font-size: 10px;
-    color: var(--text-dim);
-    letter-spacing: 0.5px;
-    line-height: 1.3;
-  }
-
-  .engine-tag {
-    display: inline-block;
-    margin-top: 5px;
-    padding: 1px 6px;
-    background: rgba(0,245,196,0.06);
-    border: 1px solid rgba(0,245,196,0.15);
-    border-radius: 3px;
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 8px;
-    color: var(--dark-teal);
-    letter-spacing: 1px;
-    text-transform: uppercase;
-  }
-
-  .engine-card.active .engine-tag {
-    background: rgba(0,245,196,0.12);
-    border-color: rgba(0,245,196,0.35);
-    color: var(--teal);
-  }
-
-  /* Sidebar footer stats */
-  .sidebar-stats {
-    padding: 12px 14px;
-    border-top: 1px solid var(--border);
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-  }
-
-  .stat-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-
-  .stat-label {
-    font-size: 9px;
-    color: var(--text-dim);
-    letter-spacing: 1px;
-    text-transform: uppercase;
-  }
-
-  .stat-val {
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 10px;
-    color: var(--teal);
-  }
-
-  /* ══════════════════════════════════
-     CENTER — COMMAND TERMINAL
-  ══════════════════════════════════ */
-  #terminal-zone {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    position: relative;
-  }
-
-  /* Terminal header bar */
-  #terminal-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 8px 16px;
-    background: var(--bg2);
-    border-bottom: 1px solid var(--border);
-    flex-shrink: 0;
-  }
-
-  .terminal-tabs {
-    display: flex;
-    gap: 2px;
-  }
-
-  .term-tab {
-    padding: 4px 14px;
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 10px;
-    letter-spacing: 1px;
-    color: var(--text-dim);
-    background: transparent;
-    border: 1px solid transparent;
-    border-radius: 4px 4px 0 0;
-    cursor: pointer;
-    text-transform: uppercase;
-  }
-
-  .term-tab.active {
-    color: var(--teal);
-    background: rgba(0,245,196,0.06);
-    border-color: var(--border);
-    border-bottom-color: var(--bg2);
-  }
-
-  .terminal-controls {
-    display: flex;
-    gap: 8px;
-    align-items: center;
-  }
-
-  .ctrl-dot {
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-  }
-  .ctrl-dot.red { background: #ff3366; }
-  .ctrl-dot.yellow { background: #ffaa00; }
-  .ctrl-dot.green { background: #00ff88; }
-
-  /* The terminal itself */
-  #terminal {
-    flex: 1;
-    overflow-y: auto;
-    padding: 16px 20px;
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 13px;
-    line-height: 1.7;
-    background:
-      radial-gradient(ellipse at 20% 0%, rgba(0,245,196,0.04) 0%, transparent 60%),
-      radial-gradient(ellipse at 80% 100%, rgba(0,170,255,0.03) 0%, transparent 60%),
-      var(--bg);
-    scrollbar-width: thin;
-    scrollbar-color: var(--border) transparent;
-  }
-
-  .term-line {
-    display: block;
-    margin-bottom: 2px;
-  }
-
-  .term-line.system { color: var(--text-dim); }
-  .term-line.user-input { color: var(--blue); }
-  .term-line.user-input::before { content: '> '; color: var(--teal); }
-  .term-line.ai-response { color: #c8f0e8; }
-  .term-line.ai-label {
-    color: var(--teal);
-    font-size: 10px;
-    letter-spacing: 2px;
-    margin-top: 10px;
-    margin-bottom: 2px;
-    opacity: 0.7;
-  }
-  .term-line.divider { color: var(--border); }
-  .term-line.error { color: var(--danger); }
-  .term-line.success { color: var(--green); }
-  .term-line.warn { color: var(--warn); }
-
-  /* Cursor blink */
-  .cursor {
-    display: inline-block;
-    width: 8px;
-    height: 14px;
-    background: var(--teal);
-    animation: blink 1s step-end infinite;
-    vertical-align: text-bottom;
-    box-shadow: 0 0 6px var(--teal);
-  }
-
-  @keyframes blink { 50% { opacity: 0; } }
-
-  /* Typewriter */
-  .typewriter-char { opacity: 0; animation: appear 0.01s forwards; }
-  @keyframes appear { to { opacity: 1; } }
-
-  /* ── INPUT ZONE ── */
-  #input-zone {
-    padding: 12px 16px;
-    background: var(--bg2);
-    border-top: 1px solid var(--border);
-    flex-shrink: 0;
-  }
-
-  /* Quick action buttons */
-  .quick-actions {
-    display: flex;
-    gap: 8px;
-    margin-bottom: 10px;
-  }
-
-  .qa-btn {
-    padding: 6px 14px;
-    background: transparent;
-    border: 1px solid var(--border);
-    border-radius: 4px;
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 10px;
-    letter-spacing: 1.5px;
-    color: var(--text-dim);
-    cursor: pointer;
-    text-transform: uppercase;
-    transition: all 0.2s ease;
-    position: relative;
-    overflow: hidden;
-  }
-
-  .qa-btn::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(135deg, transparent, rgba(0,245,196,0.06));
-    opacity: 0;
-    transition: opacity 0.2s;
-  }
-
-  .qa-btn:hover {
-    border-color: var(--teal);
-    color: var(--teal);
-    box-shadow: 0 0 12px rgba(0,245,196,0.15);
-  }
-
-  .qa-btn:hover::before { opacity: 1; }
-
-  .qa-btn.script { border-color: rgba(0,170,255,0.3); }
-  .qa-btn.script:hover { border-color: var(--blue); color: var(--blue); box-shadow: 0 0 12px rgba(0,170,255,0.2); }
-
-  .qa-btn.audit { border-color: rgba(255,170,0,0.3); }
-  .qa-btn.audit:hover { border-color: var(--warn); color: var(--warn); box-shadow: 0 0 12px rgba(255,170,0,0.2); }
-
-  .qa-btn.market { border-color: rgba(0,255,136,0.3); }
-  .qa-btn.market:hover { border-color: var(--green); color: var(--green); box-shadow: 0 0 12px rgba(0,255,136,0.2); }
-
-  /* Input row */
-  .input-row {
-    display: flex;
-    gap: 10px;
-    align-items: flex-end;
-  }
-
-  #prompt-input {
-    flex: 1;
-    background: var(--panel);
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    padding: 10px 14px;
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 13px;
-    color: var(--text);
-    resize: none;
-    outline: none;
-    min-height: 44px;
-    max-height: 120px;
-    transition: border-color 0.2s, box-shadow 0.2s;
-    scrollbar-width: thin;
-    scrollbar-color: var(--border) transparent;
-  }
-
-  #prompt-input:focus {
-    border-color: var(--teal);
-    box-shadow: 0 0 0 1px rgba(0,245,196,0.2), 0 0 20px rgba(0,245,196,0.08);
-  }
-
-  #prompt-input::placeholder { color: var(--text-dim); }
-
-  #send-btn {
-    padding: 10px 20px;
-    background: linear-gradient(135deg, rgba(0,245,196,0.15), rgba(0,170,255,0.1));
-    border: 1px solid var(--teal);
-    border-radius: 6px;
-    font-family: 'Orbitron', sans-serif;
-    font-size: 10px;
-    font-weight: 700;
-    color: var(--teal);
-    letter-spacing: 2px;
-    cursor: pointer;
-    text-transform: uppercase;
-    transition: all 0.2s ease;
-    white-space: nowrap;
-    box-shadow: 0 0 12px rgba(0,245,196,0.1);
-    align-self: stretch;
-  }
-
-  #send-btn:hover:not(:disabled) {
-    background: linear-gradient(135deg, rgba(0,245,196,0.25), rgba(0,170,255,0.15));
-    box-shadow: 0 0 20px rgba(0,245,196,0.3);
-    transform: translateY(-1px);
-  }
-
-  #send-btn:disabled {
-    opacity: 0.4;
-    cursor: not-allowed;
-    transform: none;
-  }
-
-  /* ══════════════════════════════════
-     RIGHT PANEL — HUD STATS
-  ══════════════════════════════════ */
-  #hud-panel {
-    width: 200px;
-    flex-shrink: 0;
-    background: linear-gradient(180deg, var(--bg2), var(--bg));
-    border-left: 1px solid var(--border);
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-  }
-
-  .hud-section {
-    padding: 14px;
-    border-bottom: 1px solid var(--border);
-  }
-
-  .hud-section-title {
-    font-family: 'Orbitron', sans-serif;
-    font-size: 8px;
-    color: var(--text-dim);
-    letter-spacing: 2.5px;
-    text-transform: uppercase;
-    margin-bottom: 10px;
-  }
-
-  /* Arc meter */
-  .arc-meter {
-    position: relative;
-    text-align: center;
-    margin-bottom: 4px;
-  }
-
-  .arc-meter svg { overflow: visible; }
-
-  .arc-label {
-    font-family: 'Orbitron', monospace;
-    font-size: 18px;
-    font-weight: 900;
-    color: var(--teal);
-    text-shadow: 0 0 10px rgba(0,245,196,0.5);
-  }
-
-  .arc-sub {
-    font-size: 9px;
-    color: var(--text-dim);
-    letter-spacing: 1px;
-    text-transform: uppercase;
-  }
-
-  .hud-metric {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 8px;
-  }
-
-  .hud-metric-label {
-    font-size: 10px;
-    color: var(--text-dim);
-    letter-spacing: 0.5px;
-  }
-
-  .hud-metric-val {
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 11px;
-    color: var(--teal);
-  }
-
-  /* Mini bar */
-  .mini-bar-wrap {
-    background: var(--bg3);
-    border-radius: 2px;
-    height: 3px;
-    margin-top: 3px;
-    overflow: hidden;
-  }
-
-  .mini-bar {
-    height: 100%;
-    background: linear-gradient(90deg, var(--teal), var(--blue));
-    border-radius: 2px;
-    box-shadow: 0 0 6px var(--teal);
-    transition: width 1s ease;
-  }
-
-  /* Activity log */
-  #activity-log {
-    flex: 1;
-    overflow-y: auto;
-    padding: 10px 14px;
-    scrollbar-width: thin;
-    scrollbar-color: var(--border) transparent;
-  }
-
-  .activity-item {
-    display: flex;
-    align-items: flex-start;
-    gap: 6px;
-    margin-bottom: 10px;
-    opacity: 0;
-    animation: fadeSlide 0.4s forwards;
-  }
-
-  @keyframes fadeSlide {
-    from { opacity: 0; transform: translateX(8px); }
-    to { opacity: 1; transform: translateX(0); }
-  }
-
-  .activity-dot {
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    flex-shrink: 0;
-    margin-top: 4px;
-  }
-
-  .activity-dot.teal { background: var(--teal); box-shadow: 0 0 4px var(--teal); }
-  .activity-dot.blue { background: var(--blue); box-shadow: 0 0 4px var(--blue); }
-  .activity-dot.warn { background: var(--warn); }
-  .activity-dot.green { background: var(--green); box-shadow: 0 0 4px var(--green); }
-
-  .activity-text {
-    font-size: 10px;
-    color: var(--text-dim);
-    line-height: 1.4;
-  }
-
-  .activity-time {
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 9px;
-    color: rgba(90,138,128,0.5);
-    display: block;
-  }
-
-  /* Token counter bar */
-  .token-bar-wrap {
-    padding: 10px 14px;
-    border-top: 1px solid var(--border);
-    flex-shrink: 0;
-  }
-
-  .token-bar-label {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 5px;
-  }
-
-  .token-bar-outer {
-    height: 4px;
-    background: var(--bg3);
-    border-radius: 2px;
-    overflow: hidden;
-  }
-
-  .token-bar-inner {
-    height: 100%;
-    width: 24%;
-    background: linear-gradient(90deg, var(--blue), var(--teal));
-    border-radius: 2px;
-    box-shadow: 0 0 8px var(--teal);
-    transition: width 0.5s ease;
-  }
-
-  /* Loading shimmer */
-  .loading-line {
-    height: 13px;
-    background: linear-gradient(90deg, var(--panel), rgba(0,245,196,0.15), var(--panel));
-    background-size: 200% 100%;
-    animation: shimmer 1.2s ease infinite;
-    border-radius: 2px;
-    margin-bottom: 4px;
-  }
-
-  @keyframes shimmer {
-    0% { background-position: 200% 0; }
-    100% { background-position: -200% 0; }
-  }
-
-  /* ── Responsive / scrollbars ── */
-  ::-webkit-scrollbar { width: 4px; }
-  ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
-  ::-webkit-scrollbar-thumb:hover { background: var(--dark-teal); }
+:root {
+  --bg: #000;
+  --bg2: #050d0a;
+  --bg3: #0a1a12;
+  --teal: #00f5c4;
+  --teal-dim: #00a884;
+  --teal-dark: #002a1e;
+  --red: #ff3366;
+  --green: #00ff88;
+  --warn: #ffaa00;
+  --text: #b8e8d8;
+  --dim: #3a6a58;
+  --border: #0d3a2a;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+html,body { height:100%; background:var(--bg); color:var(--text); font-family:'JetBrains Mono',monospace; }
+body { display:flex; flex-direction:column; position:fixed; inset:0; overflow:hidden; }
+
+/* SCANLINES */
+body::before {
+  content:''; position:fixed; inset:0; pointer-events:none; z-index:999;
+  background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,245,196,0.012) 2px,rgba(0,245,196,0.012) 4px);
+}
+
+/* ── AUTH SCREEN ── */
+#auth-screen {
+  position:fixed; inset:0; background:var(--bg); z-index:100;
+  display:flex; flex-direction:column; align-items:center; justify-content:center; padding:24px;
+}
+.auth-logo { font-size:11px; letter-spacing:4px; color:var(--teal); margin-bottom:4px; }
+.auth-sub { font-size:9px; color:var(--dim); letter-spacing:2px; margin-bottom:32px; }
+.auth-box { width:100%; max-width:320px; }
+.auth-label { font-size:9px; color:var(--dim); letter-spacing:2px; margin-bottom:6px; display:block; }
+.auth-input {
+  width:100%; background:var(--bg3); border:1px solid var(--border);
+  color:var(--teal); font-family:'JetBrains Mono',monospace; font-size:13px;
+  padding:12px 14px; outline:none; margin-bottom:12px;
+  -webkit-appearance:none;
+}
+.auth-input:focus { border-color:var(--teal-dim); }
+.auth-btn {
+  width:100%; background:var(--teal-dark); border:1px solid var(--teal-dim);
+  color:var(--teal); font-family:'JetBrains Mono',monospace; font-size:11px;
+  letter-spacing:2px; padding:13px; cursor:pointer; transition:background .15s;
+}
+.auth-btn:active { background:var(--teal); color:#000; }
+.auth-err { font-size:10px; color:var(--red); margin-top:8px; text-align:center; min-height:16px; }
+.auth-loading { font-size:10px; color:var(--dim); margin-top:8px; text-align:center; }
+
+/* ── TOPBAR ── */
+.topbar {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:8px 14px; border-bottom:1px solid var(--border);
+  background:rgba(0,10,6,0.98); flex-shrink:0;
+}
+.topbar-logo { font-size:10px; letter-spacing:2px; color:var(--teal); }
+.topbar-logo span { color:var(--text); }
+.topbar-right { display:flex; align-items:center; gap:10px; }
+.admin-badge { border:1px solid var(--teal-dim); padding:2px 7px; font-size:8px; letter-spacing:2px; color:var(--teal); }
+.logout-btn { font-size:8px; color:var(--red); letter-spacing:1px; cursor:pointer; padding:3px 6px; border:1px solid #330011; }
+
+/* ── TABS ── */
+.tabs {
+  display:flex; border-bottom:1px solid var(--border);
+  background:#030d08; flex-shrink:0;
+}
+.tab {
+  flex:1; padding:10px 4px; font-size:9px; letter-spacing:1px; text-align:center;
+  color:var(--dim); cursor:pointer; border-bottom:2px solid transparent;
+  transition:all .15s;
+}
+.tab.active { color:var(--teal); border-bottom-color:var(--teal); }
+
+/* ── CONTENT ── */
+#content { flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; padding:14px; }
+
+/* ── SECTION ── */
+.section { display:none; }
+.section.active { display:block; }
+.section-title { font-size:9px; letter-spacing:3px; color:var(--teal-dim); margin-bottom:12px; }
+
+/* ── ENGINE CARDS ── */
+.engine-card {
+  background:var(--bg3); border:1px solid var(--border);
+  padding:12px 14px; margin-bottom:8px;
+  display:flex; align-items:center; justify-content:space-between;
+}
+.engine-info { flex:1; }
+.engine-name { font-size:12px; font-weight:700; color:var(--text); letter-spacing:1px; }
+.engine-model { font-size:9px; color:var(--dim); margin-top:2px; }
+.engine-key { font-size:8px; margin-top:3px; }
+.engine-key.ok { color:var(--green); }
+.engine-key.miss { color:var(--red); }
+.toggle-wrap { display:flex; flex-direction:column; align-items:center; gap:4px; margin-left:12px; }
+.toggle {
+  position:relative; width:44px; height:24px; cursor:pointer;
+}
+.toggle input { display:none; }
+.toggle-track {
+  position:absolute; inset:0; background:#1a2e24; border:1px solid var(--border);
+  transition:background .2s;
+}
+.toggle input:checked ~ .toggle-track { background:var(--teal-dark); border-color:var(--teal-dim); }
+.toggle-thumb {
+  position:absolute; top:3px; left:3px; width:16px; height:16px;
+  background:var(--dim); transition:all .2s;
+}
+.toggle input:checked ~ .toggle-thumb { left:23px; background:var(--teal); }
+.toggle-label { font-size:8px; color:var(--dim); letter-spacing:1px; }
+.toggle input:checked ~ .toggle-label { color:var(--teal); }
+
+/* ── MODE SELECTOR ── */
+.mode-bar {
+  background:var(--bg3); border:1px solid var(--border); padding:12px 14px; margin-bottom:14px;
+}
+.mode-bar-title { font-size:9px; color:var(--dim); letter-spacing:2px; margin-bottom:8px; }
+.mode-btns { display:flex; gap:8px; }
+.mode-btn {
+  flex:1; padding:8px; font-size:9px; letter-spacing:1px; text-align:center;
+  border:1px solid var(--border); background:var(--bg); color:var(--dim); cursor:pointer;
+  transition:all .15s;
+}
+.mode-btn.active { background:var(--teal-dark); border-color:var(--teal-dim); color:var(--teal); }
+
+/* ── STATS ── */
+.stat-card {
+  background:var(--bg3); border:1px solid var(--border);
+  padding:12px 14px; margin-bottom:8px;
+}
+.stat-card-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; }
+.stat-username { font-size:12px; color:var(--teal); font-weight:600; }
+.stat-tokens { font-size:11px; color:var(--warn); }
+.stat-row { display:flex; justify-content:space-between; font-size:9px; color:var(--dim); margin-top:3px; }
+.stat-providers { font-size:9px; color:var(--text); margin-top:6px; }
+.provider-tag {
+  display:inline-block; border:1px solid var(--border); padding:1px 5px;
+  font-size:8px; color:var(--teal-dim); margin:2px 2px 0 0;
+}
+
+/* ── LOGS ── */
+.log-entry {
+  background:var(--bg3); border:1px solid var(--border);
+  padding:10px 12px; margin-bottom:6px;
+}
+.log-meta { display:flex; justify-content:space-between; font-size:8px; color:var(--dim); margin-bottom:5px; }
+.log-user { color:var(--teal-dim); }
+.log-provider { color:var(--warn); }
+.log-query { font-size:10px; color:var(--text); margin-bottom:4px; word-break:break-word; }
+.log-response { font-size:9px; color:var(--dim); word-break:break-word; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+.log-tokens { font-size:8px; color:var(--green); margin-top:4px; }
+
+/* ── REFRESH BTN ── */
+.refresh-btn {
+  width:100%; background:var(--bg3); border:1px solid var(--border);
+  color:var(--teal-dim); font-family:'JetBrains Mono',monospace;
+  font-size:9px; letter-spacing:2px; padding:10px; cursor:pointer; margin-bottom:14px;
+}
+.refresh-btn:active { background:var(--teal-dark); color:var(--teal); }
+
+/* ── LOADING ── */
+.loading { text-align:center; color:var(--dim); font-size:10px; padding:20px; }
+.empty { text-align:center; color:var(--dim); font-size:10px; padding:30px; }
+
+/* ── STATUS BAR ── */
+.statusbar {
+  display:flex; justify-content:space-between; padding:4px 12px;
+  background:#000; font-size:8px; color:var(--dim); letter-spacing:1px; flex-shrink:0;
+}
 </style>
 </head>
 <body>
 
-<!-- ══ INFINITY STATUS BAR ══ -->
-<div id="status-bar">
-  <div class="status-brand">
-    <div class="brand-icon">
-      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <polygon points="12,2 22,8 22,16 12,22 2,16 2,8" stroke="#00f5c4" stroke-width="1.5" fill="rgba(0,245,196,0.06)"/>
-        <polygon points="12,6 18,9.5 18,14.5 12,18 6,14.5 6,9.5" stroke="#00aaff" stroke-width="1" fill="none" opacity="0.5"/>
-        <circle cx="12" cy="12" r="2" fill="#00f5c4"/>
-      </svg>
-    </div>
-    <div>
-      <div class="brand-name">VAULT-AI</div>
-      <div class="brand-sub">INTELLIGENCE NERVE CENTER</div>
-    </div>
+<!-- AUTH SCREEN -->
+<div id="auth-screen">
+  <div class="auth-logo">GENESIS VAULT</div>
+  <div class="auth-sub">// ADMIN AI CONTROL //</div>
+  <div class="auth-box">
+    <label class="auth-label">ADMIN TOKEN</label>
+    <input type="password" class="auth-input" id="token-input" placeholder="paste your admin token..." autocomplete="off">
+    <button class="auth-btn" id="auth-btn">AUTHENTICATE</button>
+    <div class="auth-err" id="auth-err"></div>
   </div>
-
-  <div class="status-leds" id="status-leds">
-    <!-- Populated by JS -->
-  </div>
-
-  <div class="status-time" id="clock">--:--:--</div>
 </div>
 
-<!-- ══ MAIN LAYOUT ══ -->
-<div id="main">
+<!-- MAIN UI -->
+<div id="main-ui" style="display:none;flex-direction:column;height:100%;">
 
-  <!-- LEFT SIDEBAR -->
-  <div id="sidebar">
-    <div class="sidebar-header">
-      <div class="sidebar-title">ENGINE <span>SELECTOR</span></div>
-    </div>
-    <div id="engines-list">
-      <!-- Populated by JS -->
-    </div>
-    <div class="sidebar-stats">
-      <div class="stat-row">
-        <span class="stat-label">Session</span>
-        <span class="stat-val" id="session-queries">0 queries</span>
-      </div>
-      <div class="stat-row">
-        <span class="stat-label">Active Engine</span>
-        <span class="stat-val" id="active-engine-stat">—</span>
-      </div>
+  <div class="topbar">
+    <div class="topbar-logo">VAULT <span>//</span> AI ADMIN</div>
+    <div class="topbar-right">
+      <span class="admin-badge" id="admin-name">ADMIN</span>
+      <span class="logout-btn" id="logout-btn">LOGOUT</span>
     </div>
   </div>
 
-  <!-- TERMINAL -->
-  <div id="terminal-zone">
-    <div id="terminal-header">
-      <div class="terminal-tabs">
-        <div class="term-tab active">COMMAND</div>
-        <div class="term-tab">HISTORY</div>
-        <div class="term-tab">CONFIG</div>
-      </div>
-      <div class="terminal-controls">
-        <div class="ctrl-dot red"></div>
-        <div class="ctrl-dot yellow"></div>
-        <div class="ctrl-dot green"></div>
-      </div>
-    </div>
-
-    <div id="terminal">
-      <!-- Boot sequence -->
-    </div>
-
-    <div id="input-zone">
-      <div class="quick-actions">
-        <button class="qa-btn script" onclick="quickAction('script')">⟨/⟩ Generate Script</button>
-        <button class="qa-btn audit" onclick="quickAction('audit')">⚠ Audit Code</button>
-        <button class="qa-btn market" onclick="quickAction('market')">◈ Marketplace Tool</button>
-      </div>
-      <div class="input-row">
-        <textarea id="prompt-input" placeholder="Enter command or query..." rows="1"
-          onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>
-        <button id="send-btn" onclick="sendPrompt()">EXECUTE</button>
-      </div>
-    </div>
+  <div class="tabs">
+    <div class="tab active" data-tab="engines">ENGINES</div>
+    <div class="tab" data-tab="users">USERS</div>
+    <div class="tab" data-tab="logs">LOGS</div>
   </div>
 
-  <!-- RIGHT HUD PANEL -->
-  <div id="hud-panel">
-    <div class="hud-section">
-      <div class="hud-section-title">System Load</div>
-      <div class="arc-meter">
-        <svg width="120" height="70" viewBox="0 0 120 70">
-          <path d="M 15 65 A 50 50 0 0 1 105 65" stroke="#0d3a4a" stroke-width="6" fill="none" stroke-linecap="round"/>
-          <path d="M 15 65 A 50 50 0 0 1 105 65" stroke="url(#arcGrad)" stroke-width="6" fill="none"
-            stroke-linecap="round" stroke-dasharray="157" stroke-dashoffset="60" id="arc-path"/>
-          <defs>
-            <linearGradient id="arcGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stop-color="#00aaff"/>
-              <stop offset="100%" stop-color="#00f5c4"/>
-            </linearGradient>
-          </defs>
-          <text x="60" y="60" text-anchor="middle" font-family="Orbitron" font-size="18" font-weight="900"
-            fill="#00f5c4" filter="url(#glow)">62%</text>
-          <defs>
-            <filter id="glow">
-              <feGaussianBlur stdDeviation="2" result="blur"/>
-              <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
-            </filter>
-          </defs>
-        </svg>
-        <div class="arc-sub">NEURAL LOAD</div>
+  <div id="content">
+
+    <!-- ENGINES TAB -->
+    <div class="section active" id="tab-engines">
+      <div class="mode-bar">
+        <div class="mode-bar-title">ENGINE MODE</div>
+        <div class="mode-btns">
+          <div class="mode-btn active" id="mode-auto" onclick="setMode('auto')">AUTO FAILOVER</div>
+          <div class="mode-btn" id="mode-manual" onclick="setMode('manual')">MANUAL SELECT</div>
+        </div>
       </div>
+      <div class="section-title">AI PROVIDERS</div>
+      <div id="engines-list"><div class="loading">LOADING PROVIDERS...</div></div>
     </div>
 
-    <div class="hud-section">
-      <div class="hud-section-title">Metrics</div>
-      <div class="hud-metric">
-        <span class="hud-metric-label">Latency</span>
-        <span class="hud-metric-val" id="latency-val">—</span>
-      </div>
-      <div class="hud-metric">
-        <span class="hud-metric-label">Responses</span>
-        <span class="hud-metric-val" id="resp-count">0</span>
-      </div>
-      <div class="hud-metric">
-        <span class="hud-metric-label">Avg Speed</span>
-        <span class="hud-metric-val" id="avg-speed">—</span>
-      </div>
-      <div class="mini-bar-wrap">
-        <div class="mini-bar" id="perf-bar" style="width:0%"></div>
-      </div>
+    <!-- USERS TAB -->
+    <div class="section" id="tab-users">
+      <div class="section-title">PER-USER TOKEN USAGE</div>
+      <button class="refresh-btn" onclick="loadUsers()">↻ REFRESH</button>
+      <div id="users-list"><div class="loading">LOADING STATS...</div></div>
     </div>
 
-    <div class="hud-section-title" style="padding: 10px 14px 4px; font-family: Orbitron; font-size:8px; color: var(--text-dim); letter-spacing:2.5px; text-transform:uppercase;">Activity</div>
-    <div id="activity-log">
-      <!-- Populated by JS -->
+    <!-- LOGS TAB -->
+    <div class="section" id="tab-logs">
+      <div class="section-title">RECENT AI CONVERSATIONS</div>
+      <button class="refresh-btn" onclick="loadLogs()">↻ REFRESH</button>
+      <div id="logs-list"><div class="loading">LOADING LOGS...</div></div>
     </div>
 
-    <div class="token-bar-wrap">
-      <div class="token-bar-label">
-        <span style="font-size:9px;color:var(--text-dim);letter-spacing:1px;text-transform:uppercase;">TOKENS</span>
-        <span style="font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--teal)" id="token-label">240 / 1k</span>
-      </div>
-      <div class="token-bar-outer">
-        <div class="token-bar-inner" id="token-bar"></div>
-      </div>
-    </div>
+  </div>
+
+  <div class="statusbar">
+    <span id="status-left">VAULT AI ADMIN</span>
+    <span id="clock"></span>
+    <span id="status-right">SECURE</span>
   </div>
 
 </div>
 
 <script>
-  const API = 'https://genesis-ai-backend.onrender.com';
+const AI_URL = 'https://genesis-ai-backend.onrender.com';
+let adminToken = '';
+let currentMode = 'auto';
 
-  /* ── ENGINES ── */
-  const ENGINES = [
-    { id: 'gemini',     name: 'GEMINI',      specialty: 'Multimodal Reasoning', tag: 'GOOGLE',    online: true  },
-    { id: 'cerebras',   name: 'CEREBRAS',    specialty: 'Ultra-Fast Inference', tag: 'HARDWARE',  online: true  },
-    { id: 'groq',       name: 'GROQ',        specialty: 'Hyper-Speed Execution',tag: 'SPEED',     online: true  },
-    { id: 'deepseek',   name: 'DEEPSEEK',    specialty: 'Coding / Logic',       tag: 'CODE',      online: true  },
-    { id: 'together',   name: 'TOGETHER',    specialty: 'Open Model Hub',       tag: 'ENSEMBLE',  online: false },
-    { id: 'mistral',    name: 'MISTRAL',     specialty: 'EU Sovereign AI',      tag: 'EUROPEAN',  online: true  },
-    { id: 'openrouter', name: 'OPENROUTER',  specialty: 'Unified Gateway',      tag: 'ROUTER',    online: true  },
-  ];
+// ── CLOCK ──
+setInterval(() => {
+  document.getElementById('clock').textContent = new Date().toLocaleTimeString('en-GB');
+}, 1000);
 
-  let selectedEngine = 'groq';
-  let sessionQueries = 0;
-  let totalLatencies = [];
-  let isLoading = false;
-  let tokenCount = 240;
+// ── AUTH ──
+document.getElementById('auth-btn').addEventListener('click', authenticate);
+document.getElementById('token-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') authenticate();
+});
 
-  /* ── BUILD STATUS LEDs ── */
-  const ledsEl = document.getElementById('status-leds');
-  ENGINES.forEach(e => {
-    const item = document.createElement('div');
-    item.className = 'led-item' + (e.online ? ' online' : '');
-    item.innerHTML = `<div class="led ${e.online ? 'online' : 'offline'}"></div><span class="led-label">${e.name}</span>`;
-    ledsEl.appendChild(item);
+async function authenticate() {
+  const token = document.getElementById('token-input').value.trim();
+  if (!token) return showErr('TOKEN REQUIRED');
+  document.getElementById('auth-btn').textContent = 'VERIFYING...';
+  document.getElementById('auth-err').textContent = '';
+
+  try {
+    const res = await fetch(`${AI_URL}/admin/ai-status`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    if (res.status === 401) {
+      showErr('INVALID TOKEN. ACCESS DENIED.');
+      document.getElementById('auth-btn').textContent = 'AUTHENTICATE';
+      return;
+    }
+    const data = await res.json();
+    if (data.providers) {
+      adminToken = token;
+      sessionStorage.setItem('admin_token', token);
+      document.getElementById('auth-screen').style.display = 'none';
+      document.getElementById('main-ui').style.display = 'flex';
+      renderEngines(data.providers);
+      loadUsers();
+    } else {
+      showErr('UNEXPECTED RESPONSE.');
+      document.getElementById('auth-btn').textContent = 'AUTHENTICATE';
+    }
+  } catch(e) {
+    showErr('CONNECTION FAILED. CHECK BACKEND.');
+    document.getElementById('auth-btn').textContent = 'AUTHENTICATE';
+  }
+}
+
+function showErr(msg) {
+  document.getElementById('auth-err').textContent = msg;
+}
+
+// Auto-restore session
+window.addEventListener('load', () => {
+  const saved = sessionStorage.getItem('admin_token');
+  if (saved) {
+    document.getElementById('token-input').value = saved;
+    authenticate();
+  }
+});
+
+// Logout
+document.getElementById('logout-btn').addEventListener('click', () => {
+  sessionStorage.removeItem('admin_token');
+  adminToken = '';
+  document.getElementById('auth-screen').style.display = 'flex';
+  document.getElementById('main-ui').style.display = 'none';
+  document.getElementById('token-input').value = '';
+  document.getElementById('auth-btn').textContent = 'AUTHENTICATE';
+});
+
+// ── TABS ──
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById('tab-' + tab.dataset.tab).classList.add('active');
+    if (tab.dataset.tab === 'users') loadUsers();
+    if (tab.dataset.tab === 'logs') loadLogs();
   });
+});
 
-  /* ── BUILD ENGINE CARDS ── */
-  const enginesList = document.getElementById('engines-list');
-  ENGINES.forEach(e => {
+// ── ENGINE MODE ──
+function setMode(mode) {
+  currentMode = mode;
+  document.getElementById('mode-auto').classList.toggle('active', mode === 'auto');
+  document.getElementById('mode-manual').classList.toggle('active', mode === 'manual');
+  document.getElementById('status-left').textContent = `MODE: ${mode.toUpperCase()}`;
+}
+
+// ── RENDER ENGINES ──
+function renderEngines(providers) {
+  const list = document.getElementById('engines-list');
+  list.innerHTML = '';
+  providers.forEach(p => {
     const card = document.createElement('div');
-    card.className = 'engine-card' + (e.id === selectedEngine ? ' active' : '');
-    card.id = 'card-' + e.id;
+    card.className = 'engine-card';
     card.innerHTML = `
-      <div class="engine-name">${e.name}</div>
-      <div class="engine-specialty">${e.specialty}</div>
-      <span class="engine-tag">${e.tag}</span>
+      <div class="engine-info">
+        <div class="engine-name">${p.name}</div>
+        <div class="engine-model">${p.model}</div>
+        <div class="engine-key ${p.hasKey ? 'ok' : 'miss'}">${p.hasKey ? '✓ KEY SET' : '✗ NO KEY'}</div>
+      </div>
+      <div class="toggle-wrap">
+        <label class="toggle">
+          <input type="checkbox" ${p.active ? 'checked' : ''} onchange="toggleEngine('${p.name}', this.checked)">
+          <div class="toggle-track"></div>
+          <div class="toggle-thumb"></div>
+        </label>
+        <span class="toggle-label">${p.active ? 'ON' : 'OFF'}</span>
+      </div>
     `;
-    card.onclick = () => selectEngine(e.id);
-    enginesList.appendChild(card);
+    list.appendChild(card);
   });
+}
 
-  function selectEngine(id) {
-    document.querySelectorAll('.engine-card').forEach(c => c.classList.remove('active'));
-    document.getElementById('card-' + id).classList.add('active');
-    selectedEngine = id;
-    document.getElementById('active-engine-stat').textContent = id.toUpperCase();
-    const e = ENGINES.find(x => x.id === id);
-    addActivity(`Engine switched → ${e.name}`, 'blue');
-    termLine(`[ENGINE] Selected: ${e.name} (${e.specialty})`, 'system');
-  }
-
-  /* ── TERMINAL ── */
-  const term = document.getElementById('terminal');
-
-  function termLine(text, cls = 'system') {
-    const line = document.createElement('span');
-    line.className = 'term-line ' + cls;
-    line.textContent = text;
-    term.appendChild(line);
-    term.appendChild(document.createElement('br'));
-    term.scrollTop = term.scrollHeight;
-  }
-
-  async function typewriterLine(text, cls = 'ai-response', delay = 18) {
-    const line = document.createElement('span');
-    line.className = 'term-line ' + cls;
-    term.appendChild(line);
-    term.appendChild(document.createElement('br'));
-
-    for (let i = 0; i < text.length; i++) {
-      await new Promise(r => setTimeout(r, delay));
-      line.textContent += text[i];
-      term.scrollTop = term.scrollHeight;
-    }
-  }
-
-  function showLoadingLines() {
-    const wrap = document.createElement('div');
-    wrap.id = 'loading-wrap';
-    for (let i = 0; i < 3; i++) {
-      const l = document.createElement('div');
-      l.className = 'loading-line';
-      l.style.width = (50 + Math.random() * 40) + '%';
-      l.style.marginBottom = '4px';
-      wrap.appendChild(l);
-    }
-    term.appendChild(wrap);
-    term.scrollTop = term.scrollHeight;
-  }
-
-  function removeLoadingLines() {
-    const w = document.getElementById('loading-wrap');
-    if (w) w.remove();
-  }
-
-  /* ── BOOT SEQUENCE ── */
-  async function boot() {
-    const lines = [
-      { t: '╔══════════════════════════════════════════════════╗', c: 'divider' },
-      { t: '║     GENESIS VAULT // INTELLIGENCE NERVE CENTER   ║', c: 'divider' },
-      { t: '╚══════════════════════════════════════════════════╝', c: 'divider' },
-      { t: '', c: 'system' },
-      { t: '[BOOT] Initializing secure neural gateway...', c: 'system' },
-      { t: '[BOOT] Loading engine manifests...', c: 'system' },
-      { t: '[OK]   7 AI engines indexed', c: 'success' },
-      { t: '[BOOT] Establishing encrypted tunnel to AI backend...', c: 'system' },
-      { t: '[OK]   genesis-ai-backend.onrender.com CONNECTED', c: 'success' },
-      { t: '[BOOT] Active engine: GROQ (Hyper-Speed Execution)', c: 'system' },
-      { t: '', c: 'system' },
-      { t: '  Type a prompt and press EXECUTE — or use Quick-Actions', c: 'warn' },
-      { t: '', c: 'system' },
-    ];
-    for (const l of lines) {
-      await new Promise(r => setTimeout(r, 60));
-      termLine(l.t, l.c);
-    }
-    addCursor();
-    selectEngine('groq');
-    document.getElementById('active-engine-stat').textContent = 'GROQ';
-  }
-
-  function addCursor() {
-    const existing = document.getElementById('term-cursor');
-    if (existing) existing.remove();
-    const cur = document.createElement('span');
-    cur.id = 'term-cursor';
-    cur.className = 'cursor';
-    term.appendChild(cur);
-  }
-
-  /* ── QUICK ACTIONS ── */
-  const QUICK_PROMPTS = {
-    script: 'Generate a Python security automation script for Genesis Vault. Include input validation, error handling, and logging.',
-    audit:  'Audit the following code for security vulnerabilities, injection flaws, and best practice violations:\n\n// Paste your code here',
-    market: 'Create a new Genesis Vault marketplace tool specification. Include: tool name, description, required permissions, API endpoints, and pricing tier.',
-  };
-
-  function quickAction(type) {
-    const input = document.getElementById('prompt-input');
-    input.value = QUICK_PROMPTS[type];
-    autoResize(input);
-    input.focus();
-    addActivity(`Quick action: ${type}`, 'teal');
-  }
-
-  /* ── SEND PROMPT ── */
-  async function sendPrompt() {
-    if (isLoading) return;
-    const input = document.getElementById('prompt-input');
-    const prompt = input.value.trim();
-    if (!prompt) return;
-
-    isLoading = true;
-    input.value = '';
-    autoResize(input);
-    document.getElementById('send-btn').disabled = true;
-
-    const cur = document.getElementById('term-cursor');
-    if (cur) cur.remove();
-
-    termLine('', 'system');
-    termLine(`[${new Date().toLocaleTimeString()}] USER → ${selectedEngine.toUpperCase()}`, 'system');
-    termLine(prompt, 'user-input');
-    termLine('', 'system');
-
-    sessionQueries++;
-    document.getElementById('session-queries').textContent = sessionQueries + ' quer' + (sessionQueries === 1 ? 'y' : 'ies');
-    addActivity(`Query sent via ${selectedEngine}`, 'teal');
-
-    showLoadingLines();
-    const t0 = Date.now();
-
-    try {
-      const res = await fetch(`${API}/chat`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: prompt, engine: selectedEngine }),
-      });
-
-      removeLoadingLines();
-      const ms = Date.now() - t0;
-      totalLatencies.push(ms);
-
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-
-      const data = await res.json();
-      const reply = data.reply || data.response || data.message || JSON.stringify(data);
-
-      const engine = ENGINES.find(e => e.id === selectedEngine);
-      termLine(`◈ ${engine.name} RESPONSE [${ms}ms]`, 'ai-label');
-
-      // Chunk into lines for typewriter
-      const chunks = reply.split('\n');
-      for (const chunk of chunks) {
-        if (chunk.trim()) {
-          await typewriterLine(chunk, 'ai-response', 12);
-        } else {
-          termLine('', 'system');
+async function toggleEngine(name, active) {
+  try {
+    const res = await fetch(`${AI_URL}/admin/ai-toggle`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${adminToken}`
+      },
+      body: JSON.stringify({ name, active })
+    });
+    const data = await res.json();
+    if (data.success) {
+      document.getElementById('status-right').textContent = `${name}: ${active ? 'ON' : 'OFF'}`;
+      // Update label
+      document.querySelectorAll('.engine-card').forEach(card => {
+        if (card.querySelector('.engine-name').textContent === name) {
+          card.querySelector('.toggle-label').textContent = active ? 'ON' : 'OFF';
         }
-      }
-
-      // Update metrics
-      document.getElementById('latency-val').textContent = ms + 'ms';
-      document.getElementById('resp-count').textContent = totalLatencies.length;
-      const avg = Math.round(totalLatencies.reduce((a,b)=>a+b,0)/totalLatencies.length);
-      document.getElementById('avg-speed').textContent = avg + 'ms';
-      document.getElementById('perf-bar').style.width = Math.min(100, (1000/ms)*100) + '%';
-
-      // Tokens
-      const newToks = Math.floor(reply.split(' ').length * 1.3);
-      tokenCount += newToks;
-      const pct = Math.min(100, (tokenCount / 1000) * 100);
-      document.getElementById('token-bar').style.width = pct + '%';
-      document.getElementById('token-label').textContent = tokenCount + ' / 1k';
-
-      addActivity(`Response received (${ms}ms)`, 'green');
-
-    } catch (err) {
-      removeLoadingLines();
-      termLine(`[ERROR] ${err.message}`, 'error');
-      termLine('[INFO]  Check backend connectivity or API key.', 'warn');
-      addActivity('Request failed: ' + err.message, 'warn');
+      });
     }
-
-    termLine('', 'system');
-    addCursor();
-    isLoading = false;
-    document.getElementById('send-btn').disabled = false;
+  } catch(e) {
+    alert('Failed to toggle: ' + e.message);
   }
+}
 
-  /* ── ACTIVITY LOG ── */
-  function addActivity(text, dotClass = 'teal') {
-    const log = document.getElementById('activity-log');
-    const item = document.createElement('div');
-    item.className = 'activity-item';
-    const now = new Date().toLocaleTimeString('en-US', { hour12: false });
-    item.innerHTML = `
-      <div class="activity-dot ${dotClass}"></div>
-      <div class="activity-text">${text}<span class="activity-time">${now}</span></div>
-    `;
-    log.appendChild(item);
-    log.scrollTop = log.scrollHeight;
-    // Trim
-    while (log.children.length > 20) log.removeChild(log.firstChild);
-  }
-
-  /* ── KEYBOARD ── */
-  function handleKey(e) {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      sendPrompt();
+// ── USERS ──
+async function loadUsers() {
+  const list = document.getElementById('users-list');
+  list.innerHTML = '<div class="loading">LOADING...</div>';
+  try {
+    const res = await fetch(`${AI_URL}/admin/user-stats`, {
+      headers: { 'Authorization': `Bearer ${adminToken}` }
+    });
+    const data = await res.json();
+    if (!data.users || data.users.length === 0) {
+      list.innerHTML = '<div class="empty">NO USER DATA YET</div>';
+      return;
     }
+    list.innerHTML = '';
+    data.users.forEach(u => {
+      const providerTags = Object.entries(u.providers)
+        .map(([p, c]) => `<span class="provider-tag">${p}: ${c}</span>`).join('');
+      const lastActive = u.last_active ? new Date(u.last_active).toLocaleDateString() : 'N/A';
+      const card = document.createElement('div');
+      card.className = 'stat-card';
+      card.innerHTML = `
+        <div class="stat-card-header">
+          <span class="stat-username">${u.username}</span>
+          <span class="stat-tokens">${u.total_tokens.toLocaleString()} tokens</span>
+        </div>
+        <div class="stat-row">
+          <span>Queries: ${u.total_queries}</span>
+          <span>Last: ${lastActive}</span>
+        </div>
+        <div class="stat-providers">${providerTags}</div>
+      `;
+      list.appendChild(card);
+    });
+  } catch(e) {
+    list.innerHTML = `<div class="empty">ERROR: ${e.message}</div>`;
   }
+}
 
-  function autoResize(el) {
-    el.style.height = 'auto';
-    el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+// ── LOGS ──
+async function loadLogs() {
+  const list = document.getElementById('logs-list');
+  list.innerHTML = '<div class="loading">LOADING...</div>';
+  try {
+    const res = await fetch(`${AI_URL}/admin/recent-logs`, {
+      headers: { 'Authorization': `Bearer ${adminToken}` }
+    });
+    const data = await res.json();
+    if (!data.logs || data.logs.length === 0) {
+      list.innerHTML = '<div class="empty">NO LOGS YET</div>';
+      return;
+    }
+    list.innerHTML = '';
+    data.logs.forEach(log => {
+      const time = log.created_at ? new Date(log.created_at).toLocaleString() : '';
+      const entry = document.createElement('div');
+      entry.className = 'log-entry';
+      entry.innerHTML = `
+        <div class="log-meta">
+          <span class="log-user">${log.username || 'anon'}</span>
+          <span class="log-provider">${log.provider || 'unknown'}</span>
+          <span>${time}</span>
+        </div>
+        <div class="log-query">&gt; ${log.user_query || ''}</div>
+        <div class="log-response">${log.ai_response || ''}</div>
+        <div class="log-tokens">~${log.tokens_used || 0} tokens</div>
+      `;
+      list.appendChild(entry);
+    });
+  } catch(e) {
+    list.innerHTML = `<div class="empty">ERROR: ${e.message}</div>`;
   }
-
-  /* ── CLOCK ── */
-  function updateClock() {
-    document.getElementById('clock').textContent =
-      new Date().toLocaleTimeString('en-US', { hour12: false });
-  }
-  setInterval(updateClock, 1000);
-  updateClock();
-
-  /* ── INIT ── */
-  boot();
+}
 </script>
 </body>
 </html>
