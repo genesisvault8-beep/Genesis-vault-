@@ -405,22 +405,21 @@ async function send(msg) {
   const analyzing = print('[LOG]: ANALYZING... ROUTING TO INFINITY ENGINE...', 'logc');
 
   try {
-    const res = await fetch(`${BACKEND_URL}/chat`, {
+    const res = await fetch(`${BACKEND_URL}/api/vault-ai`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ message: msg, engine: 'groq' })
+      body: JSON.stringify({ message: msg, rank: USER_RANK })
     });
     const data = await res.json();
     analyzing.remove();
 
-    const replyText = data.reply || data.response;
-    if (replyText) {
+    if (data.response) {
       const el = document.createElement('div');
       el.className = 'line ai';
       el.innerHTML = `<span style="color:var(--green);opacity:.7">[VAULT-AI]:</span> `;
       out.appendChild(el);
       out.scrollTop = out.scrollHeight;
-      await typewrite(el, replyText, 7);
+      await typewrite(el, data.response, 7);
     } else {
       print('[ERR]: UNEXPECTED RESPONSE.', 'err');
     }
