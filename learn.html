@@ -526,13 +526,22 @@
     }).join('');
   }
 
-  function openCourse(id) {
+  async function openCourse(id) {
     const course = allCourses.find(c => c.id == id);
     if (!course) return;
     document.getElementById('reader-title').textContent = `// ${course.title}`;
-    document.getElementById('reader-content').textContent = course.content || 'No content available.';
+    document.getElementById('reader-content').textContent = '// Loading...';
     document.getElementById('course-reader').classList.add('active');
     document.getElementById('course-reader').scrollIntoView({ behavior: 'smooth' });
+    try {
+      const res = await fetch(`${API}/courses/${id}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const data = await res.json();
+      document.getElementById('reader-content').textContent = data.content || data.course?.content || 'No content available.';
+    } catch(e) {
+      document.getElementById('reader-content').textContent = 'Failed to load content.';
+    }
   }
 
   function closeReader() {
@@ -583,7 +592,9 @@
 
   async function loadCourses() {
     try {
-      const res = await fetch(`${API}/courses`);
+      const res = await fetch(`${API}/courses`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
       const data = await res.json();
       allCourses = data.courses || [];
       renderCourses();
