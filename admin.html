@@ -521,12 +521,82 @@
     margin-top: 2px;
   }
 
-  .divider {
-    border: none;
-    border-top: 1px solid var(--border);
-    margin: 20px 0;
+  /* AI ENGINE */
+  .ai-card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    padding: 16px;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    animation: fadeIn 0.3s ease;
   }
-</style>
+
+  .ai-card.active-provider { border-left: 3px solid var(--accent); }
+  .ai-card.inactive-provider { border-left: 3px solid var(--accent3); opacity: 0.6; }
+  .ai-card.no-key { border-left: 3px solid var(--accent4); }
+
+  .ai-info { flex: 1; }
+
+  .ai-name {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.9rem;
+    color: white;
+    letter-spacing: 1px;
+  }
+
+  .ai-model {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.65rem;
+    color: var(--text-dim);
+    margin-top: 3px;
+  }
+
+  .ai-status-badge {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.6rem;
+    padding: 2px 8px;
+    letter-spacing: 1px;
+    margin-top: 5px;
+    display: inline-block;
+  }
+
+  .badge-online  { border: 1px solid var(--accent);  color: var(--accent); }
+  .badge-offline { border: 1px solid var(--accent3); color: var(--accent3); }
+  .badge-no-key  { border: 1px solid var(--accent4); color: var(--accent4); }
+
+  .ai-toggle {
+    position: relative;
+    width: 44px;
+    height: 24px;
+    flex-shrink: 0;
+    margin-left: 12px;
+  }
+
+  .ai-toggle input { opacity: 0; width: 0; height: 0; }
+
+  .toggle-slider {
+    position: absolute;
+    inset: 0;
+    background: var(--border);
+    cursor: pointer;
+    transition: 0.3s;
+    border: 1px solid var(--border);
+  }
+
+  .toggle-slider:before {
+    content: '';
+    position: absolute;
+    width: 16px; height: 16px;
+    left: 3px; top: 3px;
+    background: var(--text-dim);
+    transition: 0.3s;
+  }
+
+  input:checked + .toggle-slider { background: rgba(0,245,196,0.15); border-color: var(--accent); }
+  input:checked + .toggle-slider:before { transform: translateX(20px); background: var(--accent); }
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.6/marked.min.js"></script>
 </head>
 <body>
@@ -617,6 +687,39 @@
     </div>
   </div>
 
+  <!-- ══ AI ENGINE ══ -->
+  <div class="page" id="page-ai">
+
+    <div class="section-title">
+      // Infinity Engine Status
+      <button class="refresh-btn" onclick="loadAIStatus()">↻ REFRESH</button>
+    </div>
+
+    <!-- Engine Status Banner -->
+    <div id="engine-banner" class="stat-card wide green" style="margin-bottom:20px;">
+      <div class="stat-value" id="engine-active-count">...</div>
+      <div class="stat-label">Active AI Providers</div>
+    </div>
+
+    <!-- AI Provider Cards -->
+    <div id="ai-providers-container">
+      <div class="loading"><span class="spinner"></span>Loading providers...</div>
+    </div>
+
+    <hr class="divider">
+
+    <!-- Test Engine -->
+    <div class="section-title">// Test Infinity Engine</div>
+    <div class="item-card">
+      <input type="text" id="ai-test-input" placeholder="Send a test message to the engine...">
+      <div style="display:flex;gap:8px;margin-top:4px;">
+        <button class="btn-approve" onclick="testEngine()" style="flex:1;">[ SEND TEST ]</button>
+      </div>
+      <div id="ai-test-result" style="margin-top:12px;font-family:'Share Tech Mono',monospace;font-size:0.75rem;color:var(--accent);line-height:1.6;display:none;"></div>
+    </div>
+
+  </div>
+
   <!-- ══ COURSES ══ -->
   <div class="page" id="page-courses">
     <div class="section-title">// Post New Course</div>
@@ -673,6 +776,10 @@
   <div class="nav-item" onclick="showPage('courses', this)">
     <span class="nav-icon">▣</span>
     <span class="nav-label">Courses</span>
+  </div>
+  <div class="nav-item" onclick="showPage('ai', this)">
+    <span class="nav-icon">⚡</span>
+    <span class="nav-label">AI Engine</span>
   </div>
 </div>
 
@@ -844,6 +951,7 @@
     if (name === 'payments')  loadPayments();
     if (name === 'users')     loadUsers();
     if (name === 'courses')   { loadCourses(); }
+    if (name === 'ai')        { loadAIStatus(); }
   }
 
   function toast(msg, color = 'var(--accent)') {
@@ -1526,6 +1634,94 @@
       toast('// Network error.', 'var(--accent3)');
       btn.disabled = false;
       btn.textContent = '[ DELETE ]';
+    }
+  }
+
+  // ══════════════════════════════════════════════════════════════════
+  // AI ENGINE
+  // ══════════════════════════════════════════════════════════════════
+
+  const AI_BACKEND = 'https://genesis-ai-backend.onrender.com';
+
+  async function loadAIStatus() {
+    const c = document.getElementById('ai-providers-container');
+    c.innerHTML = '<div class="loading"><span class="spinner"></span>Loading...</div>';
+    try {
+      const res = await fetch(`${AI_BACKEND}/infinity/status`);
+      const d = await res.json();
+      const providers = d.providers || [];
+      const activeCount = providers.filter(p => p.active && p.hasKey).length;
+
+      document.getElementById('engine-active-count').textContent = activeCount;
+      const banner = document.getElementById('engine-banner');
+      banner.className = `stat-card wide ${activeCount > 3 ? 'green' : activeCount > 1 ? 'yellow' : 'red'}`;
+
+      c.innerHTML = providers.map(p => {
+        const hasKey = p.hasKey;
+        const isOn = p.active && hasKey;
+        const statusClass = !hasKey ? 'no-key' : isOn ? 'active-provider' : 'inactive-provider';
+        const badgeClass = !hasKey ? 'badge-no-key' : isOn ? 'badge-online' : 'badge-offline';
+        const badgeText = !hasKey ? 'NO KEY' : isOn ? 'ONLINE' : 'OFFLINE';
+
+        return `
+          <div class="ai-card ${statusClass}" id="ai-card-${p.name}">
+            <div class="ai-info">
+              <div class="ai-name">${p.name}</div>
+              <div class="ai-model">${p.model}</div>
+              <span class="ai-status-badge ${badgeClass}">${badgeText}</span>
+            </div>
+            <label class="ai-toggle" title="${!hasKey ? 'Add API key to Render first' : ''}">
+              <input type="checkbox" ${isOn ? 'checked' : ''} ${!hasKey ? 'disabled' : ''}
+                onchange="toggleAI('${p.name}', this.checked, this)">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+        `;
+      }).join('');
+    } catch(e) {
+      c.innerHTML = '<div class="empty">// Failed to reach AI backend.</div>';
+    }
+  }
+
+  async function toggleAI(name, active, checkbox) {
+    checkbox.disabled = true;
+    try {
+      const res = await fetch(`${AI_BACKEND}/infinity/toggle`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, active })
+      });
+      const d = await res.json();
+      if (d.success) {
+        toast(`// ${name} ${active ? 'ACTIVATED' : 'DEACTIVATED'}`);
+        loadAIStatus();
+      } else {
+        toast('// Toggle failed.', 'var(--accent3)');
+        checkbox.checked = !active;
+      }
+    } catch(e) {
+      toast('// Network error.', 'var(--accent3)');
+      checkbox.checked = !active;
+    }
+    checkbox.disabled = false;
+  }
+
+  async function testEngine() {
+    const input = document.getElementById('ai-test-input').value.trim();
+    if (!input) return;
+    const result = document.getElementById('ai-test-result');
+    result.style.display = 'block';
+    result.textContent = '[INFINITY ENGINE] Routing request...';
+    try {
+      const res = await fetch(`${AI_BACKEND}/api/vault-ai`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: input, rank: 'Admin' })
+      });
+      const d = await res.json();
+      result.innerHTML = `<span style="color:var(--accent4)">[Provider: ${d.provider || 'Unknown'}]</span>\n\n${d.response || d.error}`;
+    } catch(e) {
+      result.textContent = '[ERR] Failed to reach engine.';
     }
   }
 
