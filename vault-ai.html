@@ -195,7 +195,7 @@
 </div>
 
 <script>
-const BACKEND_URL = 'https://genesis-vault-backend.onrender.com';
+const BACKEND_URL = 'https://genesis-ai-backend.onrender.com';
 const USER_RANK = 'Ghost';
 let busy = false;
 let history = [];
@@ -405,21 +405,22 @@ async function send(msg) {
   const analyzing = print('[LOG]: ANALYZING... ROUTING TO INFINITY ENGINE...', 'logc');
 
   try {
-    const res = await fetch(`${BACKEND_URL}/api/vault-ai`, {
+    const res = await fetch(`${BACKEND_URL}/chat`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ message: msg, rank: USER_RANK })
+      body: JSON.stringify({ message: msg, engine: 'groq' })
     });
     const data = await res.json();
     analyzing.remove();
 
-    if (data.response) {
+    const replyText = data.reply || data.response;
+    if (replyText) {
       const el = document.createElement('div');
       el.className = 'line ai';
       el.innerHTML = `<span style="color:var(--green);opacity:.7">[VAULT-AI]:</span> `;
       out.appendChild(el);
       out.scrollTop = out.scrollHeight;
-      await typewrite(el, data.response, 7);
+      await typewrite(el, replyText, 7);
     } else {
       print('[ERR]: UNEXPECTED RESPONSE.', 'err');
     }
