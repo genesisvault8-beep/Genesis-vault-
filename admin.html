@@ -527,6 +527,7 @@
     margin: 20px 0;
   }
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.6/marked.min.js"></script>
 </head>
 <body>
 
@@ -1479,12 +1480,29 @@
           <h4>${course.title}</h4>
           <p>${course.description || ''}</p>
           <div class="actions" style="margin-top:10px;">
+            <button class="btn-approve" style="font-size:0.7rem;padding:5px 12px;margin-right:8px;" onclick="viewCourse(${course.id}, \`${course.title}\`)">[ VIEW ]</button>
             <button class="btn-reject" style="font-size:0.7rem;padding:5px 12px;" onclick="deleteCourse(${course.id}, this)">[ DELETE ]</button>
           </div>
         </div>
       `).join('');
     } catch(e) {
       c.innerHTML = '<div class="empty">// Failed to load courses.</div>';
+    }
+  }
+
+  async function viewCourse(id, title) {
+    document.getElementById('modal-course-title').textContent = '// ' + title;
+    document.getElementById('modal-course-body').innerHTML = '<div class="loading"><span class="spinner"></span>Loading...</div>';
+    document.getElementById('modal-course-view').style.display = 'block';
+    try {
+      const res = await fetch(`${API}/courses/${id}`, {
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('gv_admin_token')}` }
+      });
+      const d = await res.json();
+      const raw = d.content || d.course?.content || 'No content available.';
+      document.getElementById('modal-course-body').innerHTML = marked.parse(raw);
+    } catch(e) {
+      document.getElementById('modal-course-body').innerHTML = '// Failed to load content.';
     }
   }
 
@@ -1556,5 +1574,15 @@
 
   setTimeout(initAdmin, 1000);
 </script>
+<!-- COURSE VIEWER MODAL -->
+<div id="modal-course-view" style="display:none;position:fixed;inset:0;background:rgba(2,6,8,0.97);z-index:300;overflow-y:auto;padding:20px;">
+  <div style="max-width:600px;margin:0 auto;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--border);">
+      <h3 id="modal-course-title" style="font-family:'Share Tech Mono',monospace;color:var(--accent);letter-spacing:2px;font-size:0.9rem;">// COURSE</h3>
+      <button onclick="document.getElementById('modal-course-view').style.display='none'" style="background:none;border:1px solid var(--border);color:var(--text-dim);width:32px;height:32px;cursor:pointer;font-size:1rem;">✕</button>
+    </div>
+    <div id="modal-course-body" style="font-size:0.9rem;line-height:1.8;color:var(--text);"></div>
+  </div>
+</div>
 </body>
 </html>
