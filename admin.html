@@ -1566,7 +1566,7 @@
     toast('// Course loaded for editing.');
   }
 
-
+  async function deleteCourse(id, btn) {
     if (!confirm('Permanently delete this course? This cannot be undone.')) return;
     btn.disabled = true;
     btn.textContent = '...';
