@@ -1481,7 +1481,7 @@
     const c = document.getElementById('courses-container');
     c.innerHTML = '<div class="loading"><span class="spinner"></span>Loading...</div>';
     try {
-      const res = await apiFetch(`${API}/courses`);
+      const res = await apiFetch(`${API}/admin/courses`);
       if (!res) return;
       const d   = await res.json();
       if (!d.courses || !d.courses.length) {
