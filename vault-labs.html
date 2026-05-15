@@ -1,0 +1,995 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Genesis Vault | Vault Labs</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:      #020608;
+    --bg2:     #060d10;
+    --bg3:     #0a1520;
+    --accent:  #00f5c4;
+    --accent2: #00a8ff;
+    --accent3: #ff003c;
+    --accent4: #ffaa00;
+    --text:    #c8e6f0;
+    --dim:     #4a7a8a;
+    --border:  #0f2a35;
+    --glow:    0 0 20px rgba(0,245,196,0.15);
+    --glow2:   0 0 30px rgba(0,245,196,0.25);
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Rajdhani', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content:'';
+    position:fixed; inset:0;
+    background-image:
+      linear-gradient(rgba(0,245,196,0.015) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,245,196,0.015) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events:none; z-index:0;
+  }
+
+  /* ── NAV ── */
+  nav {
+    position:fixed; top:0; left:0; right:0;
+    background: rgba(2,6,8,0.97);
+    border-bottom: 1px solid var(--border);
+    height:56px; padding:0 20px;
+    display:flex; align-items:center; justify-content:space-between;
+    z-index:100; backdrop-filter:blur(10px);
+  }
+  .nav-logo { font-family:'Share Tech Mono',monospace; font-size:1rem; letter-spacing:3px; }
+  .nav-logo span:first-child { color:var(--accent); }
+  .nav-logo span:last-child  { color:white; }
+  .back-btn {
+    background:none; border:1px solid var(--border); color:var(--dim);
+    padding:4px 12px; font-family:'Share Tech Mono',monospace;
+    font-size:0.7rem; cursor:pointer; letter-spacing:1px; transition:all 0.2s;
+  }
+  .back-btn:hover { border-color:var(--accent); color:var(--accent); }
+
+  /* ── MAIN ── */
+  main {
+    padding-top:76px; padding-bottom:40px;
+    position:relative; z-index:1;
+    padding-left:16px; padding-right:16px;
+  }
+
+  /* ── HERO ── */
+  .hero {
+    text-align:center; padding:20px 0 28px;
+    border-bottom:1px solid var(--border);
+    margin-bottom:24px;
+  }
+  .hero-tag {
+    font-family:'Share Tech Mono',monospace;
+    font-size:0.65rem; color:var(--accent);
+    letter-spacing:4px; margin-bottom:10px;
+  }
+  .hero h1 {
+    font-size:2rem; font-weight:700;
+    letter-spacing:4px; color:white;
+    text-transform:uppercase; margin-bottom:6px;
+  }
+  .hero h1 span { color:var(--accent); }
+  .hero p {
+    font-size:0.85rem; color:var(--dim);
+    line-height:1.6; max-width:340px; margin:0 auto;
+  }
+  .hero-stats {
+    display:flex; justify-content:center; gap:28px;
+    margin-top:16px;
+  }
+  .hstat { text-align:center; }
+  .hstat-val {
+    font-family:'Share Tech Mono',monospace;
+    font-size:1.3rem; color:var(--accent); display:block;
+  }
+  .hstat-label {
+    font-size:0.6rem; color:var(--dim);
+    letter-spacing:2px; text-transform:uppercase;
+  }
+
+  /* ── TABS ── */
+  .tabs {
+    display:flex; gap:0;
+    border-bottom:1px solid var(--border);
+    margin-bottom:20px; overflow-x:auto;
+  }
+  .tab {
+    padding:8px 16px;
+    font-family:'Share Tech Mono',monospace;
+    font-size:0.68rem; letter-spacing:2px;
+    color:var(--dim); cursor:pointer;
+    border-bottom:2px solid transparent;
+    white-space:nowrap; transition:all 0.2s;
+  }
+  .tab.active { color:var(--accent); border-bottom-color:var(--accent); }
+  .tab:hover  { color:var(--text); }
+
+  /* ── LAB CARDS ── */
+  .labs-grid { display:grid; gap:12px; }
+
+  .lab-card {
+    background:var(--bg2); border:1px solid var(--border);
+    padding:16px; cursor:pointer;
+    transition:all 0.25s; animation:fadeIn 0.4s ease;
+    position:relative; overflow:hidden;
+  }
+  .lab-card::before {
+    content:''; position:absolute;
+    top:0; left:0; right:0; height:2px;
+    background: linear-gradient(90deg, transparent, var(--accent), transparent);
+    opacity:0; transition:opacity 0.3s;
+  }
+  .lab-card:hover { border-color:var(--accent); box-shadow:var(--glow); }
+  .lab-card:hover::before { opacity:1; }
+
+  .lab-card.medium:hover  { border-color:var(--accent4); box-shadow:0 0 20px rgba(255,170,0,0.15); }
+  .lab-card.medium::before { background:linear-gradient(90deg, transparent, var(--accent4), transparent); }
+  .lab-card.hard:hover  { border-color:var(--accent3); box-shadow:0 0 20px rgba(255,0,60,0.15); }
+  .lab-card.hard::before { background:linear-gradient(90deg, transparent, var(--accent3), transparent); }
+
+  .lab-top {
+    display:flex; justify-content:space-between;
+    align-items:flex-start; margin-bottom:8px;
+  }
+  .lab-category {
+    font-family:'Share Tech Mono',monospace;
+    font-size:0.6rem; color:var(--accent2);
+    letter-spacing:2px; text-transform:uppercase;
+  }
+  .diff-badge {
+    font-family:'Share Tech Mono',monospace;
+    font-size:0.6rem; padding:2px 8px;
+    letter-spacing:1px; border:1px solid;
+  }
+  .diff-easy   { color:var(--accent);  border-color:var(--accent); }
+  .diff-medium { color:var(--accent4); border-color:var(--accent4); }
+  .diff-hard   { color:var(--accent3); border-color:var(--accent3); }
+
+  .lab-card h3 {
+    font-size:1.05rem; font-weight:700;
+    letter-spacing:1px; color:white; margin-bottom:4px;
+  }
+  .lab-card p {
+    font-size:0.78rem; color:var(--dim);
+    line-height:1.5; margin-bottom:12px;
+  }
+  .lab-footer {
+    display:flex; justify-content:space-between; align-items:center;
+  }
+  .lab-status {
+    font-family:'Share Tech Mono',monospace;
+    font-size:0.6rem; color:var(--accent);
+    letter-spacing:1px; display:flex; align-items:center; gap:6px;
+  }
+  .status-dot {
+    width:6px; height:6px; border-radius:50%;
+    background:var(--accent); animation:pulse 2s infinite;
+  }
+  .enter-btn {
+    background:none; border:1px solid var(--accent);
+    color:var(--accent); padding:5px 14px;
+    font-family:'Share Tech Mono',monospace;
+    font-size:0.65rem; cursor:pointer; letter-spacing:1px;
+    transition:all 0.2s;
+  }
+  .enter-btn:hover { background:var(--accent); color:var(--bg); }
+  .enter-btn.medium { border-color:var(--accent4); color:var(--accent4); }
+  .enter-btn.medium:hover { background:var(--accent4); color:var(--bg); }
+  .enter-btn.hard { border-color:var(--accent3); color:var(--accent3); }
+  .enter-btn.hard:hover { background:var(--accent3); color:white; }
+
+  .lab-tags {
+    display:flex; gap:6px; flex-wrap:wrap; margin-bottom:10px;
+  }
+  .lab-tag {
+    font-family:'Share Tech Mono',monospace;
+    font-size:0.55rem; color:var(--dim);
+    border:1px solid var(--border); padding:1px 6px;
+    letter-spacing:1px;
+  }
+
+  /* ── LAB VIEWER ── */
+  #lab-viewer {
+    display:none;
+    animation:fadeIn 0.3s ease;
+  }
+
+  .viewer-header {
+    display:flex; align-items:center; gap:12px;
+    margin-bottom:16px; padding-bottom:12px;
+    border-bottom:1px solid var(--border);
+  }
+  .viewer-back {
+    background:none; border:1px solid var(--border);
+    color:var(--dim); padding:5px 12px;
+    font-family:'Share Tech Mono',monospace;
+    font-size:0.65rem; cursor:pointer; letter-spacing:1px;
+    transition:all 0.2s; white-space:nowrap;
+  }
+  .viewer-back:hover { border-color:var(--accent3); color:var(--accent3); }
+  .viewer-title {
+    font-family:'Share Tech Mono',monospace;
+    font-size:0.85rem; color:var(--accent);
+    letter-spacing:2px; flex:1;
+  }
+
+  /* Target frame */
+  .target-section {
+    background:var(--bg2); border:1px solid var(--border);
+    margin-bottom:12px; overflow:hidden;
+  }
+  .target-label {
+    font-family:'Share Tech Mono',monospace;
+    font-size:0.6rem; color:var(--dim);
+    letter-spacing:2px; padding:8px 14px;
+    border-bottom:1px solid var(--border);
+    display:flex; align-items:center; gap:8px;
+  }
+  .target-label::before {
+    content:'';width:6px;height:6px;border-radius:50%;
+    background:var(--accent3); animation:pulse 2s infinite;
+  }
+  #lab-frame {
+    width:100%; height:400px; border:none;
+    background:white;
+  }
+
+  /* Tools panel */
+  .tools-panel {
+    background:var(--bg2); border:1px solid var(--border);
+    margin-bottom:12px;
+  }
+  .tools-label {
+    font-family:'Share Tech Mono',monospace;
+    font-size:0.6rem; color:var(--dim);
+    letter-spacing:2px; padding:8px 14px;
+    border-bottom:1px solid var(--border);
+  }
+  .tools-row {
+    display:flex; gap:8px; padding:12px 14px;
+    flex-wrap:wrap;
+  }
+  .tool-btn {
+    background:none; border:1px solid var(--border);
+    color:var(--text-dim); padding:6px 14px;
+    font-family:'Share Tech Mono',monospace;
+    font-size:0.65rem; cursor:pointer; letter-spacing:1px;
+    transition:all 0.2s; color:var(--dim);
+  }
+  .tool-btn:hover { border-color:var(--accent2); color:var(--accent2); }
+  .tool-btn.active { border-color:var(--accent); color:var(--accent); }
+
+  /* Hint panel */
+  .hint-panel {
+    background:var(--bg3); border:1px solid var(--border);
+    padding:14px; margin-bottom:12px;
+    display:none; animation:fadeIn 0.3s;
+  }
+  .hint-panel.open { display:block; }
+  .hint-title {
+    font-family:'Share Tech Mono',monospace;
+    font-size:0.65rem; color:var(--accent4);
+    letter-spacing:2px; margin-bottom:10px;
+  }
+  .hint-item {
+    display:flex; gap:10px; margin-bottom:8px;
+    font-size:0.8rem; color:var(--dim); line-height:1.5;
+  }
+  .hint-item::before {
+    content:'//'; color:var(--accent4);
+    font-family:'Share Tech Mono',monospace;
+    font-size:0.7rem; flex-shrink:0; margin-top:1px;
+  }
+
+  /* Notes panel */
+  .notes-panel {
+    background:var(--bg3); border:1px solid var(--border);
+    padding:14px; margin-bottom:12px;
+    display:none; animation:fadeIn 0.3s;
+  }
+  .notes-panel.open { display:block; }
+  .notes-panel textarea {
+    width:100%; background:var(--bg);
+    border:1px solid var(--border); color:var(--text);
+    padding:10px; font-family:'Share Tech Mono',monospace;
+    font-size:0.75rem; resize:vertical; min-height:100px;
+    outline:none; line-height:1.6;
+  }
+  .notes-panel textarea:focus { border-color:var(--accent); }
+
+  /* AI panel */
+  .ai-panel {
+    background:var(--bg3); border:1px solid var(--border);
+    margin-bottom:12px; display:none; animation:fadeIn 0.3s;
+  }
+  .ai-panel.open { display:block; }
+  .ai-messages {
+    padding:12px 14px; min-height:80px; max-height:200px;
+    overflow-y:auto;
+  }
+  .ai-msg {
+    font-family:'Share Tech Mono',monospace;
+    font-size:0.72rem; margin-bottom:8px;
+    line-height:1.6; animation:fadeIn 0.3s;
+  }
+  .ai-msg.user { color:var(--accent2); }
+  .ai-msg.user::before { content:'YOU > '; color:var(--dim); }
+  .ai-msg.bot  { color:var(--text); }
+  .ai-msg.bot::before { content:'AI  > '; color:var(--accent); }
+  .ai-input-row {
+    display:flex; border-top:1px solid var(--border);
+  }
+  .ai-input-row input {
+    flex:1; background:transparent; border:none;
+    color:var(--text); padding:10px 14px;
+    font-family:'Share Tech Mono',monospace;
+    font-size:0.75rem; outline:none;
+  }
+  .ai-input-row input::placeholder { color:var(--dim); }
+  .ai-send {
+    background:var(--accent); border:none; color:var(--bg);
+    padding:0 16px; font-family:'Share Tech Mono',monospace;
+    font-size:0.65rem; cursor:pointer; letter-spacing:1px;
+    transition:all 0.2s;
+  }
+  .ai-send:hover { background:white; }
+
+  /* Objective + complete */
+  .objective-box {
+    background:var(--bg3); border:1px solid var(--border);
+    border-left:3px solid var(--accent);
+    padding:12px 14px; margin-bottom:12px;
+    font-size:0.82rem; line-height:1.6; color:var(--text);
+  }
+  .objective-box strong {
+    font-family:'Share Tech Mono',monospace;
+    font-size:0.65rem; color:var(--accent);
+    letter-spacing:2px; display:block; margin-bottom:6px;
+  }
+
+  .complete-btn {
+    width:100%; padding:14px;
+    background:none; border:1px solid var(--accent);
+    color:var(--accent); font-family:'Share Tech Mono',monospace;
+    font-size:0.8rem; letter-spacing:3px; cursor:pointer;
+    transition:all 0.3s; margin-bottom:20px;
+  }
+  .complete-btn:hover {
+    background:var(--accent); color:var(--bg);
+    box-shadow:var(--glow2);
+  }
+  .complete-btn.done {
+    background:var(--accent); color:var(--bg);
+    border-color:var(--accent);
+  }
+
+  /* Solved overlay */
+  .solved-banner {
+    display:none; background:rgba(0,245,196,0.08);
+    border:1px solid var(--accent); padding:16px;
+    text-align:center; margin-bottom:16px;
+    animation:fadeIn 0.4s;
+  }
+  .solved-banner.show { display:block; }
+  .solved-banner h3 {
+    font-family:'Share Tech Mono',monospace;
+    color:var(--accent); letter-spacing:3px;
+    font-size:0.9rem; margin-bottom:4px;
+  }
+  .solved-banner p {
+    font-size:0.78rem; color:var(--dim);
+  }
+
+  /* Empty */
+  .empty {
+    text-align:center; padding:40px;
+    font-family:'Share Tech Mono',monospace;
+    font-size:0.75rem; color:var(--dim);
+  }
+
+  @keyframes fadeIn {
+    from { opacity:0; transform:translateY(8px); }
+    to   { opacity:1; transform:translateY(0); }
+  }
+  @keyframes pulse {
+    0%,100% { opacity:1; }
+    50%      { opacity:0.3; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-logo"><span>GENESIS</span><span>VAULT</span></div>
+  <button class="back-btn" onclick="window.location.href='dashboard.html'">← BACK</button>
+</nav>
+
+<main>
+
+  <!-- ══ LOBBY ══ -->
+  <div id="lobby">
+
+    <div class="hero">
+      <p class="hero-tag">// VAULT LABS</p>
+      <h1>HACK THE <span>VAULT</span></h1>
+      <p>Sandboxed environments to practice real cyber security techniques. All targets are intentionally vulnerable.</p>
+      <div class="hero-stats">
+        <div class="hstat">
+          <span class="hstat-val" id="stat-total">3</span>
+          <span class="hstat-label">Labs</span>
+        </div>
+        <div class="hstat">
+          <span class="hstat-val" id="stat-solved">0</span>
+          <span class="hstat-label">Solved</span>
+        </div>
+        <div class="hstat">
+          <span class="hstat-val">LIVE</span>
+          <span class="hstat-label">Status</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- TABS -->
+    <div class="tabs">
+      <div class="tab active" onclick="filterLabs('all',this)">ALL</div>
+      <div class="tab" onclick="filterLabs('easy',this)">EASY</div>
+      <div class="tab" onclick="filterLabs('medium',this)">MEDIUM</div>
+      <div class="tab" onclick="filterLabs('hard',this)">HARD</div>
+      <div class="tab" onclick="filterLabs('web',this)">WEB</div>
+      <div class="tab" onclick="filterLabs('auth',this)">AUTH</div>
+      <div class="tab" onclick="filterLabs('api',this)">API</div>
+    </div>
+
+    <div class="labs-grid" id="labs-grid"></div>
+
+  </div>
+
+  <!-- ══ LAB VIEWER ══ -->
+  <div id="lab-viewer">
+
+    <div class="viewer-header">
+      <button class="viewer-back" onclick="closeLab()">← EXIT LAB</button>
+      <div class="viewer-title" id="viewer-title">// LAB</div>
+      <span class="diff-badge" id="viewer-diff"></span>
+    </div>
+
+    <div class="solved-banner" id="solved-banner">
+      <h3>// LAB COMPLETE</h3>
+      <p>Objective achieved. Flag captured.</p>
+    </div>
+
+    <div class="objective-box">
+      <strong>// OBJECTIVE</strong>
+      <span id="viewer-objective"></span>
+    </div>
+
+    <div class="target-section">
+      <div class="target-label">LIVE TARGET</div>
+      <iframe id="lab-frame" sandbox="allow-scripts allow-forms allow-same-origin"></iframe>
+    </div>
+
+    <div class="tools-panel">
+      <div class="tools-label">// TOOLS</div>
+      <div class="tools-row">
+        <button class="tool-btn" id="btn-hints" onclick="togglePanel('hints')">[ HINTS ]</button>
+        <button class="tool-btn" id="btn-notes" onclick="togglePanel('notes')">[ NOTES ]</button>
+        <button class="tool-btn" id="btn-ai"    onclick="togglePanel('ai')"   >[ ASK AI ]</button>
+      </div>
+    </div>
+
+    <!-- Hints -->
+    <div class="hint-panel" id="panel-hints">
+      <div class="hint-title">// HINTS</div>
+      <div id="hints-content"></div>
+    </div>
+
+    <!-- Notes -->
+    <div class="notes-panel" id="panel-notes">
+      <textarea id="notes-input" placeholder="// Write your notes here...&#10;// What did you find? What did you try?"></textarea>
+    </div>
+
+    <!-- AI -->
+    <div class="ai-panel" id="panel-ai">
+      <div class="ai-messages" id="ai-messages">
+        <div class="ai-msg bot" style="color:var(--dim)">Vault AI is ready. Ask for hints, explanations, or guidance on this lab.</div>
+      </div>
+      <div class="ai-input-row">
+        <input type="text" id="ai-input" placeholder="Ask the AI for help..." onkeydown="if(event.key==='Enter')sendAI()">
+        <button class="ai-send" onclick="sendAI()">SEND</button>
+      </div>
+    </div>
+
+    <button class="complete-btn" id="complete-btn" onclick="markComplete()">[ MARK AS COMPLETE ]</button>
+
+  </div>
+
+</main>
+
+<!-- ══ LAB SRCDOC TEMPLATES ══ -->
+<script id="lab-fakebank" type="text/plain">
+<!DOCTYPE html><html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FakeBank — Customer Portal</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:#f0f4f8;font-family:Arial,sans-serif;min-height:100vh;display:flex;flex-direction:column}
+  .topbar{background:#1a3a6b;color:white;padding:12px 20px;display:flex;align-items:center;gap:12px}
+  .topbar h1{font-size:1.1rem;letter-spacing:1px}
+  .topbar span{font-size:0.7rem;opacity:0.7;margin-top:2px}
+  .secure-badge{margin-left:auto;background:rgba(255,255,255,0.1);padding:4px 10px;border-radius:3px;font-size:0.7rem}
+  main{flex:1;display:flex;align-items:center;justify-content:center;padding:30px 20px}
+  .card{background:white;border-radius:8px;padding:32px 28px;width:100%;max-width:360px;box-shadow:0 4px 20px rgba(0,0,0,0.1)}
+  .card h2{font-size:1.1rem;color:#1a3a6b;margin-bottom:6px}
+  .card p{font-size:0.8rem;color:#888;margin-bottom:24px}
+  label{display:block;font-size:0.8rem;color:#555;margin-bottom:4px;font-weight:600}
+  input{width:100%;border:1px solid #ddd;border-radius:4px;padding:10px;font-size:0.9rem;margin-bottom:16px;outline:none}
+  input:focus{border-color:#1a3a6b}
+  button{width:100%;background:#1a3a6b;color:white;border:none;border-radius:4px;padding:12px;font-size:0.95rem;cursor:pointer;font-weight:700}
+  button:hover{background:#254d94}
+  .msg{margin-top:12px;padding:10px;border-radius:4px;font-size:0.8rem;display:none}
+  .msg.error{background:#fee;color:#c00;border:1px solid #f99}
+  .msg.success{background:#efe;color:#060;border:1px solid #9f9}
+  .footer{text-align:center;padding:12px;font-size:0.7rem;color:#aaa;background:#f8f9fa;border-top:1px solid #eee}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div>
+    <h1>🏦 FAKEBANK</h1>
+    <span>Customer Portal v2.1</span>
+  </div>
+  <div class="secure-badge">🔒 SECURE</div>
+</div>
+<main>
+  <div class="card">
+    <h2>Account Login</h2>
+    <p>Enter your credentials to access your account</p>
+    <label>Username</label>
+    <input type="text" id="u" placeholder="Enter username">
+    <label>Password</label>
+    <input type="password" id="p" placeholder="Enter password">
+    <button onclick="doLogin()">Sign In</button>
+    <div class="msg" id="msg"></div>
+  </div>
+</main>
+<div class="footer">FakeBank © 2024 — Member FDIC — Your deposits are protected</div>
+<script>
+// TODO: remove before production — dev credentials
+var USERS = {admin:"admin123", user:"password", john:"john2024"};
+var FLAG = "GV{w34k_cr3d3nt14ls_4r3_d4ng3r0us}";
+function doLogin(){
+  var u=document.getElementById("u").value;
+  var p=document.getElementById("p").value;
+  var m=document.getElementById("msg");
+  if(USERS[u]&&USERS[u]===p){
+    m.className="msg success";
+    m.style.display="block";
+    m.innerHTML="✓ Login successful! <br>FLAG: <strong>"+FLAG+"</strong>";
+  } else {
+    m.className="msg error";
+    m.style.display="block";
+    m.textContent="Invalid username or password.";
+  }
+}
+<\/script>
+</body></html>
+</script>
+
+<script id="lab-exposed-api" type="text/plain">
+<!DOCTYPE html><html>
+<head>
+<meta charset="UTF-8">
+<title>DataStream API Console</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:#0d1117;color:#c9d1d9;font-family:'Courier New',monospace;padding:0}
+  .header{background:#161b22;border-bottom:1px solid #30363d;padding:12px 20px;display:flex;align-items:center;justify-content:space-between}
+  .header h1{font-size:0.9rem;color:#58a6ff;letter-spacing:2px}
+  .header span{font-size:0.7rem;color:#8b949e}
+  .container{padding:20px}
+  .section{background:#161b22;border:1px solid #30363d;border-radius:6px;padding:16px;margin-bottom:16px}
+  .section h3{font-size:0.8rem;color:#8b949e;letter-spacing:2px;margin-bottom:12px;text-transform:uppercase}
+  .endpoint{background:#0d1117;border:1px solid #21262d;border-radius:4px;padding:10px;margin-bottom:8px}
+  .method{color:#3fb950;font-size:0.75rem;margin-right:8px}
+  .path{color:#58a6ff;font-size:0.8rem}
+  .desc{font-size:0.7rem;color:#8b949e;margin-top:4px}
+  button{background:#238636;color:white;border:none;border-radius:4px;padding:6px 14px;font-size:0.75rem;cursor:pointer;margin-top:8px}
+  button:hover{background:#2ea043}
+  .response{background:#0d1117;border:1px solid #21262d;border-radius:4px;padding:12px;margin-top:12px;font-size:0.75rem;line-height:1.8;min-height:60px;color:#3fb950;white-space:pre-wrap;display:none}
+  .key-line{color:#ff7b72}
+  /* Source hint visible in page source */
+</style>
+<!-- API CONFIGURATION — DO NOT COMMIT -->
+<!-- SECRET_API_KEY = DS_LIVE_sk_7f9a2b3c4d5e6f7a8b9c0d1e2f3a4b5c -->
+<!-- ADMIN_ENDPOINT = /api/v1/admin/users?key=DS_LIVE_sk_7f9a2b3c4d5e6f7a8b9c0d1e2f3a4b5c -->
+<!-- DB_PASSWORD = datastream_prod_2024! -->
+</head>
+<body>
+<div class="header">
+  <h1>DATASTREAM // API CONSOLE</h1>
+  <span>v3.2.1 — Public Docs</span>
+</div>
+<div class="container">
+  <div class="section">
+    <h3>// Public Endpoints</h3>
+    <div class="endpoint">
+      <span class="method">GET</span><span class="path">/api/v1/status</span>
+      <div class="desc">Check API health</div>
+      <button onclick="callAPI('status')">Try it</button>
+    </div>
+    <div class="endpoint">
+      <span class="method">GET</span><span class="path">/api/v1/data</span>
+      <div class="desc">Fetch public dataset</div>
+      <button onclick="callAPI('data')">Try it</button>
+    </div>
+    <div class="endpoint">
+      <span class="method">GET</span><span class="path">/api/v1/admin/users</span>
+      <div class="desc">Admin user list — requires API key</div>
+      <button onclick="callAPI('admin')">Try it</button>
+    </div>
+  </div>
+  <div class="section">
+    <h3>// Response</h3>
+    <div class="response" id="resp"></div>
+    <div style="font-size:0.7rem;color:#8b949e;margin-top:8px">Tip: check the page source for configuration details</div>
+  </div>
+</div>
+<script>
+var KEY = "DS_LIVE_sk_7f9a2b3c4d5e6f7a8b9c0d1e2f3a4b5c";
+var FLAG = "GV{3xp0s3d_4p1_k3ys_1n_s0urc3}";
+function callAPI(ep){
+  var r = document.getElementById("resp");
+  r.style.display="block";
+  if(ep==="status"){
+    r.innerHTML='{\n  "status": "online",\n  "version": "3.2.1",\n  "uptime": "99.98%"\n}';
+  } else if(ep==="data"){
+    r.innerHTML='{\n  "records": 1482,\n  "last_updated": "2024-01-15",\n  "data": ["sample","entries","here"]\n}';
+  } else if(ep==="admin"){
+    r.innerHTML='// 401 Unauthorized\n// API key required\n// Hint: check the HTML source...';
+    setTimeout(function(){
+      r.innerHTML='// Key found in source!\n{\n  "status": "success",\n  "flag": "'+FLAG+'",\n  "users": [\n    {"id":1,"email":"admin@datastream.io","role":"superadmin"},\n    {"id":2,"email":"dev@datastream.io","role":"developer"}\n  ]\n}';
+    },2000);
+  }
+}
+<\/script>
+</body></html>
+</script>
+
+<script id="lab-jwt-forge" type="text/plain">
+<!DOCTYPE html><html>
+<head>
+<meta charset="UTF-8">
+<title>SecureVote — Admin Panel</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:#1a1a2e;color:#eee;font-family:Arial,sans-serif;min-height:100vh}
+  .topbar{background:#16213e;padding:12px 20px;border-bottom:1px solid #0f3460;display:flex;align-items:center;justify-content:space-between}
+  .topbar h1{font-size:1rem;color:#e94560}
+  .topbar .role{font-size:0.75rem;background:#0f3460;padding:3px 10px;border-radius:3px}
+  main{padding:24px 20px}
+  .card{background:#16213e;border:1px solid #0f3460;border-radius:6px;padding:20px;margin-bottom:16px}
+  .card h3{font-size:0.85rem;color:#e94560;letter-spacing:2px;margin-bottom:14px;text-transform:uppercase}
+  label{display:block;font-size:0.78rem;color:#aaa;margin-bottom:4px}
+  input,textarea{width:100%;background:#0f1929;border:1px solid #0f3460;color:#eee;padding:8px 10px;border-radius:4px;font-size:0.82rem;margin-bottom:10px;font-family:'Courier New',monospace;outline:none}
+  textarea{min-height:80px;resize:vertical}
+  button{background:#e94560;color:white;border:none;border-radius:4px;padding:9px 18px;font-size:0.8rem;cursor:pointer;font-weight:700}
+  button:hover{background:#c73652}
+  .result{background:#0f1929;border:1px solid #0f3460;border-radius:4px;padding:12px;margin-top:10px;font-size:0.78rem;font-family:'Courier New',monospace;min-height:40px;color:#4ade80;display:none}
+  .hint-box{background:rgba(233,69,96,0.08);border:1px solid rgba(233,69,96,0.3);border-radius:4px;padding:12px;font-size:0.75rem;color:#aaa;line-height:1.6;margin-top:10px}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <h1>🗳 SECUREVOTE</h1>
+  <span class="role" id="role-label">ROLE: user</span>
+</div>
+<main>
+  <div class="card">
+    <h3>// Your JWT Token</h3>
+    <label>Current session token (base64 encoded)</label>
+    <textarea id="token-display" readonly>eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJ1c2VybmFtZSI6Imd1ZXN0Iiwicm9sZSI6InVzZXIiLCJpYXQiOjE3MDUzMTIwMDB9.</textarea>
+    <div class="hint-box">💡 Hint: This token uses algorithm "none". Try decoding the payload (middle part) with base64 and modifying the role field, then re-encode and submit below.</div>
+  </div>
+  <div class="card">
+    <h3>// Submit Modified Token</h3>
+    <label>Paste your forged token here</label>
+    <input type="text" id="forged-token" placeholder="eyJ...">
+    <button onclick="verifyToken()">Verify Token</button>
+    <div class="result" id="verify-result"></div>
+  </div>
+</main>
+<script>
+var FLAG = "GV{jwt_n0n3_4lg_byp4ss_pwn3d}";
+function b64d(s){try{return atob(s.replace(/-/g,'+').replace(/_/g,'/'))}catch(e){return null}}
+function verifyToken(){
+  var t=document.getElementById("forged-token").value.trim();
+  var r=document.getElementById("verify-result");
+  r.style.display="block";
+  var parts=t.split(".");
+  if(parts.length<2){r.style.color="#f87171";r.textContent="// Invalid token format";return}
+  var payload=b64d(parts[1]);
+  if(!payload){r.style.color="#f87171";r.textContent="// Could not decode payload";return}
+  try{
+    var obj=JSON.parse(payload);
+    document.getElementById("role-label").textContent="ROLE: "+obj.role;
+    if(obj.role==="admin"){
+      r.style.color="#4ade80";
+      r.innerHTML="// Access granted!\n// Role: ADMIN\n// FLAG: "+FLAG;
+    } else {
+      r.style.color="#f87171";
+      r.textContent="// Access denied. Role: "+obj.role+"\n// You need role: admin";
+    }
+  } catch(e){r.style.color="#f87171";r.textContent="// Invalid payload JSON"}
+}
+<\/script>
+</body></html>
+</script>
+
+<script>
+const API = 'https://genesis-vault-backend.onrender.com/api';
+const token = localStorage.getItem('gv_token');
+if (!token) window.location.href = 'login.html';
+
+// ── LAB DEFINITIONS ──────────────────────────────────────────────────
+const LABS = [
+  {
+    id:         'fakebank',
+    title:      'FakeBank Login',
+    category:   'AUTH',
+    difficulty: 'easy',
+    tags:       ['credentials','source-code','login-bypass'],
+    description:'A banking portal with weak credentials hardcoded in the JavaScript source. Find the credentials and capture the flag.',
+    objective:  'Inspect the page source to find hardcoded credentials. Login with them to retrieve the flag.',
+    hints: [
+      'Banking apps sometimes leave developer notes in their JavaScript.',
+      'Open browser devtools and look at the page source or Network tab.',
+      'The credentials object is stored directly in a JavaScript variable.',
+      'Try username: admin and look for its corresponding password in the source.'
+    ]
+  },
+  {
+    id:         'exposed-api',
+    title:      'Exposed API Keys',
+    category:   'API',
+    difficulty: 'easy',
+    tags:       ['api-keys','html-comments','recon'],
+    description:'A developer left secret API keys in the HTML source as comments. Find the key and use it to access the admin endpoint.',
+    objective:  'View the page source and find the API key hidden in HTML comments. Use it to call the admin endpoint and get the flag.',
+    hints: [
+      'Developers often leave sensitive info in HTML comments during development.',
+      'Right-click the page and select "View Page Source".',
+      'Look for comment blocks near the top of the HTML.',
+      'The admin endpoint path is also documented in the source comments.'
+    ]
+  },
+  {
+    id:         'jwt-forge',
+    title:      'JWT Algorithm Confusion',
+    category:   'AUTH',
+    difficulty: 'medium',
+    tags:       ['jwt','base64','auth-bypass','tokens'],
+    description:'A voting platform uses JWT tokens with the "none" algorithm — meaning no signature verification. Decode the token, change your role to admin, and re-encode it.',
+    objective:  'Decode the JWT payload (base64), change role from "user" to "admin", re-encode it, and submit the forged token to get the flag.',
+    hints: [
+      'A JWT has 3 parts separated by dots: header.payload.signature',
+      'The "none" algorithm means the signature is ignored — you can forge it.',
+      'Use atob() in browser console to decode base64, btoa() to re-encode.',
+      'Change the payload JSON role field to "admin" and re-encode with btoa().',
+      'The forged token format: header.newpayload. (note the trailing dot for empty sig)'
+    ]
+  }
+];
+
+let solved = JSON.parse(localStorage.getItem('gv_lab_solved') || '[]');
+let currentLab = null;
+let currentFilter = 'all';
+
+// ── RENDER LOBBY ─────────────────────────────────────────────────────
+function renderLabs(filter) {
+  const grid = document.getElementById('labs-grid');
+  let filtered = LABS.filter(l => {
+    if (filter === 'all')    return true;
+    if (filter === 'easy')   return l.difficulty === 'easy';
+    if (filter === 'medium') return l.difficulty === 'medium';
+    if (filter === 'hard')   return l.difficulty === 'hard';
+    if (filter === 'web')    return l.category === 'WEB';
+    if (filter === 'auth')   return l.category === 'AUTH';
+    if (filter === 'api')    return l.category === 'API';
+    return true;
+  });
+
+  if (!filtered.length) {
+    grid.innerHTML = '<div class="empty">// No labs in this category yet.</div>';
+    return;
+  }
+
+  grid.innerHTML = filtered.map(lab => {
+    const isSolved = solved.includes(lab.id);
+    const diffClass = lab.difficulty;
+    return `
+      <div class="lab-card ${diffClass}" onclick="openLab('${lab.id}')">
+        <div class="lab-top">
+          <span class="lab-category">${lab.category}</span>
+          <span class="diff-badge diff-${diffClass}">${lab.difficulty.toUpperCase()}</span>
+        </div>
+        <h3>${isSolved ? '✓ ' : ''}${lab.title}</h3>
+        <p>${lab.description}</p>
+        <div class="lab-tags">
+          ${lab.tags.map(t => `<span class="lab-tag">${t}</span>`).join('')}
+        </div>
+        <div class="lab-footer">
+          <div class="lab-status">
+            <div class="status-dot" style="${isSolved ? 'background:var(--accent)' : 'background:var(--accent2)'}"></div>
+            ${isSolved ? 'COMPLETED' : 'LIVE'}
+          </div>
+          <button class="enter-btn ${diffClass}" onclick="event.stopPropagation();openLab('${lab.id}')">
+            [ ENTER LAB ]
+          </button>
+        </div>
+      </div>`;
+  }).join('');
+
+  document.getElementById('stat-solved').textContent = solved.length;
+}
+
+function filterLabs(f, el) {
+  currentFilter = f;
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  renderLabs(f);
+}
+
+// ── OPEN LAB ─────────────────────────────────────────────────────────
+function openLab(id) {
+  const lab = LABS.find(l => l.id === id);
+  if (!lab) return;
+  currentLab = lab;
+
+  document.getElementById('lobby').style.display      = 'none';
+  document.getElementById('lab-viewer').style.display = 'block';
+  document.getElementById('viewer-title').textContent = `// ${lab.title}`;
+  document.getElementById('viewer-diff').textContent  = lab.difficulty.toUpperCase();
+  document.getElementById('viewer-diff').className    = `diff-badge diff-${lab.difficulty}`;
+  document.getElementById('viewer-objective').textContent = lab.objective;
+
+  // Load hints
+  document.getElementById('hints-content').innerHTML =
+    lab.hints.map(h => `<div class="hint-item">${h}</div>`).join('');
+
+  // Load lab iframe
+  const src = document.getElementById(`lab-${id}`).textContent;
+  document.getElementById('lab-frame').srcdoc = src;
+
+  // Reset panels
+  ['hints','notes','ai'].forEach(p => {
+    document.getElementById(`panel-${p}`).classList.remove('open');
+    document.getElementById(`btn-${p}`).classList.remove('active');
+  });
+
+  // Reset AI
+  document.getElementById('ai-messages').innerHTML =
+    `<div class="ai-msg bot" style="color:var(--dim)">Ask me anything about the <strong style="color:var(--accent)">${lab.title}</strong> lab. I can give hints without spoiling the solution.</div>`;
+
+  // Show solved state if already done
+  const isSolved = solved.includes(id);
+  document.getElementById('solved-banner').classList.toggle('show', isSolved);
+  const btn = document.getElementById('complete-btn');
+  if (isSolved) {
+    btn.textContent = '[ COMPLETED ✓ ]';
+    btn.classList.add('done');
+  } else {
+    btn.textContent = '[ MARK AS COMPLETE ]';
+    btn.classList.remove('done');
+  }
+
+  window.scrollTo(0,0);
+}
+
+function closeLab() {
+  currentLab = null;
+  document.getElementById('lab-viewer').style.display = 'none';
+  document.getElementById('lobby').style.display      = 'block';
+  document.getElementById('lab-frame').srcdoc         = '';
+  renderLabs(currentFilter);
+  window.scrollTo(0,0);
+}
+
+// ── TOOLS ────────────────────────────────────────────────────────────
+function togglePanel(name) {
+  const panel = document.getElementById(`panel-${name}`);
+  const btn   = document.getElementById(`btn-${name}`);
+  const isOpen = panel.classList.contains('open');
+
+  // Close all
+  ['hints','notes','ai'].forEach(p => {
+    document.getElementById(`panel-${p}`).classList.remove('open');
+    document.getElementById(`btn-${p}`).classList.remove('active');
+  });
+
+  // Toggle target
+  if (!isOpen) {
+    panel.classList.add('open');
+    btn.classList.add('active');
+    if (name === 'ai') document.getElementById('ai-input').focus();
+  }
+}
+
+// ── COMPLETE ─────────────────────────────────────────────────────────
+function markComplete() {
+  if (!currentLab) return;
+  if (!solved.includes(currentLab.id)) {
+    solved.push(currentLab.id);
+    localStorage.setItem('gv_lab_solved', JSON.stringify(solved));
+  }
+  document.getElementById('solved-banner').classList.add('show');
+  const btn = document.getElementById('complete-btn');
+  btn.textContent = '[ COMPLETED ✓ ]';
+  btn.classList.add('done');
+  document.getElementById('stat-solved').textContent = solved.length;
+}
+
+// ── AI HINTS ─────────────────────────────────────────────────────────
+async function sendAI() {
+  const input = document.getElementById('ai-input');
+  const msgs  = document.getElementById('ai-messages');
+  const q = input.value.trim();
+  if (!q) return;
+
+  // Add user message
+  const userEl = document.createElement('div');
+  userEl.className = 'ai-msg user';
+  userEl.textContent = q;
+  msgs.appendChild(userEl);
+  input.value = '';
+  msgs.scrollTop = msgs.scrollHeight;
+
+  // Typing indicator
+  const typingEl = document.createElement('div');
+  typingEl.className = 'ai-msg bot';
+  typingEl.textContent = '...';
+  typingEl.style.color = 'var(--dim)';
+  msgs.appendChild(typingEl);
+  msgs.scrollTop = msgs.scrollHeight;
+
+  try {
+    const labContext = currentLab
+      ? `The user is working on a cyber security lab called "${currentLab.title}". Category: ${currentLab.category}. Difficulty: ${currentLab.difficulty}. Objective: ${currentLab.objective}. Tags: ${currentLab.tags.join(', ')}. Give helpful hints without fully spoiling the solution. Be concise.`
+      : 'The user is asking about a cyber security lab.';
+
+    const res = await fetch(`${API}/ai/chat`, {
+      method: 'POST',
+      headers: { 'Content-Type':'application/json', 'Authorization':`Bearer ${token}` },
+      body: JSON.stringify({ message: q, context: labContext })
+    });
+    const data = await res.json();
+    typingEl.textContent = data.reply || data.message || 'Could not get a response.';
+    typingEl.style.color = '';
+  } catch(e) {
+    typingEl.textContent = 'AI unavailable. Check the hints panel for help.';
+    typingEl.style.color = 'var(--accent3)';
+  }
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+// ── INIT ─────────────────────────────────────────────────────────────
+renderLabs('all');
+</script>
+</body>
+</html>
