@@ -330,8 +330,82 @@
     vertical-align:middle; margin-right:8px;
   }
 
-  @keyframes spin   { to { transform:rotate(360deg); } }
-  @keyframes fadeIn { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+  @keyframes spin    { to { transform:rotate(360deg); } }
+  @keyframes fadeIn  { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+  @keyframes slideDown { from { opacity:0; transform:translateY(-10px); } to { opacity:1; transform:translateY(0); } }
+
+  /* RANK COLORS */
+  .rank-ghost     { color:#888!important; border-color:#888!important; }
+  .rank-scout     { color:#00a8ff!important; border-color:#00a8ff!important; }
+  .rank-hunter    { color:#00f5c4!important; border-color:#00f5c4!important; }
+  .rank-predator  { color:#ff8800!important; border-color:#ff8800!important; }
+  .rank-phantom   { color:#9d4edd!important; border-color:#9d4edd!important; }
+  .rank-architect { color:#ffd700!important; border-color:#ffd700!important; }
+  .rank-guardian  { color:#ff003c!important; border-color:#ff003c!important; }
+
+  /* NOTIF BELL */
+  .notif-bell-wrap { position:relative; cursor:pointer; padding:4px 8px; }
+  .notif-bell { font-size:1.1rem; display:block; }
+  .notif-bubble {
+    position:absolute; top:-2px; right:-2px;
+    background:var(--accent3); color:white;
+    font-size:0.55rem; font-family:'Share Tech Mono',monospace;
+    min-width:16px; height:16px; border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    padding:0 3px; display:none;
+  }
+
+  /* NOTIF DRAWER */
+  .notif-drawer {
+    display:none; position:fixed; top:56px; right:0; left:0;
+    background:rgba(2,6,8,0.98); border-bottom:1px solid var(--border);
+    z-index:200; max-height:70vh; overflow-y:auto;
+    animation:slideDown 0.2s ease;
+    backdrop-filter:blur(10px);
+  }
+  .notif-drawer.open { display:block; }
+  .notif-drawer-header {
+    display:flex; justify-content:space-between; align-items:center;
+    padding:12px 20px; border-bottom:1px solid var(--border);
+    font-family:'Share Tech Mono',monospace; font-size:0.75rem; color:var(--accent);
+    letter-spacing:2px;
+  }
+  .notif-drawer-item {
+    padding:12px 20px; border-bottom:1px solid var(--border);
+    font-size:0.85rem; transition:background 0.15s;
+  }
+  .notif-drawer-item:hover { background:var(--bg2); }
+  .notif-drawer-item .nd-type {
+    font-family:'Share Tech Mono',monospace; font-size:0.65rem;
+    color:var(--accent2); letter-spacing:2px; margin-bottom:3px;
+  }
+  .notif-drawer-item .nd-msg { color:var(--text); line-height:1.5; }
+  .notif-drawer-item .nd-time { font-size:0.65rem; color:var(--text-dim); margin-top:3px; font-family:'Share Tech Mono',monospace; }
+  .notif-drawer-footer {
+    padding:10px 20px; display:flex; justify-content:space-between; align-items:center;
+  }
+  .nd-mark-read {
+    background:none; border:1px solid var(--border); color:var(--text-dim);
+    font-family:'Share Tech Mono',monospace; font-size:0.65rem;
+    padding:4px 12px; cursor:pointer; letter-spacing:1px; transition:all 0.2s;
+  }
+  .nd-mark-read:hover { border-color:var(--accent); color:var(--accent); }
+  .nd-exit {
+    background:none; border:1px solid var(--accent3); color:var(--accent3);
+    font-family:'Share Tech Mono',monospace; font-size:0.65rem;
+    padding:4px 12px; cursor:pointer; letter-spacing:1px; transition:all 0.2s;
+  }
+  .nd-exit:hover { background:var(--accent3); color:white; }
+
+  /* RANK LOCKED */
+  .rank-locked {
+    background:var(--bg2); border:1px solid var(--border);
+    border-left:3px solid var(--accent3); padding:20px;
+    text-align:center; margin-bottom:16px;
+  }
+  .rank-locked .lock-icon { font-size:1.5rem; margin-bottom:8px; }
+  .rank-locked p { font-family:'Share Tech Mono',monospace; font-size:0.8rem; color:var(--text-dim); }
+  .rank-locked span { color:var(--accent3); }
 </style>
 </head>
 <body>
@@ -340,11 +414,27 @@
 <nav>
   <div class="nav-logo"><span>GENESIS</span><span>VAULT</span></div>
   <div class="nav-right">
-    <span class="rank-badge" id="nav-rank">GHOST</span>
-    <span class="nav-user"   id="nav-username">hunter</span>
-    <button class="logout-btn" onclick="logout()">EXIT</button>
+    <span class="rank-badge rank-ghost" id="nav-rank">GHOST</span>
+    <span class="nav-user" id="nav-username">hunter</span>
+    <div class="notif-bell-wrap" onclick="toggleNotifDrawer()" id="bell-wrap">
+      <span class="notif-bell">🔔</span>
+      <span class="notif-bubble" id="notif-bubble">0</span>
+    </div>
   </div>
 </nav>
+
+<!-- NOTIFICATION DRAWER -->
+<div class="notif-drawer" id="notif-drawer">
+  <div class="notif-drawer-header">
+    <span>// NOTIFICATIONS</span>
+    <span style="color:var(--text-dim);cursor:pointer;font-size:0.8rem;" onclick="toggleNotifDrawer()">✕</span>
+  </div>
+  <div id="notif-drawer-list"><div class="loading" style="padding:20px;"><span class="spinner"></span>Loading...</div></div>
+  <div class="notif-drawer-footer">
+    <button class="nd-mark-read" onclick="markAllRead()">[ MARK ALL READ ]</button>
+    <button class="nd-exit" onclick="logout()">[ EXIT ]</button>
+  </div>
+</div>
 
 <main>
 
@@ -406,7 +496,7 @@
   <!-- MARKETPLACE -->
   <div class="page" id="page-marketplace">
     <p class="section-title">// Tool Marketplace</p>
-    <button class="post-btn" onclick="openModal('modal-submit')" style="margin-bottom:16px;">[ LIST A TOOL ]</button>
+    <div id="list-tool-area" style="margin-bottom:16px;"></div>
     <div class="market-filter">
       <button class="filter-btn active" onclick="filterMarket('',this)">ALL</button>
       <button class="filter-btn" onclick="filterMarket('script',this)">SCRIPTS</button>
@@ -545,12 +635,31 @@ const API = 'https://genesis-vault-backend.onrender.com/api';
 const token = localStorage.getItem('gv_token');
 if (!token) location.href = 'login.html';
 
-let currentRank   = localStorage.getItem('gv_rank') || 'Ghost';
-let currentFilter = '';
-let buyTarget     = { id: null, title: '', price: 0 };
+let currentRank     = localStorage.getItem('gv_rank') || 'Ghost';
+let currentFilter   = '';
+let buyTarget       = { id: null, title: '', price: 0 };
+let canPostTools    = false;
+let drawerOpen      = false;
+
+const RANK_COLORS = {
+  'Ghost':     'rank-ghost',
+  'Scout':     'rank-scout',
+  'Hunter':    'rank-hunter',
+  'Predator':  'rank-predator',
+  'Phantom':   'rank-phantom',
+  'Architect': 'rank-architect',
+  'Guardian':  'rank-guardian'
+};
+const CAN_POST = ['Predator','Phantom','Architect','Guardian'];
 
 function h() {
   return { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` };
+}
+
+function applyRankColor(el, rank) {
+  el.className = el.className.replace(/rank-\w+/g, '').trim();
+  const cls = RANK_COLORS[rank] || 'rank-ghost';
+  el.classList.add(cls);
 }
 
 // ── BOOT ─────────────────────────────────────────────────────────────
@@ -561,12 +670,16 @@ async function boot() {
     if (data.status !== 'success') { logout(); return; }
 
     const u = data.username || data.email?.split('@')[0] || 'Hunter';
-    currentRank = data.rank || 'Ghost';
+    currentRank  = data.rank || 'Ghost';
+    canPostTools = data.can_post_tools || CAN_POST.includes(currentRank);
     localStorage.setItem('gv_username', u);
     localStorage.setItem('gv_rank',     currentRank);
 
     document.getElementById('nav-username').textContent = u;
-    document.getElementById('nav-rank').textContent     = currentRank.toUpperCase();
+    const rankBadge = document.getElementById('nav-rank');
+    rankBadge.textContent = currentRank.toUpperCase();
+    applyRankColor(rankBadge, currentRank);
+
     document.getElementById('welcome-name').textContent = u.charAt(0).toUpperCase() + u.slice(1);
     document.getElementById('stat-rank').textContent    = currentRank;
     document.getElementById('stat-tools').textContent   = data.tool_count || 0;
@@ -574,13 +687,81 @@ async function boot() {
     document.getElementById('stat-since').textContent   = data.created_at
       ? new Date(data.created_at).toLocaleDateString('en-GB',{month:'short',year:'2-digit'})
       : '—';
+
+    // Update notification bubble
+    const unread = data.unread_notifications || 0;
+    const bubble = document.getElementById('notif-bubble');
+    if (unread > 0) {
+      bubble.textContent = unread > 9 ? '9+' : unread;
+      bubble.style.display = 'flex';
+    }
+
+    // Render tool list area based on rank
+    renderToolListArea();
+
   } catch(e) {
     const u = localStorage.getItem('gv_username') || 'Hunter';
     document.getElementById('nav-username').textContent = u;
-    document.getElementById('nav-rank').textContent     = currentRank.toUpperCase();
+    const rankBadge = document.getElementById('nav-rank');
+    rankBadge.textContent = currentRank.toUpperCase();
+    applyRankColor(rankBadge, currentRank);
     document.getElementById('welcome-name').textContent = u;
+    renderToolListArea();
   }
 }
+
+function renderToolListArea() {
+  const area = document.getElementById('list-tool-area');
+  if (!area) return;
+  if (canPostTools) {
+    area.innerHTML = `<button class="post-btn" onclick="openModal('modal-submit')">[ LIST A TOOL ]</button>`;
+  } else {
+    const needed = currentRank === 'Ghost' || currentRank === 'Scout' || currentRank === 'Hunter'
+      ? 'Predator' : 'Predator';
+    area.innerHTML = `
+      <div class="rank-locked">
+        <div class="lock-icon">🔒</div>
+        <p>// Tool listing requires <span>${needed}</span> rank or above.</p>
+        <p style="margin-top:6px;font-size:0.7rem;">Purchase a membership to unlock tool posting.</p>
+      </div>`;
+  }
+}
+
+// ── NOTIFICATION DRAWER ───────────────────────────────────────────────
+function toggleNotifDrawer() {
+  const drawer = document.getElementById('notif-drawer');
+  drawerOpen = !drawerOpen;
+  drawer.classList.toggle('open', drawerOpen);
+  if (drawerOpen) loadNotifDrawer();
+}
+
+async function loadNotifDrawer() {
+  const list = document.getElementById('notif-drawer-list');
+  try {
+    const res  = await fetch(`${API}/notifications`, { headers: h() });
+    const data = await res.json();
+    if (!data.notifications || !data.notifications.length) {
+      list.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text-dim);font-family:'Share Tech Mono',monospace;font-size:0.8rem;">// No notifications yet.</div>';
+      return;
+    }
+    list.innerHTML = data.notifications.map(n => `
+      <div class="notif-drawer-item">
+        <div class="nd-type">${esc(n.type||'INFO')}</div>
+        <div class="nd-msg">${esc(n.message)}</div>
+        <div class="nd-time">${ago(n.created_at)}</div>
+      </div>`).join('');
+  } catch(e) {
+    list.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text-dim);font-family:'Share Tech Mono',monospace;font-size:0.8rem;">// Failed to load.</div>';
+  }
+}
+
+// Close drawer when clicking outside
+document.addEventListener('click', e => {
+  if (drawerOpen && !e.target.closest('#notif-drawer') && !e.target.closest('#bell-wrap')) {
+    drawerOpen = false;
+    document.getElementById('notif-drawer').classList.remove('open');
+  }
+});
 
 // ── NAVIGATION ────────────────────────────────────────────────────────
 function showPage(page, el) {
@@ -627,7 +808,7 @@ function renderPost(p) {
     <div class="post-meta">
       <div>
         <span class="post-author">${esc(p.username||'Ghost')}</span>
-        <span class="post-rank">[${esc(p.rank||'Ghost')}]</span>
+        <span class="post-rank ${RANK_COLORS[p.rank]||'rank-ghost'}" style="border:1px solid;padding:1px 5px;">[${esc(p.rank||'Ghost')}]</span>
       </div>
       <span class="post-time">${ago(p.created_at)}</span>
     </div>
@@ -853,13 +1034,18 @@ async function loadProfile() {
     const data = await res.json();
     const u    = data.username || data.email?.split('@')[0] || 'Hunter';
     const rank = data.rank || 'Ghost';
+    const rankClass = RANK_COLORS[rank] || 'rank-ghost';
+    const salesRow = data.sales_count > 0
+      ? `<div class="profile-stat"><div class="val">${data.sales_count}</div><div class="lbl">Sold</div></div>`
+      : '';
     document.getElementById('profile-card').innerHTML = `
       <div class="profile-avatar">${u[0].toUpperCase()}</div>
       <div class="profile-username">${esc(u)}</div>
-      <div class="profile-rank">[ ${rank} ]</div>
-      <div class="profile-stats">
+      <div class="profile-rank ${rankClass}" style="border:1px solid;display:inline-block;padding:3px 12px;letter-spacing:3px;margin-top:6px;">[ ${rank} ]</div>
+      <div class="profile-stats" style="margin-top:16px;">
         <div class="profile-stat"><div class="val">${data.tool_count||0}</div><div class="lbl">Tools</div></div>
         <div class="profile-stat"><div class="val">${data.unread_notifications||0}</div><div class="lbl">Unread</div></div>
+        ${salesRow}
         <div class="profile-stat">
           <div class="val">${data.created_at?new Date(data.created_at).toLocaleDateString('en-GB',{month:'short',year:'2-digit'}):'—'}</div>
           <div class="lbl">Joined</div>
