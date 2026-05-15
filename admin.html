@@ -631,12 +631,15 @@
         <option value="Tools">Tools</option>
         <option value="BugBounty">Bug Bounty</option>
       </select>
-      <select id="c-rank">
-        <option value="Ghost">Ghost (All members)</option>
-        <option value="Operator">Operator+</option>
-        <option value="Phantom">Phantom+</option>
-        <option value="Spectre">Spectre only</option>
-      </select>
+     <select id="c-rank">
+  <option value="Ghost">Ghost (All members)</option>
+  <option value="Scout">Scout+</option>
+  <option value="Hunter">Hunter+</option>
+  <option value="Predator">Predator+</option>
+  <option value="Phantom">Phantom+</option>
+  <option value="Architect">Architect+</option>
+  <option value="Guardian">Guardian only</option>
+     </select>
       <input type="number" id="c-price" placeholder="Price in USDT (0 = free)" min="0" step="0.01">
       <button class="btn-approve" onclick="postCourse()" style="width:100%;">[ PUBLISH COURSE ]</button>
     </div>
@@ -682,10 +685,13 @@
     <h3>// PROMOTE MEMBER</h3>
     <p style="color:var(--text-dim);font-size:0.8rem;margin-bottom:16px;font-family:'Share Tech Mono',monospace;" id="promote-username-label"></p>
     <select id="promote-rank">
-      <option value="Ghost">Ghost</option>
-      <option value="Operator">Operator</option>
-      <option value="Phantom">Phantom</option>
-      <option value="Spectre">Spectre</option>
+  <option value="Ghost">Ghost</option>
+  <option value="Scout">Scout</option>
+  <option value="Hunter">Hunter</option>
+  <option value="Predator">Predator</option>
+  <option value="Phantom">Phantom</option>
+  <option value="Architect">Architect</option>
+  <option value="Guardian">Guardian</option>
     </select>
     <div class="modal-actions">
       <button class="btn-full" onclick="confirmPromote()">[ PROMOTE ]</button>
