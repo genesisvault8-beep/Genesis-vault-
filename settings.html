@@ -1,0 +1,854 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Genesis Vault | Settings</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:       #020608;
+    --bg2:      #060d10;
+    --bg3:      #0a1520;
+    --accent:   #00f5c4;
+    --accent2:  #00a8ff;
+    --accent3:  #ff003c;
+    --text:     #c8e6f0;
+    --text-dim: #4a7a8a;
+    --border:   #0f2a35;
+    --glow:     0 0 20px rgba(0,245,196,0.2);
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  body {
+    background:var(--bg); color:var(--text);
+    font-family:'Rajdhani',sans-serif; min-height:100vh;
+  }
+
+  body::before {
+    content:''; position:fixed; inset:0;
+    background-image:
+      linear-gradient(rgba(0,245,196,0.02) 1px,transparent 1px),
+      linear-gradient(90deg,rgba(0,245,196,0.02) 1px,transparent 1px);
+    background-size:40px 40px; pointer-events:none; z-index:0;
+  }
+
+  /* ── NAV ── */
+  nav {
+    position:fixed; top:0; left:0; right:0;
+    background:rgba(2,6,8,0.95); border-bottom:1px solid var(--border);
+    padding:0 20px; height:56px; display:flex; align-items:center;
+    justify-content:space-between; z-index:100; backdrop-filter:blur(10px);
+  }
+
+  .nav-logo {
+    font-family:'Share Tech Mono',monospace;
+    font-size:1rem; letter-spacing:3px;
+    position:relative; cursor:default; user-select:none;
+  }
+  .nav-logo .g { color:var(--accent); }
+  .nav-logo .v { color:white; }
+  .nav-logo::before, .nav-logo::after {
+    content: attr(data-text);
+    position:absolute; top:0; left:0;
+    width:100%; height:100%;
+    font-family:'Share Tech Mono',monospace;
+    font-size:1rem; letter-spacing:3px; pointer-events:none;
+  }
+  .nav-logo::before {
+    color:var(--accent3);
+    clip-path:polygon(0 20%,100% 20%,100% 40%,0 40%);
+    animation:glitch1 4s infinite; left:2px;
+  }
+  .nav-logo::after {
+    color:var(--accent2);
+    clip-path:polygon(0 60%,100% 60%,100% 80%,0 80%);
+    animation:glitch2 4s infinite; left:-2px;
+  }
+  @keyframes glitch1 {
+    0%,90%,100% { opacity:0; transform:translateX(0); }
+    91% { opacity:1; transform:translateX(-3px); }
+    93% { opacity:1; transform:translateX(3px); }
+    95% { opacity:1; transform:translateX(-2px); }
+    97% { opacity:0; }
+  }
+  @keyframes glitch2 {
+    0%,90%,100% { opacity:0; transform:translateX(0); }
+    92% { opacity:1; transform:translateX(3px); }
+    94% { opacity:1; transform:translateX(-3px); }
+    96% { opacity:1; transform:translateX(2px); }
+    98% { opacity:0; }
+  }
+
+  .back-btn {
+    background:none; border:1px solid var(--border); color:var(--text-dim);
+    padding:6px 14px; font-family:'Share Tech Mono',monospace; font-size:0.7rem;
+    cursor:pointer; letter-spacing:1px; transition:all 0.2s;
+  }
+  .back-btn:hover { border-color:var(--accent); color:var(--accent); }
+
+  /* ── MAIN ── */
+  main {
+    padding-top:76px; padding-bottom:40px;
+    min-height:100vh; position:relative; z-index:1;
+    max-width:600px; margin:0 auto; padding-left:20px; padding-right:20px;
+  }
+
+  /* ── PAGE HEADER ── */
+  .page-header {
+    margin-bottom:28px; animation:fadeIn 0.4s ease;
+  }
+  .page-header .breadcrumb {
+    font-family:'Share Tech Mono',monospace; font-size:0.65rem;
+    color:var(--text-dim); letter-spacing:2px; margin-bottom:8px;
+  }
+  .page-header h1 {
+    font-size:1.6rem; font-weight:700; color:white;
+    letter-spacing:3px; text-transform:uppercase;
+  }
+  .page-header h1 span { color:var(--accent); }
+  .page-header .sub {
+    font-family:'Share Tech Mono',monospace; font-size:0.7rem;
+    color:var(--text-dim); letter-spacing:1px; margin-top:6px;
+  }
+
+  /* ── SECTION ── */
+  .settings-section {
+    background:var(--bg2); border:1px solid var(--border);
+    margin-bottom:16px; animation:fadeIn 0.5s ease;
+    animation-fill-mode:both;
+  }
+  .settings-section:nth-child(1) { animation-delay:0.05s; }
+  .settings-section:nth-child(2) { animation-delay:0.10s; }
+  .settings-section:nth-child(3) { animation-delay:0.15s; }
+  .settings-section:nth-child(4) { animation-delay:0.20s; }
+  .settings-section:nth-child(5) { animation-delay:0.25s; }
+
+  .section-header {
+    padding:14px 18px; border-bottom:1px solid var(--border);
+    display:flex; align-items:center; gap:10px;
+  }
+  .section-icon {
+    font-size:1rem; width:28px; text-align:center;
+  }
+  .section-title-text {
+    font-family:'Share Tech Mono',monospace; font-size:0.75rem;
+    color:var(--accent); letter-spacing:3px; text-transform:uppercase;
+  }
+  .section-body { padding:18px; }
+
+  /* ── FORM FIELDS ── */
+  .field-group { margin-bottom:16px; }
+  .field-group:last-child { margin-bottom:0; }
+
+  label {
+    display:block; font-size:0.68rem; letter-spacing:2px;
+    text-transform:uppercase; color:var(--text-dim); margin-bottom:6px;
+    font-family:'Share Tech Mono',monospace;
+  }
+
+  .field-row {
+    display:flex; gap:10px; align-items:stretch;
+  }
+
+  input[type="text"],
+  input[type="email"],
+  input[type="password"] {
+    flex:1; background:var(--bg); border:1px solid var(--border);
+    color:var(--text); padding:11px 14px;
+    font-family:'Share Tech Mono',monospace; font-size:0.85rem;
+    outline:none; transition:border-color 0.2s; width:100%;
+  }
+  input:focus { border-color:var(--accent); }
+  input::placeholder { color:var(--text-dim); }
+
+  .field-current {
+    font-family:'Share Tech Mono',monospace; font-size:0.78rem;
+    color:var(--text-dim); padding:6px 0; letter-spacing:0.5px;
+  }
+  .field-current span { color:var(--accent2); }
+
+  /* Save button (inline) */
+  .save-btn {
+    background:var(--accent); color:var(--bg); border:none;
+    padding:11px 18px; font-family:'Share Tech Mono',monospace;
+    font-size:0.7rem; letter-spacing:1px; cursor:pointer;
+    transition:all 0.2s; white-space:nowrap; font-weight:700;
+    flex-shrink:0;
+  }
+  .save-btn:hover { background:white; }
+  .save-btn:disabled { opacity:0.5; cursor:not-allowed; }
+
+  /* Status messages */
+  .field-status {
+    font-family:'Share Tech Mono',monospace; font-size:0.7rem;
+    letter-spacing:1px; margin-top:8px; padding:8px 12px;
+    display:none;
+  }
+  .field-status.ok  { border:1px solid var(--accent); color:var(--accent); background:rgba(0,245,196,0.05); }
+  .field-status.err { border:1px solid var(--accent3); color:var(--accent3); background:rgba(255,0,60,0.05); }
+
+  /* ── TOGGLE SWITCH ── */
+  .toggle-row {
+    display:flex; align-items:center; justify-content:space-between;
+    padding:12px 0; border-bottom:1px solid var(--border);
+  }
+  .toggle-row:last-child { border-bottom:none; padding-bottom:0; }
+  .toggle-row:first-child { padding-top:0; }
+
+  .toggle-info { flex:1; padding-right:16px; }
+  .toggle-label {
+    font-size:0.9rem; font-weight:600; color:var(--text);
+    letter-spacing:1px; display:block; margin-bottom:2px;
+  }
+  .toggle-desc {
+    font-family:'Share Tech Mono',monospace; font-size:0.65rem;
+    color:var(--text-dim); letter-spacing:0.5px;
+  }
+
+  .toggle-switch {
+    position:relative; width:44px; height:24px; flex-shrink:0;
+  }
+  .toggle-switch input { opacity:0; width:0; height:0; }
+  .toggle-track {
+    position:absolute; inset:0; background:var(--bg3);
+    border:1px solid var(--border); cursor:pointer; transition:all 0.3s;
+  }
+  .toggle-track::after {
+    content:''; position:absolute; top:3px; left:3px;
+    width:16px; height:16px; background:var(--text-dim);
+    transition:all 0.3s;
+  }
+  .toggle-switch input:checked + .toggle-track {
+    border-color:var(--accent); background:rgba(0,245,196,0.1);
+  }
+  .toggle-switch input:checked + .toggle-track::after {
+    transform:translateX(20px); background:var(--accent);
+  }
+
+  /* ── DANGER ZONE ── */
+  .danger-section {
+    background:var(--bg2); border:1px solid rgba(255,0,60,0.2);
+    margin-bottom:16px; animation:fadeIn 0.5s ease 0.3s; animation-fill-mode:both;
+  }
+  .danger-section .section-header {
+    border-bottom-color:rgba(255,0,60,0.15);
+  }
+  .danger-section .section-title-text { color:var(--accent3); }
+
+  .danger-desc {
+    font-family:'Share Tech Mono',monospace; font-size:0.75rem;
+    color:var(--text-dim); line-height:1.7; margin-bottom:16px;
+  }
+  .danger-desc span { color:var(--accent3); }
+
+  .delete-btn {
+    width:100%; padding:13px; background:none;
+    border:1px solid var(--accent3); color:var(--accent3);
+    font-family:'Share Tech Mono',monospace; font-size:0.8rem;
+    letter-spacing:2px; cursor:pointer; transition:all 0.2s;
+  }
+  .delete-btn:hover { background:rgba(255,0,60,0.08); }
+
+  /* ── DELETE MODAL (exit survey) ── */
+  .overlay {
+    display:none; position:fixed; inset:0;
+    background:rgba(2,6,8,0.97); z-index:200;
+    padding:20px; overflow-y:auto;
+    flex-direction:column; justify-content:center;
+  }
+  .overlay.active { display:flex; }
+
+  .modal-box {
+    background:var(--bg2); border:1px solid var(--border);
+    border-top:3px solid var(--accent3); padding:24px;
+    max-width:480px; width:100%; margin:0 auto;
+    animation:fadeIn 0.3s ease;
+  }
+
+  .modal-box h2 {
+    font-family:'Share Tech Mono',monospace; font-size:0.9rem;
+    color:var(--accent3); letter-spacing:3px; margin-bottom:6px;
+  }
+  .modal-box .modal-sub {
+    font-size:0.82rem; color:var(--text-dim); line-height:1.5; margin-bottom:20px;
+  }
+
+  .survey-label {
+    font-family:'Share Tech Mono',monospace; font-size:0.68rem;
+    color:var(--text-dim); letter-spacing:2px; margin-bottom:12px;
+    display:block;
+  }
+
+  /* Radio options */
+  .survey-options { display:flex; flex-direction:column; gap:8px; margin-bottom:16px; }
+  .survey-option {
+    display:flex; align-items:center; gap:12px;
+    padding:10px 14px; border:1px solid var(--border);
+    cursor:pointer; transition:all 0.2s;
+  }
+  .survey-option:hover { border-color:var(--accent3); }
+  .survey-option.selected { border-color:var(--accent3); background:rgba(255,0,60,0.05); }
+  .survey-option input[type="radio"] { display:none; }
+  .survey-dot {
+    width:10px; height:10px; border:1px solid var(--text-dim);
+    flex-shrink:0; transition:all 0.2s; position:relative;
+  }
+  .survey-option.selected .survey-dot {
+    border-color:var(--accent3); background:var(--accent3);
+  }
+  .survey-option-text {
+    font-size:0.85rem; color:var(--text); letter-spacing:0.5px;
+  }
+
+  .survey-other {
+    background:var(--bg); border:1px solid var(--border);
+    color:var(--text); padding:10px 14px; width:100%;
+    font-family:'Share Tech Mono',monospace; font-size:0.8rem;
+    outline:none; transition:border-color 0.2s; margin-bottom:16px;
+    display:none; resize:none; min-height:70px;
+  }
+  .survey-other:focus { border-color:var(--accent3); }
+  .survey-other.visible { display:block; }
+
+  .modal-actions { display:flex; gap:10px; }
+  .modal-cancel {
+    flex:1; padding:12px; background:none; border:1px solid var(--border);
+    color:var(--text-dim); font-family:'Share Tech Mono',monospace;
+    font-size:0.75rem; letter-spacing:2px; cursor:pointer; transition:all 0.2s;
+  }
+  .modal-cancel:hover { border-color:var(--accent); color:var(--accent); }
+  .modal-confirm {
+    flex:1; padding:12px; background:var(--accent3); border:none;
+    color:white; font-family:'Share Tech Mono',monospace;
+    font-size:0.75rem; letter-spacing:2px; cursor:pointer; transition:all 0.2s;
+    font-weight:700;
+  }
+  .modal-confirm:hover { background:#cc0030; }
+  .modal-confirm:disabled { opacity:0.5; cursor:not-allowed; }
+
+  .confirm-step {
+    display:none; margin-top:16px; padding-top:16px;
+    border-top:1px solid var(--border);
+  }
+  .confirm-step.visible { display:block; }
+  .confirm-step p {
+    font-family:'Share Tech Mono',monospace; font-size:0.75rem;
+    color:var(--accent3); margin-bottom:10px; line-height:1.6;
+  }
+  .confirm-step input {
+    width:100%; background:var(--bg); border:1px solid var(--accent3);
+    color:var(--text); padding:10px 14px;
+    font-family:'Share Tech Mono',monospace; font-size:0.85rem;
+    outline:none; margin-bottom:0;
+  }
+
+  /* ── ACCOUNT INFO CARD ── */
+  .account-card {
+    background:var(--bg2); border:1px solid var(--border);
+    border-left:3px solid var(--accent2); padding:16px 18px;
+    margin-bottom:16px; animation:fadeIn 0.4s ease;
+    display:flex; align-items:center; gap:14px;
+  }
+  .account-avatar {
+    width:44px; height:44px; background:var(--bg3);
+    border:1px solid var(--accent); display:flex;
+    align-items:center; justify-content:center;
+    font-family:'Share Tech Mono',monospace; font-size:1.1rem;
+    color:var(--accent); flex-shrink:0;
+  }
+  .account-info .account-name {
+    font-size:1rem; font-weight:700; color:white; letter-spacing:2px;
+  }
+  .account-info .account-meta {
+    font-family:'Share Tech Mono',monospace; font-size:0.65rem;
+    color:var(--text-dim); letter-spacing:1px; margin-top:3px;
+  }
+  .account-info .account-meta span { color:var(--accent2); }
+
+  /* ── SPINNER ── */
+  .spinner {
+    display:inline-block; width:14px; height:14px;
+    border:2px solid var(--border); border-top-color:var(--accent);
+    border-radius:50%; animation:spin 0.8s linear infinite;
+    vertical-align:middle; margin-right:6px;
+  }
+
+  @keyframes spin   { to { transform:rotate(360deg); } }
+  @keyframes fadeIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo" data-text="GENESISVAULT">
+    <span class="g">GENESIS</span><span class="v">VAULT</span>
+  </div>
+  <button class="back-btn" onclick="history.back()">← BACK</button>
+</nav>
+
+<main>
+
+  <!-- PAGE HEADER -->
+  <div class="page-header">
+    <p class="breadcrumb">// DASHBOARD / SETTINGS</p>
+    <h1>VAULT <span>CONFIG</span></h1>
+    <p class="sub">Manage your account, preferences, and security.</p>
+  </div>
+
+  <!-- ACCOUNT CARD -->
+  <div class="account-card" id="account-card">
+    <div class="account-avatar" id="acct-avatar">?</div>
+    <div class="account-info">
+      <div class="account-name" id="acct-name">Loading...</div>
+      <div class="account-meta">VAULT AGE: <span id="acct-age">—</span> &nbsp;|&nbsp; <span id="acct-email-display">—</span></div>
+    </div>
+  </div>
+
+  <!-- USERNAME -->
+  <div class="settings-section">
+    <div class="section-header">
+      <span class="section-icon">◈</span>
+      <span class="section-title-text">// Username</span>
+    </div>
+    <div class="section-body">
+      <div class="field-group">
+        <label>Current Username</label>
+        <div class="field-current">→ <span id="current-username">—</span></div>
+      </div>
+      <div class="field-group">
+        <label>New Username</label>
+        <div class="field-row">
+          <input type="text" id="new-username" placeholder="enter new username">
+          <button class="save-btn" id="btn-username" onclick="saveUsername()">[ SAVE ]</button>
+        </div>
+        <div class="field-status" id="status-username"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- EMAIL -->
+  <div class="settings-section">
+    <div class="section-header">
+      <span class="section-icon">✉</span>
+      <span class="section-title-text">// Email Address</span>
+    </div>
+    <div class="section-body">
+      <div class="field-group">
+        <label>Current Email</label>
+        <div class="field-current">→ <span id="current-email">—</span></div>
+      </div>
+      <div class="field-group">
+        <label>New Email</label>
+        <div class="field-row">
+          <input type="email" id="new-email" placeholder="enter new email">
+          <button class="save-btn" id="btn-email" onclick="saveEmail()">[ SAVE ]</button>
+        </div>
+        <div class="field-status" id="status-email"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PASSWORD -->
+  <div class="settings-section">
+    <div class="section-header">
+      <span class="section-icon">⚿</span>
+      <span class="section-title-text">// Password</span>
+    </div>
+    <div class="section-body">
+      <div class="field-group">
+        <label>Current Password</label>
+        <input type="password" id="current-password" placeholder="enter current password">
+      </div>
+      <div class="field-group">
+        <label>New Password</label>
+        <input type="password" id="new-password" placeholder="enter new password">
+      </div>
+      <div class="field-group">
+        <label>Confirm New Password</label>
+        <div class="field-row">
+          <input type="password" id="confirm-password" placeholder="confirm new password">
+          <button class="save-btn" id="btn-password" onclick="savePassword()">[ SAVE ]</button>
+        </div>
+        <div class="field-status" id="status-password"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- NOTIFICATIONS -->
+  <div class="settings-section">
+    <div class="section-header">
+      <span class="section-icon">◎</span>
+      <span class="section-title-text">// Notifications</span>
+    </div>
+    <div class="section-body">
+      <div class="toggle-row">
+        <div class="toggle-info">
+          <span class="toggle-label">Admin Messages</span>
+          <span class="toggle-desc">// Alerts when admin sends you a message</span>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" id="notif-messages" checked onchange="saveNotifPref('messages', this.checked)">
+          <span class="toggle-track"></span>
+        </label>
+      </div>
+      <div class="toggle-row">
+        <div class="toggle-info">
+          <span class="toggle-label">Community Replies</span>
+          <span class="toggle-desc">// Alerts when someone replies to your posts</span>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" id="notif-replies" checked onchange="saveNotifPref('replies', this.checked)">
+          <span class="toggle-track"></span>
+        </label>
+      </div>
+      <div class="toggle-row">
+        <div class="toggle-info">
+          <span class="toggle-label">Tool Purchases</span>
+          <span class="toggle-desc">// Confirmation when a tool purchase is approved</span>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" id="notif-purchases" checked onchange="saveNotifPref('purchases', this.checked)">
+          <span class="toggle-track"></span>
+        </label>
+      </div>
+      <div class="toggle-row">
+        <div class="toggle-info">
+          <span class="toggle-label">Vault Broadcasts</span>
+          <span class="toggle-desc">// Platform-wide announcements from admin</span>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" id="notif-broadcasts" checked onchange="saveNotifPref('broadcasts', this.checked)">
+          <span class="toggle-track"></span>
+        </label>
+      </div>
+    </div>
+  </div>
+
+  <!-- DANGER ZONE -->
+  <div class="danger-section">
+    <div class="section-header">
+      <span class="section-icon">⚠</span>
+      <span class="section-title-text">// Danger Zone</span>
+    </div>
+    <div class="section-body">
+      <p class="danger-desc">
+        Deleting your account is <span>permanent and irreversible</span>.<br>
+        All your posts, tools, and data will be wiped from the Vault.<br>
+        This action cannot be undone.
+      </p>
+      <button class="delete-btn" onclick="openDeleteModal()">[ DELETE MY ACCOUNT ]</button>
+    </div>
+  </div>
+
+</main>
+
+<!-- DELETE ACCOUNT MODAL -->
+<div class="overlay" id="delete-overlay">
+  <div class="modal-box">
+    <h2>// TERMINATE ACCOUNT</h2>
+    <p class="modal-sub">Before you go — help us understand why. This takes 10 seconds and genuinely helps us improve.</p>
+
+    <span class="survey-label">// WHY ARE YOU LEAVING?</span>
+
+    <div class="survey-options" id="survey-options">
+      <div class="survey-option" onclick="selectReason('expensive', this)">
+        <div class="survey-dot"></div>
+        <span class="survey-option-text">Too expensive</span>
+      </div>
+      <div class="survey-option" onclick="selectReason('expectations', this)">
+        <div class="survey-dot"></div>
+        <span class="survey-option-text">Not what I expected</span>
+      </div>
+      <div class="survey-option" onclick="selectReason('missing', this)">
+        <div class="survey-dot"></div>
+        <span class="survey-option-text">Missing features I need</span>
+      </div>
+      <div class="survey-option" onclick="selectReason('switching', this)">
+        <div class="survey-dot"></div>
+        <span class="survey-option-text">Switching to something else</span>
+      </div>
+      <div class="survey-option" onclick="selectReason('other', this)">
+        <div class="survey-dot"></div>
+        <span class="survey-option-text">Other</span>
+      </div>
+    </div>
+
+    <textarea
+      class="survey-other"
+      id="survey-other-text"
+      placeholder="// Tell us more..."
+    ></textarea>
+
+    <!-- Confirm step -->
+    <div class="confirm-step" id="confirm-step">
+      <p>// Type <span style="color:white;">DELETE</span> to confirm account termination.</p>
+      <input type="text" id="delete-confirm-input" placeholder="Type DELETE here" oninput="checkDeleteConfirm()">
+    </div>
+
+    <div class="modal-actions" style="margin-top:16px;">
+      <button class="modal-cancel" onclick="closeDeleteModal()">[ CANCEL ]</button>
+      <button class="modal-confirm" id="btn-delete-confirm" onclick="proceedDelete()" disabled>[ CONTINUE ]</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const API   = 'https://genesis-vault-backend.onrender.com/api';
+const token = localStorage.getItem('gv_token');
+if (!token) location.href = 'login.html';
+
+let selectedReason = '';
+let deleteStage    = 1; // 1 = survey, 2 = confirm
+
+function h() {
+  return { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` };
+}
+
+/* ── VAULT AGE ── */
+function calcVaultAge(createdAt) {
+  if (!createdAt) return '—';
+  const days = Math.floor((Date.now() - new Date(createdAt)) / 86400000);
+  if (days === 0)  return 'joined today';
+  if (days < 30)   return `${days} days`;
+  const mo = Math.floor(days / 30);
+  if (mo < 12)     return `${mo} month${mo>1?'s':''}`;
+  const yr = Math.floor(mo / 12);
+  return `${yr} year${yr>1?'s':''}`;
+}
+
+/* ── BOOT ── */
+async function boot() {
+  try {
+    const res  = await fetch(`${API}/profile`, { headers: h() });
+    const data = await res.json();
+    if (data.status !== 'success') { location.href = 'login.html'; return; }
+
+    const u     = data.username || data.email?.split('@')[0] || 'Operative';
+    const email = data.email || '—';
+    const age   = calcVaultAge(data.created_at);
+
+    localStorage.setItem('gv_username', u);
+
+    // Account card
+    document.getElementById('acct-avatar').textContent     = u[0].toUpperCase();
+    document.getElementById('acct-name').textContent       = u.toUpperCase();
+    document.getElementById('acct-age').textContent        = age;
+    document.getElementById('acct-email-display').textContent = email;
+
+    // Field current values
+    document.getElementById('current-username').textContent = u;
+    document.getElementById('current-email').textContent    = email;
+
+    // Load notif prefs if available
+    if (data.notification_prefs) {
+      const p = data.notification_prefs;
+      if (p.messages   !== undefined) document.getElementById('notif-messages').checked   = p.messages;
+      if (p.replies    !== undefined) document.getElementById('notif-replies').checked    = p.replies;
+      if (p.purchases  !== undefined) document.getElementById('notif-purchases').checked  = p.purchases;
+      if (p.broadcasts !== undefined) document.getElementById('notif-broadcasts').checked = p.broadcasts;
+    }
+
+  } catch(e) {
+    // Fallback to cached
+    const u = localStorage.getItem('gv_username') || 'Operative';
+    document.getElementById('acct-avatar').textContent = u[0].toUpperCase();
+    document.getElementById('acct-name').textContent   = u.toUpperCase();
+    document.getElementById('current-username').textContent = u;
+  }
+}
+
+/* ── SAVE USERNAME ── */
+async function saveUsername() {
+  const val = document.getElementById('new-username').value.trim();
+  const btn = document.getElementById('btn-username');
+  const msg = document.getElementById('status-username');
+  if (!val) { showStatus(msg, '// Username cannot be empty.', true); return; }
+  if (val.length < 3) { showStatus(msg, '// Minimum 3 characters.', true); return; }
+  btn.disabled = true; btn.textContent = '[ ... ]';
+  try {
+    const res  = await fetch(`${API}/profile/update`, {
+      method:'PATCH', headers:h(),
+      body: JSON.stringify({ username: val })
+    });
+    const data = await res.json();
+    if (data.status === 'success') {
+      showStatus(msg, '✓ Username updated.', false);
+      document.getElementById('current-username').textContent = val;
+      document.getElementById('acct-name').textContent       = val.toUpperCase();
+      document.getElementById('acct-avatar').textContent     = val[0].toUpperCase();
+      localStorage.setItem('gv_username', val);
+      document.getElementById('new-username').value = '';
+    } else {
+      showStatus(msg, data.message || '// Update failed.', true);
+    }
+  } catch(e) {
+    showStatus(msg, '// Network error.', true);
+  }
+  btn.disabled = false; btn.textContent = '[ SAVE ]';
+}
+
+/* ── SAVE EMAIL ── */
+async function saveEmail() {
+  const val = document.getElementById('new-email').value.trim();
+  const btn = document.getElementById('btn-email');
+  const msg = document.getElementById('status-email');
+  if (!val || !val.includes('@')) { showStatus(msg, '// Enter a valid email.', true); return; }
+  btn.disabled = true; btn.textContent = '[ ... ]';
+  try {
+    const res  = await fetch(`${API}/profile/update`, {
+      method:'PATCH', headers:h(),
+      body: JSON.stringify({ email: val })
+    });
+    const data = await res.json();
+    if (data.status === 'success') {
+      showStatus(msg, '✓ Email updated.', false);
+      document.getElementById('current-email').textContent       = val;
+      document.getElementById('acct-email-display').textContent  = val;
+      document.getElementById('new-email').value = '';
+    } else {
+      showStatus(msg, data.message || '// Update failed.', true);
+    }
+  } catch(e) {
+    showStatus(msg, '// Network error.', true);
+  }
+  btn.disabled = false; btn.textContent = '[ SAVE ]';
+}
+
+/* ── SAVE PASSWORD ── */
+async function savePassword() {
+  const cur  = document.getElementById('current-password').value;
+  const nw   = document.getElementById('new-password').value;
+  const conf = document.getElementById('confirm-password').value;
+  const btn  = document.getElementById('btn-password');
+  const msg  = document.getElementById('status-password');
+
+  if (!cur)       { showStatus(msg, '// Enter your current password.', true); return; }
+  if (nw.length < 8) { showStatus(msg, '// Password must be at least 8 characters.', true); return; }
+  if (nw !== conf) { showStatus(msg, '// Passwords do not match.', true); return; }
+
+  btn.disabled = true; btn.textContent = '[ ... ]';
+  try {
+    const res  = await fetch(`${API}/profile/password`, {
+      method:'PATCH', headers:h(),
+      body: JSON.stringify({ current_password: cur, new_password: nw })
+    });
+    const data = await res.json();
+    if (data.status === 'success') {
+      showStatus(msg, '✓ Password updated. Stay secure.', false);
+      document.getElementById('current-password').value = '';
+      document.getElementById('new-password').value     = '';
+      document.getElementById('confirm-password').value = '';
+    } else {
+      showStatus(msg, data.message || '// Update failed.', true);
+    }
+  } catch(e) {
+    showStatus(msg, '// Network error.', true);
+  }
+  btn.disabled = false; btn.textContent = '[ SAVE ]';
+}
+
+/* ── NOTIFICATION PREFS ── */
+async function saveNotifPref(type, val) {
+  try {
+    await fetch(`${API}/profile/notifications`, {
+      method:'PATCH', headers:h(),
+      body: JSON.stringify({ [type]: val })
+    });
+  } catch(e) {}
+}
+
+/* ── DELETE ACCOUNT MODAL ── */
+function openDeleteModal() {
+  selectedReason = '';
+  deleteStage    = 1;
+  document.querySelectorAll('.survey-option').forEach(o => o.classList.remove('selected'));
+  document.getElementById('survey-other-text').classList.remove('visible');
+  document.getElementById('survey-other-text').value = '';
+  document.getElementById('confirm-step').classList.remove('visible');
+  document.getElementById('delete-confirm-input').value = '';
+  document.getElementById('btn-delete-confirm').disabled  = true;
+  document.getElementById('btn-delete-confirm').textContent = '[ CONTINUE ]';
+  document.getElementById('delete-overlay').classList.add('active');
+}
+
+function closeDeleteModal() {
+  document.getElementById('delete-overlay').classList.remove('active');
+}
+
+function selectReason(reason, el) {
+  selectedReason = reason;
+  document.querySelectorAll('.survey-option').forEach(o => o.classList.remove('selected'));
+  el.classList.add('selected');
+  const other = document.getElementById('survey-other-text');
+  if (reason === 'other') { other.classList.add('visible'); }
+  else { other.classList.remove('visible'); }
+  // Enable continue once reason selected
+  document.getElementById('btn-delete-confirm').disabled = false;
+}
+
+function checkDeleteConfirm() {
+  const val = document.getElementById('delete-confirm-input').value.trim();
+  document.getElementById('btn-delete-confirm').disabled = val !== 'DELETE';
+}
+
+async function proceedDelete() {
+  if (deleteStage === 1) {
+    // Move to confirmation step
+    if (!selectedReason) return;
+    deleteStage = 2;
+    document.getElementById('confirm-step').classList.add('visible');
+    document.getElementById('btn-delete-confirm').textContent = '[ TERMINATE ACCOUNT ]';
+    document.getElementById('btn-delete-confirm').disabled    = true;
+    document.getElementById('delete-confirm-input').focus();
+    return;
+  }
+
+  // Stage 2 — actually delete
+  const confirmVal = document.getElementById('delete-confirm-input').value.trim();
+  if (confirmVal !== 'DELETE') return;
+
+  const btn    = document.getElementById('btn-delete-confirm');
+  btn.disabled = true;
+  btn.textContent = '[ TERMINATING... ]';
+
+  const reason = selectedReason === 'other'
+    ? document.getElementById('survey-other-text').value.trim() || 'other'
+    : selectedReason;
+
+  try {
+    const res  = await fetch(`${API}/profile/delete`, {
+      method:'DELETE', headers:h(),
+      body: JSON.stringify({ reason })
+    });
+    const data = await res.json();
+    if (data.status === 'success') {
+      localStorage.clear();
+      location.href = 'login.html';
+    } else {
+      btn.textContent = '[ TERMINATE ACCOUNT ]';
+      btn.disabled    = false;
+      alert(data.message || 'Failed to delete account. Try again.');
+    }
+  } catch(e) {
+    btn.textContent = '[ TERMINATE ACCOUNT ]';
+    btn.disabled    = false;
+    alert('Network error. Try again.');
+  }
+}
+
+/* ── UTILS ── */
+function showStatus(el, msg, err) {
+  el.textContent   = msg;
+  el.className     = 'field-status ' + (err ? 'err' : 'ok');
+  el.style.display = 'block';
+  if (!err) setTimeout(() => el.style.display = 'none', 4000);
+}
+
+/* ── INIT ── */
+boot();
+</script>
+</body>
+</html>
