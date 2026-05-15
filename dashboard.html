@@ -343,16 +343,80 @@
   .rank-architect { color:#ffd700!important; border-color:#ffd700!important; }
   .rank-guardian  { color:#ff003c!important; border-color:#ff003c!important; }
 
-  /* NOTIF BELL */
-  .notif-bell-wrap { position:relative; cursor:pointer; padding:4px 8px; }
-  .notif-bell { font-size:1.1rem; display:block; }
-  .notif-bubble {
-    position:absolute; top:-2px; right:-2px;
-    background:var(--accent3); color:white;
-    font-size:0.55rem; font-family:'Share Tech Mono',monospace;
-    min-width:16px; height:16px; border-radius:50%;
-    display:flex; align-items:center; justify-content:center;
-    padding:0 3px; display:none;
+  /* HAMBURGER MENU */
+  .menu-btn {
+    display:flex; flex-direction:column; gap:5px;
+    cursor:pointer; padding:8px; background:none; border:none;
+  }
+  .menu-btn span {
+    display:block; width:22px; height:2px;
+    background:var(--text-dim); transition:all 0.3s;
+  }
+  .menu-btn:hover span { background:var(--accent); }
+
+  /* SLIDE MENU */
+  .slide-menu {
+    position:fixed; top:0; right:-280px; width:280px; height:100vh;
+    background:rgba(6,13,16,0.99); border-left:1px solid var(--border);
+    z-index:300; transition:right 0.3s ease; backdrop-filter:blur(20px);
+    display:flex; flex-direction:column;
+  }
+  .slide-menu.open { right:0; }
+  .slide-menu-overlay {
+    display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5);
+    z-index:299;
+  }
+  .slide-menu-overlay.open { display:block; }
+  .slide-menu-header {
+    padding:20px; border-bottom:1px solid var(--border);
+    display:flex; justify-content:space-between; align-items:center;
+  }
+  .slide-menu-header .menu-title {
+    font-family:'Share Tech Mono',monospace; font-size:0.8rem;
+    color:var(--accent); letter-spacing:3px;
+  }
+  .slide-menu-close {
+    background:none; border:1px solid var(--border); color:var(--text-dim);
+    width:28px; height:28px; cursor:pointer; font-size:0.9rem; transition:all 0.2s;
+  }
+  .slide-menu-close:hover { border-color:var(--accent3); color:var(--accent3); }
+  .slide-menu-user {
+    padding:20px; border-bottom:1px solid var(--border);
+  }
+  .smu-name { font-size:1.1rem; font-weight:700; color:white; letter-spacing:2px; }
+  .smu-rank { font-family:'Share Tech Mono',monospace; font-size:0.7rem; margin-top:6px; display:inline-block; padding:2px 10px; border:1px solid; letter-spacing:2px; }
+  .slide-menu-notifs { flex:1; overflow-y:auto; }
+  .slide-menu-notifs-title {
+    padding:12px 20px; font-family:'Share Tech Mono',monospace;
+    font-size:0.65rem; color:var(--text-dim); letter-spacing:3px;
+    border-bottom:1px solid var(--border);
+  }
+  .slide-notif-item {
+    padding:12px 20px; border-bottom:1px solid var(--border);
+    font-size:0.82rem; transition:background 0.15s;
+  }
+  .slide-notif-item:hover { background:var(--bg3); }
+  .slide-notif-type {
+    font-family:'Share Tech Mono',monospace; font-size:0.6rem;
+    color:var(--accent2); letter-spacing:2px; margin-bottom:3px;
+  }
+  .slide-notif-msg { color:var(--text); line-height:1.4; }
+  .slide-notif-time { font-size:0.62rem; color:var(--text-dim); margin-top:3px; font-family:'Share Tech Mono',monospace; }
+  .slide-menu-footer {
+    padding:16px 20px; border-top:1px solid var(--border);
+    display:flex; flex-direction:column; gap:8px;
+  }
+  .slide-menu-btn {
+    width:100%; padding:10px; background:none; border:1px solid var(--border);
+    color:var(--text-dim); font-family:'Share Tech Mono',monospace;
+    font-size:0.7rem; letter-spacing:2px; cursor:pointer; transition:all 0.2s; text-align:left;
+  }
+  .slide-menu-btn:hover { border-color:var(--accent); color:var(--accent); }
+  .slide-menu-btn.danger { border-color:var(--accent3); color:var(--accent3); }
+  .slide-menu-btn.danger:hover { background:var(--accent3); color:white; }
+  .notif-count-badge {
+    float:right; background:var(--accent3); color:white;
+    font-size:0.6rem; padding:1px 6px; border-radius:10px;
   }
 
   /* NOTIF DRAWER */
@@ -416,23 +480,35 @@
   <div class="nav-right">
     <span class="rank-badge rank-ghost" id="nav-rank">GHOST</span>
     <span class="nav-user" id="nav-username">hunter</span>
-    <div class="notif-bell-wrap" onclick="toggleNotifDrawer()" id="bell-wrap">
-      <span class="notif-bell">🔔</span>
-      <span class="notif-bubble" id="notif-bubble">0</span>
-    </div>
+    <button class="menu-btn" id="menu-btn" onclick="toggleSlideMenu()">
+      <span></span><span></span><span></span>
+    </button>
   </div>
 </nav>
 
-<!-- NOTIFICATION DRAWER -->
-<div class="notif-drawer" id="notif-drawer">
-  <div class="notif-drawer-header">
-    <span>// NOTIFICATIONS</span>
-    <span style="color:var(--text-dim);cursor:pointer;font-size:0.8rem;" onclick="toggleNotifDrawer()">✕</span>
+<!-- SLIDE MENU OVERLAY -->
+<div class="slide-menu-overlay" id="menu-overlay" onclick="closeSlideMenu()"></div>
+
+<!-- SLIDE MENU -->
+<div class="slide-menu" id="slide-menu">
+  <div class="slide-menu-header">
+    <span class="menu-title">// VAULT MENU</span>
+    <button class="slide-menu-close" onclick="closeSlideMenu()">✕</button>
   </div>
-  <div id="notif-drawer-list"><div class="loading" style="padding:20px;"><span class="spinner"></span>Loading...</div></div>
-  <div class="notif-drawer-footer">
-    <button class="nd-mark-read" onclick="markAllRead()">[ MARK ALL READ ]</button>
-    <button class="nd-exit" onclick="logout()">[ EXIT ]</button>
+  <div class="slide-menu-user">
+    <div class="smu-name" id="menu-username">—</div>
+    <div class="smu-rank rank-ghost" id="menu-rank">GHOST</div>
+  </div>
+  <div class="slide-menu-notifs">
+    <div class="slide-menu-notifs-title">
+      // NOTIFICATIONS <span class="notif-count-badge" id="notif-count-badge" style="display:none">0</span>
+    </div>
+    <div id="slide-notif-list"><div class="loading" style="padding:20px;font-size:0.8rem;"><span class="spinner"></span>Loading...</div></div>
+  </div>
+  <div class="slide-menu-footer">
+    <button class="slide-menu-btn" onclick="markAllRead();closeSlideMenu()">[ MARK ALL READ ]</button>
+    <button class="slide-menu-btn" onclick="closeSlideMenu();location.href='learn.html'">[ KNOWLEDGE VAULT ]</button>
+    <button class="slide-menu-btn danger" onclick="logout()">[ EXIT VAULT ]</button>
   </div>
 </div>
 
@@ -639,7 +715,6 @@ let currentRank     = localStorage.getItem('gv_rank') || 'Ghost';
 let currentFilter   = '';
 let buyTarget       = { id: null, title: '', price: 0 };
 let canPostTools    = false;
-let drawerOpen      = false;
 
 const RANK_COLORS = {
   'Ghost':     'rank-ghost',
@@ -680,20 +755,31 @@ async function boot() {
     rankBadge.textContent = currentRank.toUpperCase();
     applyRankColor(rankBadge, currentRank);
 
+    // Populate slide menu user info
+    document.getElementById('menu-username').textContent = u;
+    const menuRank = document.getElementById('menu-rank');
+    menuRank.textContent = currentRank.toUpperCase();
+    applyRankColor(menuRank, currentRank);
+
     document.getElementById('welcome-name').textContent = u.charAt(0).toUpperCase() + u.slice(1);
-    document.getElementById('stat-rank').textContent    = currentRank;
+
+    // Stat cards
+    const rankEl = document.getElementById('stat-rank');
+    rankEl.textContent = currentRank;
+    applyRankColor(rankEl, currentRank);
+
     document.getElementById('stat-tools').textContent   = data.tool_count || 0;
     document.getElementById('stat-notifs').textContent  = data.unread_notifications || 0;
     document.getElementById('stat-since').textContent   = data.created_at
       ? new Date(data.created_at).toLocaleDateString('en-GB',{month:'short',year:'2-digit'})
       : '—';
 
-    // Update notification bubble
+    // Notification badge on menu
     const unread = data.unread_notifications || 0;
-    const bubble = document.getElementById('notif-bubble');
+    const badge  = document.getElementById('notif-count-badge');
     if (unread > 0) {
-      bubble.textContent = unread > 9 ? '9+' : unread;
-      bubble.style.display = 'flex';
+      badge.textContent    = unread > 9 ? '9+' : unread;
+      badge.style.display  = 'inline';
     }
 
     // Render tool list area based on rank
@@ -727,41 +813,41 @@ function renderToolListArea() {
   }
 }
 
-// ── NOTIFICATION DRAWER ───────────────────────────────────────────────
-function toggleNotifDrawer() {
-  const drawer = document.getElementById('notif-drawer');
-  drawerOpen = !drawerOpen;
-  drawer.classList.toggle('open', drawerOpen);
-  if (drawerOpen) loadNotifDrawer();
+// ── SLIDE MENU ────────────────────────────────────────────────────────
+function toggleSlideMenu() {
+  const menu    = document.getElementById('slide-menu');
+  const overlay = document.getElementById('menu-overlay');
+  const isOpen  = menu.classList.contains('open');
+  if (isOpen) { closeSlideMenu(); return; }
+  menu.classList.add('open');
+  overlay.classList.add('open');
+  loadSlideNotifs();
 }
 
-async function loadNotifDrawer() {
-  const list = document.getElementById('notif-drawer-list');
+function closeSlideMenu() {
+  document.getElementById('slide-menu').classList.remove('open');
+  document.getElementById('menu-overlay').classList.remove('open');
+}
+
+async function loadSlideNotifs() {
+  const list = document.getElementById('slide-notif-list');
   try {
     const res  = await fetch(`${API}/notifications`, { headers: h() });
     const data = await res.json();
     if (!data.notifications || !data.notifications.length) {
-      list.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text-dim);font-family:'Share Tech Mono',monospace;font-size:0.8rem;">// No notifications yet.</div>';
+      list.innerHTML = `<div style="padding:20px;text-align:center;color:var(--text-dim);font-family:'Share Tech Mono',monospace;font-size:0.8rem;">// No notifications yet.</div>`;
       return;
     }
     list.innerHTML = data.notifications.map(n => `
-      <div class="notif-drawer-item">
-        <div class="nd-type">${esc(n.type||'INFO')}</div>
-        <div class="nd-msg">${esc(n.message)}</div>
-        <div class="nd-time">${ago(n.created_at)}</div>
+      <div class="slide-notif-item">
+        <div class="slide-notif-type">${esc(n.type||'INFO')}</div>
+        <div class="slide-notif-msg">${esc(n.message)}</div>
+        <div class="slide-notif-time">${ago(n.created_at)}</div>
       </div>`).join('');
   } catch(e) {
-    list.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text-dim);font-family:'Share Tech Mono',monospace;font-size:0.8rem;">// Failed to load.</div>';
+    list.innerHTML = `<div style="padding:20px;text-align:center;color:var(--text-dim);font-family:'Share Tech Mono',monospace;font-size:0.8rem;">// Failed to load.</div>`;
   }
 }
-
-// Close drawer when clicking outside
-document.addEventListener('click', e => {
-  if (drawerOpen && !e.target.closest('#notif-drawer') && !e.target.closest('#bell-wrap')) {
-    drawerOpen = false;
-    document.getElementById('notif-drawer').classList.remove('open');
-  }
-});
 
 // ── NAVIGATION ────────────────────────────────────────────────────────
 function showPage(page, el) {
