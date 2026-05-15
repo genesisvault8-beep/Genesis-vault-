@@ -671,7 +671,7 @@
   </div>
   <div class="nav-item" onclick="showPage('users', this)">
     <span class="nav-icon">◉</span>
-    <span class="nav-label">Users</span>
+    <span class="nav-label">Members</span>
   </div>
   <div class="nav-item" onclick="showPage('courses', this)">
     <span class="nav-icon">▣</span>
@@ -916,6 +916,10 @@
         <div class="stat-card green wide">
           <div class="stat-value">${d.pending_payouts ?? 0}</div>
           <div class="stat-label">Pending Payouts</div>
+        </div>
+        <div class="stat-card blue wide">
+          <div class="stat-value">${d.total_courses ?? 0}</div>
+          <div class="stat-label">Published Courses</div>
         </div>
       `;
     } catch(e) {
@@ -1188,20 +1192,19 @@
       if (!d.payouts || !d.payouts.length) {
         pyc.innerHTML = '<div class="empty">// No payout requests. ✓</div>';
       } else {
-        c.innerHTML = d.purchases.map(p => `
-  <div class="item-card" id="payment-${p.id}">
+        pyc.innerHTML = d.payouts.map(p => `
+  <div class="item-card" id="payout-${p.id}">
     <div class="item-meta">
-      <span>${p.type === 'course' ? '📚 COURSE' : '🔧 TOOL'}</span> ·
-      <span>by <span style="color:var(--accent2)">${p.buyer_name}</span></span> ·
-      <span style="color:var(--accent)">$${p.amount_paid} USDT</span>
+      Seller: <span style="color:var(--accent2)">${p.seller_name || 'Unknown'}</span> ·
+      <span style="color:var(--accent)">$${p.amount} USDT</span> ·
+      ${timeAgo(p.created_at)}
     </div>
-    <h4>${p.title || 'Unknown'}</h4>
+    <h4>${p.title || 'Payout Request'}</h4>
     <div class="item-meta" style="margin-top:6px;">
-      TX: <span style="color:var(--accent);word-break:break-all;">${p.binance_tx_id || '—'}</span>
+      Wallet: <span style="color:var(--accent);word-break:break-all;">${p.wallet_address || '—'}</span>
     </div>
     <div class="actions" style="margin-top:12px;">
-      <button class="btn-approve" onclick="confirmPayment(${p.id}, this)">[ CONFIRM ]</button>
-      <button class="btn-reject"  onclick="rejectPayment(${p.id}, this)">[ REJECT ]</button>
+      <button class="btn-approve" onclick="markPayoutSent(${p.id}, this)">[ MARK SENT ]</button>
     </div>
   </div>`).join('');
       }
@@ -1478,7 +1481,8 @@
     const c = document.getElementById('courses-container');
     c.innerHTML = '<div class="loading"><span class="spinner"></span>Loading...</div>';
     try {
-      const res = await fetch(`${API}/courses`);
+      const res = await apiFetch(`${API}/courses`);
+      if (!res) return;
       const d   = await res.json();
       if (!d.courses || !d.courses.length) {
         c.innerHTML = '<div class="empty">// No courses yet.</div>';
@@ -1490,7 +1494,8 @@
           <h4>${course.title}</h4>
           <p>${course.description || ''}</p>
           <div class="actions" style="margin-top:10px;">
-            <button class="btn-approve" style="font-size:0.7rem;padding:5px 12px;margin-right:8px;" onclick="viewCourse(${course.id}, \`${course.title}\`)">[ VIEW ]</button>
+            <button class="btn-approve" style="font-size:0.7rem;padding:5px 12px;" onclick="viewCourse(${course.id}, \`${course.title}\`)">[ VIEW ]</button>
+            <button class="btn-action" style="font-size:0.7rem;padding:5px 12px;" onclick="editCourse(${course.id})">[ EDIT ]</button>
             <button class="btn-reject" style="font-size:0.7rem;padding:5px 12px;" onclick="deleteCourse(${course.id}, this)">[ DELETE ]</button>
           </div>
         </div>
@@ -1516,7 +1521,52 @@
     }
   }
 
-  async function deleteCourse(id, btn) {
+  async function editCourse(id) {
+    const res = await apiFetch(`${API}/courses/${id}`);
+    if (!res) return;
+    const d = await res.json();
+    const course = d.course || d;
+    document.getElementById('c-title').value   = course.title || '';
+    document.getElementById('c-desc').value    = course.description || '';
+    document.getElementById('c-content').value = course.content || '';
+    document.getElementById('c-category').value = course.category || 'Beginner';
+    document.getElementById('c-rank').value    = course.rank_required || 'Ghost';
+    document.getElementById('c-price').value   = course.price || 0;
+    // Swap publish button to update mode
+    const btn = document.querySelector('[onclick="postCourse()"]');
+    btn.textContent = '[ UPDATE COURSE ]';
+    btn.onclick = async () => {
+      const title   = document.getElementById('c-title').value.trim();
+      const desc    = document.getElementById('c-desc').value.trim();
+      const content = document.getElementById('c-content').value.trim();
+      const category= document.getElementById('c-category').value;
+      const rank    = document.getElementById('c-rank').value;
+      const price   = parseFloat(document.getElementById('c-price').value) || 0;
+      if (!title || !content) { toast('// Title and content are required.', 'var(--accent3)'); return; }
+      const updateRes = await apiFetch(`${API}/admin/courses/${id}/update`, {
+        method: 'POST',
+        body: JSON.stringify({ title, description: desc, content, category, rank_required: rank, price, is_free: price === 0 })
+      });
+      if (!updateRes) return;
+      const ud = await updateRes.json();
+      if (ud.status === 'success') {
+        toast('// Course updated!');
+        document.getElementById('c-title').value = '';
+        document.getElementById('c-desc').value  = '';
+        document.getElementById('c-content').value = '';
+        document.getElementById('c-price').value = '';
+        btn.textContent = '[ PUBLISH COURSE ]';
+        btn.onclick = postCourse;
+        loadCourses();
+      } else {
+        toast(`// ${ud.message || 'Update failed.'}`, 'var(--accent3)');
+      }
+    };
+    document.getElementById('c-title').scrollIntoView({ behavior: 'smooth' });
+    toast('// Course loaded for editing.');
+  }
+
+
     if (!confirm('Permanently delete this course? This cannot be undone.')) return;
     btn.disabled = true;
     btn.textContent = '...';
