@@ -1188,18 +1188,22 @@
       if (!d.payouts || !d.payouts.length) {
         pyc.innerHTML = '<div class="empty">// No payout requests. ✓</div>';
       } else {
-        pyc.innerHTML = d.payouts.map(p => `
-          <div class="item-card" id="payout-${p.id}">
-            <div class="item-meta">Seller: <span>${p.username}</span> · ${timeAgo(p.created_at)}</div>
-            <p class="payout-amount">$${parseFloat(p.amount || 0).toFixed(2)} USDT</p>
-            <p style="font-family:'Share Tech Mono',monospace;font-size:0.7rem;color:var(--text-dim);word-break:break-all;margin-bottom:10px;">
-              → ${p.binance_address}
-            </p>
-            <div class="actions">
-              <button class="btn-approve" onclick="markPayoutSent(${p.id}, this)">[ MARK SENT ]</button>
-            </div>
-          </div>
-        `).join('');
+        c.innerHTML = d.purchases.map(p => `
+  <div class="item-card" id="payment-${p.id}">
+    <div class="item-meta">
+      <span>${p.type === 'course' ? '📚 COURSE' : '🔧 TOOL'}</span> ·
+      <span>by <span style="color:var(--accent2)">${p.buyer_name}</span></span> ·
+      <span style="color:var(--accent)">$${p.amount_paid} USDT</span>
+    </div>
+    <h4>${p.title || 'Unknown'}</h4>
+    <div class="item-meta" style="margin-top:6px;">
+      TX: <span style="color:var(--accent);word-break:break-all;">${p.binance_tx_id || '—'}</span>
+    </div>
+    <div class="actions" style="margin-top:12px;">
+      <button class="btn-approve" onclick="confirmPayment(${p.id}, this)">[ CONFIRM ]</button>
+      <button class="btn-reject"  onclick="rejectPayment(${p.id}, this)">[ REJECT ]</button>
+    </div>
+  </div>`).join('');
       }
     } catch(e) {
       pyc.innerHTML = '<div class="empty">// Failed to load payouts.</div>';
