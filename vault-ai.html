@@ -378,7 +378,7 @@ async function send(msg) {
     const target = msg.slice(5).trim();
     const analyzing = print(`[LOG]: INITIATING RECON ON ${target.toUpperCase()}...`, 'logc');
     try {
-      const res = await fetch(`${BACKEND_URL}/api/recon`, {
+      const res = await fetch(`${BACKEND_URL}/recon`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ target: target })
@@ -460,7 +460,7 @@ async function init() {
         USER_RANK = d.user.rank || "Ghost";
         document.querySelector(".rank-badge").textContent = USER_RANK.toUpperCase();
       }
-    } catch(e) {}
+    } catch(e) { console.warn('[VAULT]: Auth verification failed — continuing as anonymous.', e); }
   }
   boot();
 }
