@@ -530,143 +530,191 @@
 </div>
 
 <script>
-  const API = 'https://genesis-vault-backend.onrender.com/api';
-  let token = localStorage.getItem('gv_token');
-  let currentUser = { rank: localStorage.getItem('gv_rank'), email: localStorage.getItem('gv_email') };
-  let allCourses = [];
-  let currentTab = 'all';
-  let selectedCourse = null;
+const API = 'https://genesis-vault-backend.onrender.com/api';
+let token = localStorage.getItem('gv_token');
+let allCourses = [];
+let currentTab = 'all';
+let selectedCourse = null;
 
-  if (!token) window.location.href = 'login.html';
+if (!token) window.location.href = 'login.html';
 
-  function switchTab(tab, el) {
-    currentTab = tab;
-    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-    el.classList.add('active');
-    closeReader();
-    renderCourses();
+function esc(s) {
+  if (!s) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function toast(msg, color) {
+  const t = document.createElement('div');
+  t.textContent = msg;
+  Object.assign(t.style, {
+    position:'fixed', bottom:'30px', left:'50%', transform:'translateX(-50%)',
+    background:'var(--bg2)', border:`1px solid ${color||'var(--accent)'}`,
+    color: color||'var(--accent)', padding:'8px 20px',
+    fontFamily:'Share Tech Mono,monospace', fontSize:'0.75rem',
+    letterSpacing:'1px', zIndex:'999', pointerEvents:'none'
+  });
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 2500);
+}
+
+function switchTab(tab, el) {
+  currentTab = tab;
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  closeReader();
+  renderCourses();
+}
+
+function filterCourses() { renderCourses(); }
+
+function renderCourses() {
+  const search = document.getElementById('search-input').value.toLowerCase();
+  const grid   = document.getElementById('courses-grid');
+
+  let filtered = allCourses.filter(c => {
+    const cat = (c.category || '').toLowerCase();
+    const matchTab = currentTab === 'all'
+      || cat === currentTab.toLowerCase()
+      || (currentTab === 'web' && cat.includes('web'))
+      || (currentTab === 'bugbounty' && cat.includes('bug'));
+    const matchSearch = !search
+      || c.title.toLowerCase().includes(search)
+      || (c.description || '').toLowerCase().includes(search);
+    return matchTab && matchSearch;
+  });
+
+  if (!filtered.length) {
+    grid.innerHTML = '<div class="empty">// No courses found.</div>';
+    return;
   }
 
-  function filterCourses() {
-    renderCourses();
-  }
+  grid.innerHTML = filtered.map(c => {
+    const isFree    = c.is_free || c.price === 0;
+    const isPurchased = c.is_purchased;
 
-  function renderCourses() {
-    const search = document.getElementById('search-input').value.toLowerCase();
-    const grid = document.getElementById('courses-grid');
+    let footerBadge, footerAction, clickAction;
 
-    let filtered = allCourses.filter(c => {
-      const cat = (c.category || '').toLowerCase();
-      const matchTab = currentTab === 'all' 
-        || cat === currentTab.toLowerCase()
-        || (currentTab === 'web' && cat.includes('web'))
-        || (currentTab === 'bugbounty' && cat.includes('bug'));
-      const matchSearch = !search ||
-        c.title.toLowerCase().includes(search) ||
-        (c.description || '').toLowerCase().includes(search);
-      return matchTab && matchSearch;
+    if (isFree) {
+      footerBadge  = '<span class="free-badge">FREE</span>';
+      footerAction = '<span style="color:var(--accent);font-size:0.7rem;font-family:Share Tech Mono,monospace;">READ →</span>';
+      clickAction  = `openCourse(${c.id})`;
+    } else if (isPurchased) {
+      footerBadge  = '<span class="free-badge">UNLOCKED</span>';
+      footerAction = '<span style="color:var(--accent);font-size:0.7rem;font-family:Share Tech Mono,monospace;">READ →</span>';
+      clickAction  = `openCourse(${c.id})`;
+    } else {
+      footerBadge  = `<span class="price-badge">🔒 $${c.price} USDT</span>`;
+      footerAction = '<span class="lock-icon">🔒</span>';
+      clickAction  = `openPayment(${c.id})`;
+    }
+
+    return `
+      <div class="course-card ${(!isFree && !isPurchased) ? 'locked' : ''}" onclick="${clickAction}">
+        <div class="course-category">${esc(c.category || 'General')}</div>
+        <h3>${esc(c.title)}</h3>
+        <p>${esc((c.description || '').substring(0, 120))}${(c.description||'').length > 120 ? '...' : ''}</p>
+        <div class="course-footer">
+          ${footerBadge}
+          ${footerAction}
+        </div>
+      </div>`;
+  }).join('');
+}
+
+async function openCourse(id) {
+  const course = allCourses.find(c => c.id == id);
+  if (!course) return;
+  document.getElementById('reader-title').textContent = `// ${course.title}`;
+  document.getElementById('reader-content').innerHTML = '<div class="loading"><span class="spinner"></span>Loading...</div>';
+  document.getElementById('course-reader').classList.add('active');
+  document.getElementById('course-reader').scrollIntoView({ behavior: 'smooth' });
+  try {
+    const res  = await fetch(`${API}/courses/${id}`, {
+      headers: { 'Authorization': `Bearer ${token}` }
     });
-
-    if (filtered.length === 0) {
-      grid.innerHTML = '<div class="empty">// No courses found.</div>';
+    const data = await res.json();
+    if (data.status === 'error' && data.message === 'NOT_PURCHASED') {
+      document.getElementById('reader-content').innerHTML =
+        '<div class="empty">// Access denied. Purchase this course to unlock.</div>';
       return;
     }
-
-    grid.innerHTML = filtered.map(c => {
-      const isFree = c.is_free || c.price === 0;
-      return `
-        <div class="course-card ${isFree ? '' : 'locked'}" onclick="${isFree ? `openCourse('${c.id}')` : `openPayment('${c.id}')`}">
-          <div class="course-category">${c.category || 'general'}</div>
-          <h3>${c.title}</h3>
-          <p>${c.description || ''}</p>
-          <div class="course-footer">
-            ${isFree ? '<span class="free-badge">FREE</span>' : `<span class="price-badge">🔒 $${c.price} USDT</span>`}
-            ${isFree ? '<span style="color:var(--accent);font-size:0.7rem;font-family:Share Tech Mono,monospace;">READ →</span>' : '<span class="lock-icon">🔒</span>'}
-          </div>
-        </div>
-      `;
-    }).join('');
+    const raw = data.content || data.course?.content || 'No content available.';
+    document.getElementById('reader-content').innerHTML = marked.parse(raw);
+  } catch(e) {
+    document.getElementById('reader-content').innerHTML =
+      '<div class="empty">// Failed to load content.</div>';
   }
+}
 
-  async function openCourse(id) {
-    const course = allCourses.find(c => c.id == id);
-    if (!course) return;
-    document.getElementById('reader-title').textContent = `// ${course.title}`;
-    document.getElementById('reader-content').textContent = '// Loading...';
-    document.getElementById('course-reader').classList.add('active');
-    document.getElementById('course-reader').scrollIntoView({ behavior: 'smooth' });
-    try {
-      const res = await fetch(`${API}/courses/${id}`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      const data = await res.json();
-      const raw = data.content || data.course?.content || 'No content available.';
-      document.getElementById('reader-content').innerHTML = marked.parse(raw);
-    } catch(e) {
-      document.getElementById('reader-content').textContent = 'Failed to load content.';
+function closeReader() {
+  document.getElementById('course-reader').classList.remove('active');
+}
+
+function openPayment(id) {
+  const course = allCourses.find(c => c.id == id);
+  if (!course) return;
+  selectedCourse = course;
+  document.getElementById('pay-course-title').textContent = course.title;
+  document.getElementById('pay-amount').textContent = `$${course.price} USDT`;
+  document.getElementById('tx-hash').value = '';
+  document.getElementById('payment-modal').classList.add('active');
+}
+
+function closePayment() {
+  document.getElementById('payment-modal').classList.remove('active');
+  selectedCourse = null;
+}
+
+async function submitPayment() {
+  const txHash = document.getElementById('tx-hash').value.trim();
+  const btn    = document.querySelector('.btn-pay');
+  if (!txHash) { toast('Paste your TX hash first.', 'var(--accent3)'); return; }
+  if (!selectedCourse) return;
+
+  btn.disabled    = true;
+  btn.textContent = '[ SUBMITTING... ]';
+
+  try {
+    const res  = await fetch(`${API}/courses/${selectedCourse.id}/purchase`, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+      body:    JSON.stringify({ tx_hash: txHash })
+    });
+    const data = await res.json();
+    if (data.status === 'success') {
+      closePayment();
+      toast('✓ Payment submitted! Admin verifies within 24h.');
+    } else {
+      toast(data.message || 'Failed. Try again.', 'var(--accent3)');
+      btn.disabled    = false;
+      btn.textContent = '[ SUBMIT PAYMENT ]';
     }
+  } catch(e) {
+    toast('Network error. Try again.', 'var(--accent3)');
+    btn.disabled    = false;
+    btn.textContent = '[ SUBMIT PAYMENT ]';
   }
+}
 
-  function closeReader() {
-    document.getElementById('course-reader').classList.remove('active');
-  }
-
-  function openPayment(id) {
-    const course = allCourses.find(c => c.id == id);
-    if (!course) return;
-    selectedCourse = course;
-    document.getElementById('pay-course-title').textContent = course.title;
-    document.getElementById('pay-amount').textContent = `$${course.price} USDT`;
-    document.getElementById('tx-hash').value = '';
-    document.getElementById('payment-modal').classList.add('active');
-  }
-
-  function closePayment() {
-    document.getElementById('payment-modal').classList.remove('active');
-    selectedCourse = null;
-  }
-
-  async function submitPayment() {
-    const txHash = document.getElementById('tx-hash').value.trim();
-    if (!txHash) return alert('Please paste your TX hash');
-    if (!selectedCourse) return;
-
-    try {
-      const res = await fetch(`${API}/payments/submit`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-        body: JSON.stringify({
-          course_id: selectedCourse.id,
-          tx_hash: txHash,
-          amount: selectedCourse.price
-        })
-      });
-      const data = await res.json();
-      if (data.status === 'success') {
-        closePayment();
-        alert('✅ Payment submitted! Admin will verify within 24 hours.');
-      } else {
-        alert('Failed to submit payment. Try again.');
-      }
-    } catch(e) {
-      alert('Connection error. Try again.');
+async function loadCourses() {
+  try {
+    const res  = await fetch(`${API}/courses`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    const data = await res.json();
+    if (data.status === 'error') {
+      window.location.href = 'login.html';
+      return;
     }
+    allCourses = data.courses || [];
+    renderCourses();
+  } catch(e) {
+    document.getElementById('courses-grid').innerHTML =
+      '<div class="empty">// Failed to load courses.</div>';
   }
+}
 
-  async function loadCourses() {
-    try {
-      const res = await fetch(`${API}/courses`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      const data = await res.json();
-      allCourses = data.courses || [];
-      renderCourses();
-    } catch(e) {
-      document.getElementById('courses-grid').innerHTML = '<div class="empty">// Failed to load courses.</div>';
-    }
-  }
-
-  loadCourses();
+loadCourses();
 </script>
 </body>
 </html>
