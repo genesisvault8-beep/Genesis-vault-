@@ -935,7 +935,7 @@ async function loadMarketplace(type) {
       <div class="market-card">
         <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">
           <h3>${esc(t.title)}</h3>
-          <span class="market-type">${(t.type||'tool').toUpperCase()}</span>
+          <span class="market-type">${esc(t.type||'tool').toUpperCase()}</span>
         </div>
         <p>${esc((t.description||'').substring(0,120))}${(t.description||'').length>120?'...':''}</p>
         <div class="market-footer">
