@@ -55,6 +55,9 @@ body::before {
 .auth-err { font-size:10px; color:var(--red); margin-top:8px; text-align:center; min-height:16px; }
 .auth-loading { font-size:10px; color:var(--dim); margin-top:8px; text-align:center; }
 
+/* ── MAIN UI ── */
+#main-ui { display:flex; flex-direction:column; height:100%; }
+
 /* ── TOPBAR ── */
 .topbar {
   display:flex; align-items:center; justify-content:space-between;
@@ -191,7 +194,7 @@ body::before {
 </div>
 
 <!-- MAIN UI -->
-<div id="main-ui" style="display:none;flex-direction:column;height:100%;">
+<div id="main-ui" style="display:none;">
 
   <div class="topbar">
     <div class="topbar-logo">VAULT <span>//</span> AI ADMIN</div>
@@ -247,7 +250,7 @@ body::before {
 </div>
 
 <script>
-const AI_URL = 'https://genesis-ai-backend.onrender.com';
+const AI_URL = 'https://genesis-ai-backend.onrender.com'; // same backend as BACKEND_URL in vault-ai.html
 let adminToken = '';
 let currentMode = 'auto';
 
@@ -325,8 +328,17 @@ document.querySelectorAll('.tab').forEach(tab => {
     document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
     tab.classList.add('active');
     document.getElementById('tab-' + tab.dataset.tab).classList.add('active');
-    if (tab.dataset.tab === 'users') loadUsers();
-    if (tab.dataset.tab === 'logs') loadLogs();
+    if (tab.dataset.tab === 'users') {
+      document.getElementById('status-left').textContent = 'USER STATS';
+      loadUsers();
+    }
+    if (tab.dataset.tab === 'logs') {
+      document.getElementById('status-left').textContent = 'RECENT LOGS';
+      loadLogs();
+    }
+    if (tab.dataset.tab === 'engines') {
+      document.getElementById('status-left').textContent = `MODE: ${currentMode.toUpperCase()}`;
+    }
   });
 });
 
@@ -404,7 +416,7 @@ async function loadUsers() {
     }
     list.innerHTML = '';
     data.users.forEach(u => {
-      const providerTags = Object.entries(u.providers)
+      const providerTags = Object.entries(u.providers || {})
         .map(([p, c]) => `<span class="provider-tag">${p}: ${c}</span>`).join('');
       const lastActive = u.last_active ? new Date(u.last_active).toLocaleDateString() : 'N/A';
       const card = document.createElement('div');
