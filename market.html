@@ -307,7 +307,7 @@
 
 <script>
 const API   = 'https://genesis-vault-backend.onrender.com/api';
-const token = localStorage.getItem('gv_token');
+let token = localStorage.getItem('gv_token');
 if (!token) location.href = 'login.html';
 
 let allTools      = [];
@@ -318,6 +318,18 @@ let promoCode     = '';
 let ownedOpen     = false;
 
 function h() { return { 'Content-Type':'application/json', 'Authorization':`Bearer ${token}` }; }
+
+// ── AUTH-AWARE FETCH — redirects to login on 401 ──────────────────────
+async function fetchWithAuth(url, options = {}) {
+  options.headers = { ...h(), ...(options.headers || {}) };
+  const res = await fetch(url, options);
+  if (res.status === 401) {
+    localStorage.removeItem('gv_token');
+    location.href = 'login.html';
+    throw new Error('Session expired');
+  }
+  return res;
+}
 
 /* ── BOOT ── */
 async function boot() {
@@ -334,7 +346,7 @@ async function boot() {
 /* ── TOOLS ── */
 async function loadTools() {
   try {
-    const res  = await fetch(`${API}/marketplace`, { headers:h() });
+    const res  = await fetchWithAuth(`${API}/marketplace`, { headers:h() });
     const data = await res.json();
     allTools   = data.tools || [];
     renderTools();
@@ -440,7 +452,7 @@ async function loadOwned() {
   const label = document.getElementById('owned-count-label');
   const list  = document.getElementById('owned-list');
   try {
-    const res  = await fetch(`${API}/marketplace?owned=true`, { headers:h() });
+    const res  = await fetchWithAuth(`${API}/marketplace?owned=true`, { headers:h() });
     const data = await res.json();
     const owned = (data.tools||[]).filter(t => t.owned);
 
@@ -481,7 +493,7 @@ async function applyPromo() {
   const msg  = document.getElementById('promo-status');
   if (!code) { showStatus(msg,'Enter a promo code.',true); return; }
   try {
-    const res  = await fetch(`${API}/marketplace/promo`, {
+    const res  = await fetchWithAuth(`${API}/marketplace/promo`, {
       method:'POST', headers:h(), body: JSON.stringify({ code })
     });
     const data = await res.json();
@@ -534,7 +546,7 @@ async function submitPayment() {
   if (!tx) { showStatus(msg,'// TX ID required.',true); return; }
   btn.disabled = true; btn.textContent = '[ SUBMITTING... ]';
   try {
-    const res  = await fetch(`${API}/payments/submit`, {
+    const res  = await fetchWithAuth(`${API}/payments/submit`, {
       method:'POST', headers:h(),
       body: JSON.stringify({ tool_id: activeTool.id, binance_tx_id: tx, promo_code: promoCode || null })
     });
@@ -542,9 +554,16 @@ async function submitPayment() {
     if (data.status === 'success') {
       showStatus(msg,'✓ Submitted! Admin reviews within 24h. Tool unlocks automatically.',false);
       btn.textContent = '[ SUBMITTED ]';
+      // Clear promo only on success
       promoDiscount = 0; promoCode = '';
       document.getElementById('promo-input').value  = '';
       document.getElementById('promo-status').style.display = 'none';
+      // Refresh UI after short delay
+      setTimeout(async () => {
+        await loadTools();
+        await loadOwned();
+        renderTools();
+      }, 1500);
     } else {
       showStatus(msg, data.message||'// Submission failed.', true);
       btn.disabled = false; btn.textContent = '[ SUBMIT PAYMENT ]';
@@ -570,7 +589,7 @@ async function submitFree() {
   const msg = document.getElementById('free-status');
   btn.disabled = true; btn.textContent = '[ UNLOCKING... ]';
   try {
-    const res  = await fetch(`${API}/payments/submit`, {
+    const res  = await fetchWithAuth(`${API}/payments/submit`, {
       method:'POST', headers:h(),
       body: JSON.stringify({ tool_id: activeTool.id, binance_tx_id: 'FREE' })
     });
