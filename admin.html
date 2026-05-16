@@ -721,16 +721,17 @@
 
 <script>
   const API = 'https://genesis-vault-backend.onrender.com/api';
-  let adminId = localStorage.getItem('gv_admin_id');
+  let token   = sessionStorage.getItem('gv_admin_token');
+  let adminId = sessionStorage.getItem('gv_admin_id');
   let promoteUserId = null;
   let revokeTargetId = null;
   let revokeTargetName = '';
 
   // ── Auth guard ──────────────────────────────────────────────────────
-  // Cookie auth is verified server-side in initAdmin — no instant redirect needed
+  if (!token) window.location.href = 'admin-login.html';
 
   function authHeaders() {
-    return { 'Content-Type': 'application/json' };
+    return { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` };
   }
 
   // ── Wake-up overlay helpers ──────────────────────────────────────────
@@ -793,7 +794,7 @@
         const res = await fetch(url, {
           ...options,
           headers: authHeaders(),
-          credentials: 'include',
+          ,
           signal: AbortSignal.timeout(15000)
         });
 
@@ -807,7 +808,7 @@
           }
           // All retries exhausted — real 401, logout
           hideAdminWakeup();
-          localStorage.removeItem('gv_admin_id');
+          sessionStorage.removeItem('gv_admin_token'); sessionStorage.removeItem('gv_admin_id');
           window.location.href = 'admin-login.html';
           return null;
         }
@@ -835,8 +836,9 @@
   }
 
   async function logout() {
-    await fetch(`${API}/admin/logout`, { method: 'POST', credentials: 'include' });
-    localStorage.removeItem('gv_admin_id');
+    await fetch(`${API}/admin/logout`, { method: 'POST', headers: authHeaders() });
+    sessionStorage.removeItem('gv_admin_token');
+    sessionStorage.removeItem('gv_admin_id');
     window.location.href = 'admin-login.html';
   }
 
@@ -1473,7 +1475,7 @@
     document.getElementById('modal-course-view').style.display = 'block';
     try {
       const res = await fetch(`${API}/courses/${id}`, {
-        credentials: 'include'
+        headers: authHeaders()
       });
       const d = await res.json();
       const raw = d.content || d.course?.content || 'No content available.';
@@ -1569,7 +1571,7 @@
     try {
       const res = await fetch(`${API}/admin/dashboard`, {
         headers: authHeaders(),
-        credentials: 'include',
+        ,
         signal: AbortSignal.timeout(15000)
       });
 
@@ -1579,12 +1581,12 @@
         await new Promise(r => setTimeout(r, 8000));
         const retry = await fetch(`${API}/admin/dashboard`, {
           headers: authHeaders(),
-          credentials: 'include',
+          ,
           signal: AbortSignal.timeout(15000)
         });
         if (retry.status === 401) {
           hideAdminWakeup();
-          localStorage.removeItem('gv_admin_id');
+          sessionStorage.removeItem('gv_admin_token'); sessionStorage.removeItem('gv_admin_id');
           window.location.href = 'admin-login.html';
           return;
         }
