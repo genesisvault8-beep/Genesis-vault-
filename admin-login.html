@@ -758,13 +758,13 @@
       const res = await fetch(`${API}/api/admin/auth`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({ username, password })
       });
 
       const data = await res.json();
 
       if (data.status === 'success') {
-        localStorage.setItem('gv_admin_token',    data.token);
         localStorage.setItem('gv_admin_username', data.username);
         localStorage.setItem('gv_admin_id',       data.admin_id);
 
@@ -799,11 +799,11 @@
         const retry = await fetch(`${API}/api/admin/auth`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
           body: JSON.stringify({ username, password })
         });
         const data = await retry.json();
         if (data.status === 'success') {
-          localStorage.setItem('gv_admin_token',    data.token);
           localStorage.setItem('gv_admin_username', data.username);
           localStorage.setItem('gv_admin_id',       data.admin_id);
           showOutput('success', `ACCESS GRANTED\n> WELCOME, ${data.username.toUpperCase()}\n> REDIRECTING...`);
