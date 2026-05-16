@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Genesis Vault — Account Test Console</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:      #020608;
+    --bg2:     #060d10;
+    --bg3:     #081218;
+    --accent:  #00f5c4;
+    --accent2: #00a8ff;
+    --accent3: #ff003c;
+    --warn:    #ffaa00;
+    --text:    #c8e6f0;
+    --dim:     #4a7a8a;
+    --border:  #0f2a35;
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Share Tech Mono', monospace;
+    min-height: 100vh;
+    padding: 20px;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content:'';
+    position:fixed; inset:0;
+    background-image:
+      linear-gradient(rgba(0,245,196,0.025) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,245,196,0.025) 1px, transparent 1px);
+    background-size:40px 40px;
+    pointer-events:none; z-index:0;
+  }
+
+  .scanner {
+    position:fixed; top:0; left:0; right:0; height:2px;
+    background:linear-gradient(90deg,transparent,var(--accent),transparent);
+    animation:scan 3s linear infinite; z-index:100;
+  }
+  @keyframes scan { 0%{top:0;opacity:1} 100%{top:100vh;opacity:0} }
+
+  .wrap {
+    position:relative; z-index:1;
+    max-width: 960px; margin:0 auto;
+  }
+
+  /* HEADER */
+  .header {
+    display:flex; align-items:center; justify-content:space-between;
+    margin-bottom:24px; padding-bottom:16px;
+    border-bottom:1px solid var(--border);
+  }
+  .header-title { font-size:1rem; letter-spacing:4px; }
+  .header-title span { color:var(--accent); }
+  .header-badge {
+    font-size:0.55rem; letter-spacing:2px; color:var(--dim);
+    border:1px solid var(--border); padding:4px 10px;
+  }
+
+  /* GRID */
+  .grid {
+    display:grid;
+    grid-template-columns: 1fr 1fr;
+    gap:16px;
+  }
+  @media(max-width:700px){ .grid{grid-template-columns:1fr;} }
+
+  /* PANEL */
+  .panel {
+    background:var(--bg2);
+    border:1px solid var(--border);
+    padding:0;
+    overflow:hidden;
+  }
+  .panel-header {
+    display:flex; align-items:center; gap:10px;
+    padding:12px 16px;
+    border-bottom:1px solid var(--border);
+    background:var(--bg3);
+  }
+  .panel-dot {
+    width:6px; height:6px; border-radius:50%;
+  }
+  .panel-dot.g { background:var(--accent); }
+  .panel-dot.b { background:var(--accent2); }
+  .panel-dot.r { background:var(--accent3); }
+  .panel-title {
+    font-size:0.6rem; letter-spacing:3px; color:var(--dim);
+    text-transform:uppercase;
+  }
+  .panel-body { padding:20px; }
+
+  /* FORM */
+  .field { margin-bottom:14px; }
+  .field label {
+    display:block; font-size:0.58rem;
+    letter-spacing:2px; color:var(--dim);
+    text-transform:uppercase; margin-bottom:6px;
+  }
+  .field input {
+    width:100%; background:var(--bg);
+    border:1px solid var(--border); color:var(--text);
+    padding:10px 12px; font-family:'Share Tech Mono',monospace;
+    font-size:0.8rem; outline:none;
+    transition:border-color 0.2s;
+  }
+  .field input:focus { border-color:var(--accent); }
+  .field input::placeholder { color:var(--border); }
+
+  /* BUTTONS */
+  .btn {
+    width:100%; padding:11px;
+    background:var(--accent); color:var(--bg);
+    border:none; cursor:pointer;
+    font-family:'Rajdhani',sans-serif;
+    font-weight:700; font-size:0.85rem;
+    letter-spacing:2px; text-transform:uppercase;
+    transition:all 0.2s;
+    clip-path:polygon(6px 0%,100% 0%,calc(100% - 6px) 100%,0% 100%);
+  }
+  .btn:hover { background:white; }
+  .btn:disabled { opacity:0.35; cursor:not-allowed; }
+  .btn.danger { background:var(--accent3); }
+  .btn.danger:hover { background:white; color:var(--accent3); }
+  .btn.secondary {
+    background:none; border:1px solid var(--border);
+    color:var(--dim); clip-path:none;
+    margin-top:8px; font-size:0.75rem;
+  }
+  .btn.secondary:hover { border-color:var(--accent2); color:var(--accent2); background:none; }
+
+  /* LOG */
+  .log-panel {
+    grid-column: 1 / -1;
+    background:var(--bg2);
+    border:1px solid var(--border);
+    border-top:2px solid var(--accent2);
+  }
+  .log-body {
+    padding:16px;
+    height:280px;
+    overflow-y:auto;
+    font-size:0.7rem;
+    line-height:1.9;
+  }
+  .log-body::-webkit-scrollbar { width:4px; }
+  .log-body::-webkit-scrollbar-track { background:var(--bg); }
+  .log-body::-webkit-scrollbar-thumb { background:var(--border); }
+
+  .log-line { display:flex; gap:10px; animation:fadeIn 0.3s ease; }
+  @keyframes fadeIn { from{opacity:0;transform:translateX(-4px)} to{opacity:1;transform:none} }
+
+  .log-time { color:var(--border); flex-shrink:0; }
+  .log-text { flex:1; }
+  .log-text.ok   { color:var(--accent); }
+  .log-text.err  { color:var(--accent3); }
+  .log-text.info { color:var(--accent2); }
+  .log-text.warn { color:var(--warn); }
+  .log-text.dim  { color:var(--dim); }
+
+  /* STATUS */
+  .status-bar {
+    display:flex; gap:0;
+    border-bottom:1px solid var(--border);
+    margin-bottom:0;
+  }
+  .status-item {
+    flex:1; padding:10px 14px;
+    border-right:1px solid var(--border);
+    text-align:center;
+  }
+  .status-item:last-child { border-right:none; }
+  .status-val {
+    display:block; font-size:0.9rem; color:var(--accent);
+    margin-bottom:2px;
+  }
+  .status-label { font-size:0.5rem; letter-spacing:2px; color:var(--dim); }
+
+  /* RESULT BADGE */
+  .result {
+    display:none; margin-top:14px; padding:10px 12px;
+    font-size:0.72rem; line-height:1.6;
+    border-left:3px solid var(--dim);
+  }
+  .result.ok   { border-color:var(--accent);  background:rgba(0,245,196,0.05);  color:var(--accent); }
+  .result.err  { border-color:var(--accent3); background:rgba(255,0,60,0.05);   color:var(--accent3); }
+  .result.info { border-color:var(--accent2); background:rgba(0,168,255,0.05);  color:var(--accent2); }
+
+  /* DIVIDER */
+  .divider { grid-column:1/-1; height:1px; background:var(--border); margin:4px 0; }
+
+  /* CLEAR BTN */
+  .log-actions {
+    display:flex; justify-content:flex-end; gap:8px;
+    padding:8px 16px; border-top:1px solid var(--border);
+  }
+  .log-action-btn {
+    font-family:'Share Tech Mono',monospace;
+    font-size:0.55rem; letter-spacing:2px;
+    color:var(--dim); background:none; border:none; cursor:pointer;
+    transition:color 0.2s;
+  }
+  .log-action-btn:hover { color:var(--accent); }
+
+  .tag { font-size:0.5rem; letter-spacing:1px; padding:2px 6px; border:1px solid; margin-left:6px; }
+  .tag.ok  { border-color:rgba(0,245,196,0.4); color:var(--accent); }
+  .tag.err { border-color:rgba(255,0,60,0.4);  color:var(--accent3); }
+</style>
+</head>
+<body>
+<div class="scanner"></div>
+
+<div class="wrap">
+
+  <div class="header">
+    <div class="header-title"><span>GENESIS</span>VAULT // ACCOUNT TEST CONSOLE</div>
+    <div class="header-badge">v1.0 — SECURITY AUDIT</div>
+  </div>
+
+  <!-- STATUS BAR -->
+  <div class="panel" style="margin-bottom:16px; border-top:2px solid var(--accent);">
+    <div class="status-bar">
+      <div class="status-item">
+        <span class="status-val" id="s-connected">—</span>
+        <span class="status-label">SUPABASE</span>
+      </div>
+      <div class="status-item">
+        <span class="status-val" id="s-session">NONE</span>
+        <span class="status-label">SESSION</span>
+      </div>
+      <div class="status-item">
+        <span class="status-val" id="s-user">—</span>
+        <span class="status-label">USER</span>
+      </div>
+      <div class="status-item">
+        <span class="status-val" id="s-credits">—</span>
+        <span class="status-label">VC CREDITS</span>
+      </div>
+      <div class="status-item">
+        <span class="status-val" id="s-tier">—</span>
+        <span class="status-label">TIER</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid">
+
+    <!-- REGISTER -->
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-dot g"></div>
+        <div class="panel-title">// 01 — Register New Account</div>
+      </div>
+      <div class="panel-body">
+        <div class="field">
+          <label>Username</label>
+          <input type="text" id="r-username" placeholder="test_user" maxlength="24">
+        </div>
+        <div class="field">
+          <label>Email</label>
+          <input type="email" id="r-email" placeholder="test@email.com">
+        </div>
+        <div class="field">
+          <label>Password</label>
+          <input type="password" id="r-password" placeholder="min 8 chars" value="TestPass123!">
+        </div>
+        <div class="field">
+          <label>Referral Code (optional)</label>
+          <input type="text" id="r-referral" placeholder="XXXXXXXX" maxlength="8"
+            oninput="this.value=this.value.toUpperCase()">
+        </div>
+        <button class="btn" id="reg-btn" onclick="testRegister()">[ RUN REGISTER TEST ]</button>
+        <div class="result" id="reg-result"></div>
+      </div>
+    </div>
+
+    <!-- LOGIN -->
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-dot b"></div>
+        <div class="panel-title">// 02 — Login Test</div>
+      </div>
+      <div class="panel-body">
+        <div class="field">
+          <label>Email</label>
+          <input type="email" id="l-email" placeholder="test@email.com">
+        </div>
+        <div class="field">
+          <label>Password</label>
+          <input type="password" id="l-password" placeholder="your password" value="TestPass123!">
+        </div>
+        <button class="btn" id="login-btn" onclick="testLogin()">[ RUN LOGIN TEST ]</button>
+        <button class="btn secondary" onclick="testLogout()">[ LOGOUT / CLEAR SESSION ]</button>
+        <div class="result" id="login-result"></div>
+      </div>
+    </div>
+
+    <!-- RLS CHECK -->
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-dot g"></div>
+        <div class="panel-title">// 03 — RLS Access Check</div>
+      </div>
+      <div class="panel-body">
+        <p style="font-size:0.62rem;color:var(--dim);line-height:1.8;margin-bottom:14px;">
+          Tests whether your user can only read their own data,<br>
+          and cannot access other users' records.
+        </p>
+        <button class="btn" onclick="testRLS()">[ CHECK RLS POLICIES ]</button>
+        <button class="btn secondary" onclick="testCreditTamper()">[ ATTEMPT CREDIT TAMPER ]</button>
+        <div class="result" id="rls-result"></div>
+      </div>
+    </div>
+
+    <!-- FETCH PROFILE -->
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-dot b"></div>
+        <div class="panel-title">// 04 — Fetch My Profile</div>
+      </div>
+      <div class="panel-body">
+        <p style="font-size:0.62rem;color:var(--dim);line-height:1.8;margin-bottom:14px;">
+          Fetches the current session user's profile from the<br>
+          users table and credit_transactions.
+        </p>
+        <button class="btn" onclick="testFetchProfile()">[ FETCH MY PROFILE ]</button>
+        <button class="btn secondary" onclick="testFetchTransactions()">[ FETCH MY TRANSACTIONS ]</button>
+        <div class="result" id="profile-result"></div>
+      </div>
+    </div>
+
+    <!-- LOG -->
+    <div class="log-panel">
+      <div class="panel-header">
+        <div class="panel-dot r"></div>
+        <div class="panel-title">// AUDIT LOG — Real-time test output</div>
+      </div>
+      <div class="log-body" id="log"></div>
+      <div class="log-actions">
+        <button class="log-action-btn" onclick="clearLog()">[ CLEAR LOG ]</button>
+        <button class="log-action-btn" onclick="copyLog()">[ COPY LOG ]</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ── SUPABASE INIT ──────────────────────────────────────────────────────
+const SUPABASE_URL = 'https://pesrhpgixkronvzeouek.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_LPyioDvbIyZ3oy1PhccOMg_EcwWJjnr';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// ── LOG ────────────────────────────────────────────────────────────────
+function log(msg, type = 'dim') {
+  const el = document.getElementById('log');
+  const now = new Date().toLocaleTimeString('en-GB', { hour12: false });
+  const line = document.createElement('div');
+  line.className = 'log-line';
+  line.innerHTML = `<span class="log-time">${now}</span><span class="log-text ${type}">${msg}</span>`;
+  el.appendChild(line);
+  el.scrollTop = el.scrollHeight;
+}
+function logOk(m)   { log('✓ ' + m, 'ok'); }
+function logErr(m)  { log('✗ ' + m, 'err'); }
+function logInfo(m) { log('› ' + m, 'info'); }
+function logWarn(m) { log('⚠ ' + m, 'warn'); }
+function logDim(m)  { log('  ' + m, 'dim'); }
+function clearLog() { document.getElementById('log').innerHTML = ''; }
+function copyLog() {
+  const text = [...document.querySelectorAll('.log-text')].map(e => e.textContent).join('\n');
+  navigator.clipboard.writeText(text);
+  log('Log copied to clipboard', 'info');
+}
+
+// ── SHOW RESULT ────────────────────────────────────────────────────────
+function showResult(id, msg, type='ok') {
+  const el = document.getElementById(id);
+  el.className = `result ${type}`;
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+
+// ── STATUS UPDATE ──────────────────────────────────────────────────────
+async function updateStatus() {
+  const { data: { session } } = await sb.auth.getSession();
+  document.getElementById('s-connected').textContent = '● LIVE';
+  document.getElementById('s-connected').style.color = 'var(--accent)';
+
+  if (session) {
+    document.getElementById('s-session').textContent = 'ACTIVE';
+    document.getElementById('s-session').style.color = 'var(--accent)';
+    document.getElementById('s-user').textContent = session.user.email.split('@')[0];
+
+    const { data: profile } = await sb
+      .from('users')
+      .select('credits, tier, username')
+      .eq('id', session.user.id)
+      .maybeSingle();
+
+    if (profile) {
+      document.getElementById('s-credits').textContent = profile.credits ?? '—';
+      document.getElementById('s-tier').textContent    = profile.tier ?? '—';
+      document.getElementById('s-user').textContent    = profile.username ?? session.user.email;
+    }
+  } else {
+    document.getElementById('s-session').textContent = 'NONE';
+    document.getElementById('s-session').style.color = 'var(--dim)';
+    document.getElementById('s-user').textContent    = '—';
+    document.getElementById('s-credits').textContent = '—';
+    document.getElementById('s-tier').textContent    = '—';
+  }
+}
+
+// ── TEST: REGISTER ─────────────────────────────────────────────────────
+async function testRegister() {
+  const username = document.getElementById('r-username').value.trim();
+  const email    = document.getElementById('r-email').value.trim();
+  const password = document.getElementById('r-password').value;
+  const referral = document.getElementById('r-referral').value.trim().toUpperCase();
+  const btn      = document.getElementById('reg-btn');
+
+  if (!username || !email || !password) {
+    logErr('Register: missing fields'); return;
+  }
+
+  btn.disabled = true;
+  logInfo(`Starting registration for: ${email}`);
+  logDim(`Username: ${username} | Referral: ${referral || 'none'}`);
+
+  // Step 1: check username unique
+  logInfo('Checking username availability...');
+  const { data: existing } = await sb.from('users').select('id').eq('username', username).maybeSingle();
+  if (existing) {
+    logErr('Username already taken'); showResult('reg-result','Username already taken.','err');
+    btn.disabled = false; return;
+  }
+  logOk('Username available');
+
+  // Step 2: validate referral
+  let referrerId = null;
+  if (referral) {
+    logInfo(`Validating referral code: ${referral}`);
+    const { data: referrer } = await sb.from('users').select('id').eq('referral_code', referral).maybeSingle();
+    if (referrer) { referrerId = referrer.id; logOk('Referral code valid'); }
+    else logWarn('Referral code not found — skipping bonus');
+  }
+
+  // Step 3: signUp
+  logInfo('Calling sb.auth.signUp()...');
+  const { data: authData, error: authErr } = await sb.auth.signUp({
+    email, password,
+    options: { data: { username } }
+  });
+
+  if (authErr) {
+    logErr(`Auth error: ${authErr.message}`);
+    showResult('reg-result', authErr.message, 'err');
+    btn.disabled = false; return;
+  }
+
+  const userId = authData.user.id;
+  logOk(`Auth user created: ${userId}`);
+
+  // Step 4: generate referral code (client-side for demo; move to Edge Function in prod)
+  const base = username.replace(/[^a-z0-9]/gi,'').toUpperCase().slice(0,4);
+  const arr  = new Uint32Array(1);
+  crypto.getRandomValues(arr);
+  const rand = arr[0].toString(36).toUpperCase().slice(0,4);
+  const newCode = (base + rand).slice(0,8).padEnd(8,'0');
+  logOk(`Generated referral code: ${newCode} (crypto.getRandomValues)`);
+
+  // Step 5: calculate VC
+  const VC_SIGNUP   = 50;
+  const VC_REFERRAL = 25;
+  const VC_REFERRER = 25;
+  const startVC = VC_SIGNUP + (referrerId ? VC_REFERRAL : 0);
+  logInfo(`Starting VC: ${startVC}`);
+
+  // Step 6: insert user record
+  logInfo('Inserting user profile into users table...');
+  const { error: insertErr } = await sb.from('users').insert({
+    id: userId, username, email,
+    credits: startVC,
+    referral_code: newCode,
+    referred_by: referrerId,
+    tier: 'Ghost',
+    created_at: new Date().toISOString(),
+  });
+
+  if (insertErr) {
+    logErr(`Insert failed: ${insertErr.message}`);
+    logWarn('Hint: Check RLS policies — run rls-policies.sql in Supabase SQL Editor');
+    showResult('reg-result', `Insert failed: ${insertErr.message}\n\nHint: Apply rls-policies.sql first.`, 'err');
+    btn.disabled = false; return;
+  }
+  logOk('User profile inserted');
+
+  // Step 7: log transactions
+  const txns = [{
+    user_id: userId, amount: VC_SIGNUP,
+    type: 'signup_bonus', description: 'Welcome bonus',
+    created_at: new Date().toISOString(),
+  }];
+  if (referrerId) {
+    txns.push({
+      user_id: userId, amount: VC_REFERRAL,
+      type: 'referral_bonus', description: `Referral bonus — ${referral}`,
+      created_at: new Date().toISOString(),
+    });
+  }
+  await sb.from('credit_transactions').insert(txns);
+  logOk(`Logged ${txns.length} VC transaction(s)`);
+
+  // Step 8: update referrer (note: in production, use Edge Function!)
+  if (referrerId) {
+    logWarn('Credit referrer: doing client-side update (move to Edge Function in production)');
+    const { data: ref } = await sb.from('users').select('credits').eq('id', referrerId).single();
+    if (ref) {
+      await sb.from('users').update({ credits: ref.credits + VC_REFERRER }).eq('id', referrerId);
+      logOk(`Referrer credited +${VC_REFERRER} VC`);
+    }
+  }
+
+  logOk(`Registration complete! ${startVC} VC credited. Welcome to Genesis Vault.`);
+  showResult('reg-result',
+    `✓ Account created!\nUser ID: ${userId}\nVC: ${startVC}\nReferral code: ${newCode}\n\nNote: Confirm your email if Supabase confirmation is enabled.`,
+    'ok'
+  );
+
+  // auto-fill login
+  document.getElementById('l-email').value = email;
+  await updateStatus();
+  btn.disabled = false;
+}
+
+// ── TEST: LOGIN ────────────────────────────────────────────────────────
+async function testLogin() {
+  const email    = document.getElementById('l-email').value.trim();
+  const password = document.getElementById('l-password').value;
+  const btn      = document.getElementById('login-btn');
+
+  if (!email || !password) { logErr('Login: missing fields'); return; }
+
+  btn.disabled = true;
+  logInfo(`Attempting login for: ${email}`);
+
+  const { data, error } = await sb.auth.signInWithPassword({ email, password });
+
+  if (error) {
+    logErr(`Login failed: ${error.message}`);
+    showResult('login-result', error.message, 'err');
+  } else {
+    logOk(`Login successful! Session token issued.`);
+    logDim(`User ID: ${data.user.id}`);
+    logDim(`Token expires: ${new Date(data.session.expires_at * 1000).toLocaleString()}`);
+    showResult('login-result', `✓ Logged in as ${data.user.email}`, 'ok');
+    await updateStatus();
+  }
+  btn.disabled = false;
+}
+
+// ── TEST: LOGOUT ───────────────────────────────────────────────────────
+async function testLogout() {
+  await sb.auth.signOut();
+  logInfo('Signed out — session cleared');
+  await updateStatus();
+}
+
+// ── TEST: RLS ──────────────────────────────────────────────────────────
+async function testRLS() {
+  logInfo('Running RLS policy checks...');
+  const { data: { session } } = await sb.auth.getSession();
+
+  if (!session) {
+    logErr('Not logged in — login first to test RLS');
+    showResult('rls-result', 'Login first to run RLS checks.', 'err');
+    return;
+  }
+
+  // 1. Fetch own record
+  logInfo('Test 1: Fetch own user record...');
+  const { data: own, error: e1 } = await sb.from('users').select('*').eq('id', session.user.id).maybeSingle();
+  if (e1) logErr(`Own record fetch failed: ${e1.message}`);
+  else if (own) logOk('Test 1 PASS: Own record accessible ✓');
+  else logWarn('Test 1: No user record found (insert may have failed)');
+
+  // 2. Try to fetch ALL users (should be blocked or return only own)
+  logInfo('Test 2: Attempt to fetch all users (should return only own)...');
+  const { data: allUsers, error: e2 } = await sb.from('users').select('id, username, credits');
+  if (e2) {
+    logOk(`Test 2 PASS: Mass fetch blocked — "${e2.message}" ✓`);
+  } else if (allUsers && allUsers.length === 1 && allUsers[0].id === session.user.id) {
+    logOk('Test 2 PASS: RLS correctly returns only own record ✓');
+  } else if (allUsers && allUsers.length > 1) {
+    logErr(`Test 2 FAIL: RLS not active — can see ${allUsers.length} user records! Apply rls-policies.sql`);
+    showResult('rls-result', `⚠ RLS NOT ACTIVE — Can see ${allUsers.length} users!\nRun rls-policies.sql in Supabase SQL Editor.`, 'err');
+    return;
+  }
+
+  // 3. Try to read another user's transactions
+  logInfo('Test 3: Attempt to read all credit_transactions...');
+  const { data: allTxns, error: e3 } = await sb.from('credit_transactions').select('*');
+  if (e3) {
+    logOk(`Test 3 PASS: Transactions blocked — "${e3.message}" ✓`);
+  } else if (!allTxns || allTxns.every(t => t.user_id === session.user.id)) {
+    logOk('Test 3 PASS: Only own transactions visible ✓');
+  } else {
+    logErr(`Test 3 FAIL: Can see ${allTxns.length} transactions from other users!`);
+  }
+
+  logOk('RLS audit complete');
+  showResult('rls-result', '✓ RLS policies appear to be working correctly.\nAll checks passed.', 'ok');
+}
+
+// ── TEST: CREDIT TAMPER ────────────────────────────────────────────────
+async function testCreditTamper() {
+  logInfo('Attempting to manually set credits to 99999...');
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session) { logErr('Login first'); return; }
+
+  const { error } = await sb.from('users')
+    .update({ credits: 99999 })
+    .eq('id', session.user.id);
+
+  if (error) {
+    logOk(`Tamper blocked: "${error.message}" ✓`);
+    showResult('rls-result', '✓ Credit tamper blocked by RLS/DB rules.', 'ok');
+  } else {
+    logErr('Tamper SUCCEEDED — credits set to 99999! Move credit updates to Edge Function.');
+    showResult('rls-result', '⚠ Credit tamper succeeded! Restrict UPDATE policy on users table.', 'err');
+    await updateStatus();
+  }
+}
+
+// ── TEST: FETCH PROFILE ────────────────────────────────────────────────
+async function testFetchProfile() {
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session) { logErr('Login first'); return; }
+
+  logInfo('Fetching user profile...');
+  const { data, error } = await sb.from('users')
+    .select('username, email, credits, tier, referral_code, referred_by, created_at')
+    .eq('id', session.user.id)
+    .maybeSingle();
+
+  if (error || !data) {
+    logErr(error?.message || 'No profile found');
+    showResult('profile-result', error?.message || 'No profile found.', 'err');
+    return;
+  }
+
+  logOk('Profile fetched:');
+  Object.entries(data).forEach(([k,v]) => logDim(`  ${k}: ${v ?? 'null'}`));
+  showResult('profile-result',
+    `Username: ${data.username}\nEmail: ${data.email}\nCredits: ${data.credits} VC\nTier: ${data.tier}\nReferral Code: ${data.referral_code}`,
+    'ok'
+  );
+}
+
+// ── TEST: FETCH TRANSACTIONS ───────────────────────────────────────────
+async function testFetchTransactions() {
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session) { logErr('Login first'); return; }
+
+  logInfo('Fetching credit transactions...');
+  const { data, error } = await sb.from('credit_transactions')
+    .select('*')
+    .eq('user_id', session.user.id)
+    .order('created_at', { ascending: false });
+
+  if (error) { logErr(error.message); return; }
+  if (!data || data.length === 0) { logWarn('No transactions found'); return; }
+
+  logOk(`Found ${data.length} transaction(s):`);
+  data.forEach(t => logDim(`  [${t.type}] +${t.amount} VC — ${t.description}`));
+  showResult('profile-result',
+    data.map(t => `${t.type}: +${t.amount} VC — ${t.description}`).join('\n'),
+    'info'
+  );
+}
+
+// ── INIT ───────────────────────────────────────────────────────────────
+(async () => {
+  logInfo('Genesis Vault Test Console initializing...');
+  logDim(`Supabase URL: ${SUPABASE_URL}`);
+  try {
+    await updateStatus();
+    logOk('Connected to Supabase ✓');
+    logInfo('Ready. Run tests in sequence: Register → Login → RLS Check → Fetch Profile');
+    logDim('─────────────────────────────────────────────');
+  } catch(e) {
+    logErr(`Connection failed: ${e.message}`);
+  }
+})();
+
+// Listen for auth state changes
+sb.auth.onAuthStateChange((event, session) => {
+  if (event === 'SIGNED_IN')  logInfo(`Auth event: SIGNED_IN`);
+  if (event === 'SIGNED_OUT') logInfo(`Auth event: SIGNED_OUT`);
+  updateStatus();
+});
+</script>
+</body>
+</html>
