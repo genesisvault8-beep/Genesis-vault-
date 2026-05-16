@@ -797,14 +797,38 @@ const LABS = [
   }
 ];
 
-let solved = JSON.parse(localStorage.getItem('gv_lab_solved') || '[]');
-let currentLab = null;
+let LABS          = [];   // loaded from backend
+let solved        = [];   // loaded from backend
+let currentLab    = null;
 let currentFilter = 'all';
+
+// ── LOAD LABS FROM BACKEND ────────────────────────────────────────────
+async function loadLabs() {
+  const grid = document.getElementById('labs-grid');
+  grid.innerHTML = '<div style="text-align:center;padding:40px;font-family:\'Share Tech Mono\',monospace;font-size:0.75rem;color:var(--dim);">// Loading labs...</div>';
+  try {
+    const res  = await fetch(`${API}/labs`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    const data = await res.json();
+    if (data.status === 'success') {
+      LABS   = data.labs || [];
+      solved = LABS.filter(l => l.solved).map(l => l.id);
+      document.getElementById('stat-total').textContent  = LABS.length;
+      document.getElementById('stat-solved').textContent = solved.length;
+      renderLabs(currentFilter);
+    } else {
+      grid.innerHTML = '<div style="text-align:center;padding:40px;font-family:\'Share Tech Mono\',monospace;font-size:0.75rem;color:var(--dim);">// No labs available yet.</div>';
+    }
+  } catch(e) {
+    grid.innerHTML = '<div style="text-align:center;padding:40px;font-family:\'Share Tech Mono\',monospace;font-size:0.75rem;color:var(--accent3);">// Failed to load labs. Check connection.</div>';
+  }
+}
 
 // ── RENDER LOBBY ─────────────────────────────────────────────────────
 function renderLabs(filter) {
   const grid = document.getElementById('labs-grid');
-  let filtered = LABS.filter(l => {
+  const filtered = LABS.filter(l => {
     if (filter === 'all')    return true;
     if (filter === 'easy')   return l.difficulty === 'easy';
     if (filter === 'medium') return l.difficulty === 'medium';
@@ -816,37 +840,36 @@ function renderLabs(filter) {
   });
 
   if (!filtered.length) {
-    grid.innerHTML = '<div class="empty">// No labs in this category yet.</div>';
+    grid.innerHTML = '<div style="text-align:center;padding:40px;font-family:\'Share Tech Mono\',monospace;font-size:0.75rem;color:var(--dim);">// No labs in this category yet.</div>';
     return;
   }
 
   grid.innerHTML = filtered.map(lab => {
-    const isSolved = solved.includes(lab.id);
-    const diffClass = lab.difficulty;
+    const isSolved  = lab.solved || solved.includes(lab.id);
+    const diffClass = lab.difficulty || 'easy';
+    const tags      = Array.isArray(lab.tags) ? lab.tags : [];
     return `
-      <div class="lab-card ${diffClass}" onclick="openLab('${lab.id}')">
+      <div class="lab-card ${diffClass}" onclick="openLab(${lab.id})">
         <div class="lab-top">
-          <span class="lab-category">${lab.category}</span>
-          <span class="diff-badge diff-${diffClass}">${lab.difficulty.toUpperCase()}</span>
+          <span class="lab-category">${lab.category || 'MISC'}</span>
+          <span class="diff-badge diff-${diffClass}">${diffClass.toUpperCase()}</span>
         </div>
         <h3>${isSolved ? '✓ ' : ''}${lab.title}</h3>
-        <p>${lab.description}</p>
+        <p>${lab.description || ''}</p>
         <div class="lab-tags">
-          ${lab.tags.map(t => `<span class="lab-tag">${t}</span>`).join('')}
+          ${tags.map(t => `<span class="lab-tag">${t}</span>`).join('')}
         </div>
         <div class="lab-footer">
           <div class="lab-status">
             <div class="status-dot" style="${isSolved ? 'background:var(--accent)' : 'background:var(--accent2)'}"></div>
             ${isSolved ? 'COMPLETED' : 'LIVE'}
           </div>
-          <button class="enter-btn ${diffClass}" onclick="event.stopPropagation();openLab('${lab.id}')">
+          <button class="enter-btn ${diffClass}" onclick="event.stopPropagation();openLab(${lab.id})">
             [ ENTER LAB ]
           </button>
         </div>
       </div>`;
   }).join('');
-
-  document.getElementById('stat-solved').textContent = solved.length;
 }
 
 function filterLabs(f, el) {
@@ -857,49 +880,64 @@ function filterLabs(f, el) {
 }
 
 // ── OPEN LAB ─────────────────────────────────────────────────────────
-function openLab(id) {
-  const lab = LABS.find(l => l.id === id);
-  if (!lab) return;
-  currentLab = lab;
-
+async function openLab(id) {
+  // Show loading state
   document.getElementById('lobby').style.display      = 'none';
   document.getElementById('lab-viewer').style.display = 'block';
-  document.getElementById('viewer-title').textContent = `// ${lab.title}`;
-  document.getElementById('viewer-diff').textContent  = lab.difficulty.toUpperCase();
-  document.getElementById('viewer-diff').className    = `diff-badge diff-${lab.difficulty}`;
-  document.getElementById('viewer-objective').textContent = lab.objective;
-
-  // Load hints
-  document.getElementById('hints-content').innerHTML =
-    lab.hints.map(h => `<div class="hint-item">${h}</div>`).join('');
-
-  // Load lab iframe
-  const src = document.getElementById(`lab-${id}`).textContent;
-  document.getElementById('lab-frame').srcdoc = src;
-
-  // Reset panels
-  ['hints','notes','ai'].forEach(p => {
-    document.getElementById(`panel-${p}`).classList.remove('open');
-    document.getElementById(`btn-${p}`).classList.remove('active');
-  });
-
-  // Reset AI
-  document.getElementById('ai-messages').innerHTML =
-    `<div class="ai-msg bot" style="color:var(--dim)">Ask me anything about the <strong style="color:var(--accent)">${lab.title}</strong> lab. I can give hints without spoiling the solution.</div>`;
-
-  // Show solved state if already done
-  const isSolved = solved.includes(id);
-  document.getElementById('solved-banner').classList.toggle('show', isSolved);
-  const btn = document.getElementById('complete-btn');
-  if (isSolved) {
-    btn.textContent = '[ COMPLETED ✓ ]';
-    btn.classList.add('done');
-  } else {
-    btn.textContent = '[ MARK AS COMPLETE ]';
-    btn.classList.remove('done');
-  }
-
+  document.getElementById('viewer-title').textContent = '// Loading...';
+  document.getElementById('lab-frame').srcdoc         = '<div style="display:flex;align-items:center;justify-content:center;height:100%;font-family:monospace;color:#555;font-size:0.8rem;">Loading lab...</div>';
   window.scrollTo(0,0);
+
+  try {
+    const res  = await fetch(`${API}/labs/${id}`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    const data = await res.json();
+    if (data.status !== 'success' || !data.lab) {
+      document.getElementById('viewer-title').textContent = '// Lab not found';
+      return;
+    }
+    const lab = data.lab;
+    currentLab = lab;
+
+    document.getElementById('viewer-title').textContent     = `// ${lab.title}`;
+    document.getElementById('viewer-diff').textContent      = (lab.difficulty || 'easy').toUpperCase();
+    document.getElementById('viewer-diff').className        = `diff-badge diff-${lab.difficulty || 'easy'}`;
+    document.getElementById('viewer-objective').textContent = lab.objective || '';
+
+    // Load hints
+    const hints = Array.isArray(lab.hints) ? lab.hints : [];
+    document.getElementById('hints-content').innerHTML =
+      hints.map(h => `<div class="hint-item">${h}</div>`).join('') ||
+      '<div style="color:var(--dim);font-size:0.8rem;">// No hints available for this lab.</div>';
+
+    // Load HTML into sandboxed iframe
+    document.getElementById('lab-frame').srcdoc = lab.html_content || '<p style="padding:20px;font-family:monospace;">No content loaded.</p>';
+
+    // Reset panels
+    ['hints','notes','ai'].forEach(p => {
+      document.getElementById(`panel-${p}`).classList.remove('open');
+      document.getElementById(`btn-${p}`).classList.remove('active');
+    });
+
+    // Reset AI
+    document.getElementById('ai-messages').innerHTML =
+      `<div class="ai-msg bot" style="color:var(--dim)">Ask me anything about the <strong style="color:var(--accent)">${lab.title}</strong> lab. I can give hints without spoiling the solution.</div>`;
+
+    // Solved state
+    const isSolved = lab.solved || solved.includes(id);
+    document.getElementById('solved-banner').classList.toggle('show', isSolved);
+    const btn = document.getElementById('complete-btn');
+    if (isSolved) {
+      btn.textContent = '[ COMPLETED ✓ ]';
+      btn.classList.add('done');
+    } else {
+      btn.textContent = '[ MARK AS COMPLETE ]';
+      btn.classList.remove('done');
+    }
+  } catch(e) {
+    document.getElementById('viewer-title').textContent = '// Failed to load lab';
+  }
 }
 
 function closeLab() {
@@ -913,17 +951,13 @@ function closeLab() {
 
 // ── TOOLS ────────────────────────────────────────────────────────────
 function togglePanel(name) {
-  const panel = document.getElementById(`panel-${name}`);
-  const btn   = document.getElementById(`btn-${name}`);
+  const panel  = document.getElementById(`panel-${name}`);
+  const btn    = document.getElementById(`btn-${name}`);
   const isOpen = panel.classList.contains('open');
-
-  // Close all
   ['hints','notes','ai'].forEach(p => {
     document.getElementById(`panel-${p}`).classList.remove('open');
     document.getElementById(`btn-${p}`).classList.remove('active');
   });
-
-  // Toggle target
   if (!isOpen) {
     panel.classList.add('open');
     btn.classList.add('active');
@@ -932,17 +966,52 @@ function togglePanel(name) {
 }
 
 // ── COMPLETE ─────────────────────────────────────────────────────────
-function markComplete() {
+async function markComplete() {
   if (!currentLab) return;
-  if (!solved.includes(currentLab.id)) {
-    solved.push(currentLab.id);
-    localStorage.setItem('gv_lab_solved', JSON.stringify(solved));
-  }
-  document.getElementById('solved-banner').classList.add('show');
   const btn = document.getElementById('complete-btn');
-  btn.textContent = '[ COMPLETED ✓ ]';
-  btn.classList.add('done');
-  document.getElementById('stat-solved').textContent = solved.length;
+  btn.disabled = true;
+  try {
+    const res  = await fetch(`${API}/labs/${currentLab.id}/complete`, {
+      method:  'POST',
+      headers: { 'Content-Type':'application/json', 'Authorization': `Bearer ${token}` }
+    });
+    const data = await res.json();
+    if (data.status === 'success') {
+      if (!solved.includes(currentLab.id)) solved.push(currentLab.id);
+      currentLab.solved = true;
+      document.getElementById('solved-banner').classList.add('show');
+      btn.textContent = '[ COMPLETED ✓ ]';
+      btn.classList.add('done');
+      document.getElementById('stat-solved').textContent = solved.length;
+    }
+  } catch(e) {
+    // Fallback to localStorage
+    if (!solved.includes(currentLab.id)) solved.push(currentLab.id);
+    localStorage.setItem('gv_lab_solved', JSON.stringify(solved));
+    document.getElementById('solved-banner').classList.add('show');
+    btn.textContent = '[ COMPLETED ✓ ]';
+    btn.classList.add('done');
+  }
+  btn.disabled = false;
+}
+
+// ── USER INFO ────────────────────────────────────────────────────────
+const AI_URL = 'https://genesis-ai-backend.onrender.com';
+let USER_ID = null, USERNAME = 'ghost', USER_RANK = 'Ghost';
+
+async function initUser() {
+  try {
+    const r = await fetch('https://genesis-vault-backend.onrender.com/api/auth/me', {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    const d = await r.json();
+    if (d.status === 'success' && d.user) {
+      USER_ID   = d.user.id;
+      USERNAME  = d.user.username;
+
+      USER_RANK = d.user.rank || 'Ghost';
+    }
+  } catch(e) { console.warn('User init failed, continuing as ghost.'); }
 }
 
 // ── AI HINTS ─────────────────────────────────────────────────────────
@@ -952,7 +1021,6 @@ async function sendAI() {
   const q = input.value.trim();
   if (!q) return;
 
-  // Add user message
   const userEl = document.createElement('div');
   userEl.className = 'ai-msg user';
   userEl.textContent = q;
@@ -960,7 +1028,6 @@ async function sendAI() {
   input.value = '';
   msgs.scrollTop = msgs.scrollHeight;
 
-  // Typing indicator
   const typingEl = document.createElement('div');
   typingEl.className = 'ai-msg bot';
   typingEl.textContent = '...';
@@ -970,26 +1037,34 @@ async function sendAI() {
 
   try {
     const labContext = currentLab
-      ? `The user is working on a cyber security lab called "${currentLab.title}". Category: ${currentLab.category}. Difficulty: ${currentLab.difficulty}. Objective: ${currentLab.objective}. Tags: ${currentLab.tags.join(', ')}. Give helpful hints without fully spoiling the solution. Be concise.`
-      : 'The user is asking about a cyber security lab.';
+      ? `You are a cyber security tutor inside GenesisVault Labs. The user is working on a lab called "${currentLab.title}" (${currentLab.difficulty} difficulty, category: ${currentLab.category}). Objective: ${currentLab.objective}. Tags: ${currentLab.tags.join(', ')}. Give helpful hints without fully spoiling the solution. Be concise and encouraging.`
+      : 'You are a cyber security tutor. Answer the user\'s question helpfully and concisely.';
 
-    const res = await fetch(`${API}/ai/chat`, {
-      method: 'POST',
-      headers: { 'Content-Type':'application/json', 'Authorization':`Bearer ${token}` },
-      body: JSON.stringify({ message: q, context: labContext })
+    const message = `[LAB CONTEXT]: ${labContext}\n\n[USER QUESTION]: ${q}`;
+
+    const res = await fetch(`${AI_URL}/api/vault-ai`, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({
+        message:  message,
+        rank:     USER_RANK,
+        user_id:  USER_ID,
+        username: USERNAME
+      })
     });
     const data = await res.json();
-    typingEl.textContent = data.reply || data.message || 'Could not get a response.';
+    typingEl.textContent = data.reply || data.response || data.message || 'No response.';
     typingEl.style.color = '';
   } catch(e) {
-    typingEl.textContent = 'AI unavailable. Check the hints panel for help.';
+    typingEl.textContent = 'AI unavailable. Use the Hints panel instead.';
     typingEl.style.color = 'var(--accent3)';
   }
   msgs.scrollTop = msgs.scrollHeight;
 }
 
 // ── INIT ─────────────────────────────────────────────────────────────
-renderLabs('all');
+initUser();
+loadLabs();
 </script>
 </body>
 </html>
