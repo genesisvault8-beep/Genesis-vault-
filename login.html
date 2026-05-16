@@ -429,11 +429,9 @@
           <button class="toggle-pw" onclick="togglePw('login-password',this)">SHOW</button>
         </div>
       </div>
-      <div style="text-align:center;margin-top:14px;">
-  <a href="reset.html" style="color:#0f2a35;font-size:1rem;text-decoration:none;
-  transition:color 0.3s;" 
-  onmouseover="this.style.color='#4a7a8a'" 
-  onmouseout="this.style.color='#0f2a35'">⟁</a>
+      <button class="btn" id="login-btn" onclick="handleLogin()">[ ACCESS VAULT ]</button>
+      <div class="forgot-link" style="margin-top:14px;">
+        <a href="reset.html">// Forgot password?</a>
       </div>
     </div>
 
@@ -584,14 +582,46 @@ function checkStrength(val) {
   label.style.color     = lvl.color;
 }
 
-// ── REFERRAL INPUT ────────────────────────────────────────────────────
-function onReferralInput(inp) {
+// ── REFERRAL INPUT (async DB validation with debounce) ────────────────
+let refTimeout = null;
+let referralValid = false;
+
+async function onReferralInput(inp) {
   inp.value = inp.value.toUpperCase();
+  const code  = inp.value.trim();
   const badge = document.getElementById('referral-badge');
   const hint  = document.getElementById('vc-hint');
-  const hasCode = inp.value.length >= 6;
-  badge.style.display = hasCode ? 'block' : 'none';
-  hint.style.display  = hasCode ? 'block' : 'none';
+
+  clearTimeout(refTimeout);
+  referralValid = false;
+
+  if (code.length < 6) {
+    badge.style.display = 'none';
+    hint.style.display  = 'none';
+    return;
+  }
+
+  badge.textContent    = '// CHECKING...';
+  badge.style.color    = 'var(--accent2)';
+  badge.style.display  = 'block';
+  hint.style.display   = 'none';
+
+  refTimeout = setTimeout(async () => {
+    const { data } = await sb.from('users').select('id').eq('referral_code', code).maybeSingle();
+    if (data) {
+      referralValid        = true;
+      badge.textContent    = '✓ VALID';
+      badge.style.color    = 'var(--accent)';
+      badge.style.display  = 'block';
+      hint.style.display   = 'block';
+    } else {
+      referralValid        = false;
+      badge.textContent    = '✗ INVALID';
+      badge.style.color    = 'var(--accent3)';
+      badge.style.display  = 'block';
+      hint.style.display   = 'none';
+    }
+  }, 500);
 }
 
 // ── WAKE-UP OVERLAY ───────────────────────────────────────────────────
@@ -696,6 +726,14 @@ async function handleRegister() {
   if (username.length < 3) return showMsg('Username must be at least 3 characters.');
   if (password.length < 8) return showMsg('Password must be at least 8 characters.');
 
+  // Block if a referral code was typed but didn't pass DB validation yet
+  const refInput = document.getElementById('reg-referral').value.trim().toUpperCase();
+  if (refInput.length >= 6 && !referralValid) {
+    const badge = document.getElementById('referral-badge');
+    if (badge.textContent === '// CHECKING...') return showMsg('Please wait — validating referral code.');
+    return showMsg('Referral code is invalid. Clear it or use a valid code.');
+  }
+
   btn.disabled = true;
   btn.textContent = '[ PROCESSING... ]';
   clearMsg();
@@ -767,7 +805,7 @@ async function handleRegister() {
     const startVC = VC_SIGNUP_BONUS + (referrerId ? VC_REFERRAL_BONUS : 0);
 
     // ── 6. Insert into users table ──
-    await sb.from('users').insert({
+    const { error: insertError } = await sb.from('users').insert({
       id:            userId,
       username:      username,
       email:         email,
@@ -777,6 +815,20 @@ async function handleRegister() {
       tier:          'Ghost',
       created_at:    new Date().toISOString(),
     });
+
+    if (insertError) {
+      clearInterval(wakeInterval); hideWakeup();
+      // Handle unique username race condition
+      if (insertError.code === '23505' || insertError.message.includes('unique')) {
+        showMsg('Username already taken. Please choose another.');
+      } else {
+        showMsg('Account setup failed. Please try again.');
+      }
+      // Clean up the auth user we just created since profile insert failed
+      await sb.auth.signOut();
+      btn.disabled = false; btn.textContent = '[ JOIN THE VAULT ]';
+      return;
+    }
 
     // ── 7. Log signup VC transaction ──
     await sb.from('credit_transactions').insert({
@@ -822,6 +874,18 @@ async function handleRegister() {
 
     clearInterval(wakeInterval);
     addLog('Account created!', 'log-ok');
+
+    // ── Handle email confirmation requirement ──
+    if (!authData.user.confirmed_at && !authData.user.email_confirmed_at) {
+      setWakeStatus('Almost there! Check your inbox to confirm.');
+      await sleep(1200);
+      hideWakeup();
+      showMsg('Account created! Please check your email to confirm before logging in.', 'info');
+      btn.disabled = false;
+      btn.textContent = '[ JOIN THE VAULT ]';
+      return;
+    }
+
     setWakeStatus(`+${startVC} VC credited. Welcome to the Vault.`);
     await sleep(1200);
     hideWakeup();
