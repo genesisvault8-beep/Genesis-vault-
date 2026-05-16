@@ -254,6 +254,26 @@ const AI_URL = 'https://genesis-ai-backend.onrender.com'; // same backend as BAC
 let adminToken = '';
 let currentMode = 'auto';
 
+// ── HELPERS ──
+function esc(s) {
+  if (!s) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function logout401() {
+  sessionStorage.removeItem('admin_token');
+  adminToken = '';
+  document.getElementById('auth-screen').style.display = 'flex';
+  document.getElementById('main-ui').style.display = 'none';
+  document.getElementById('token-input').value = '';
+  document.getElementById('auth-err').textContent = 'SESSION EXPIRED. RE-AUTHENTICATE.';
+  document.getElementById('auth-btn').textContent = 'AUTHENTICATE';
+}
+
+function setStatus(msg) {
+  document.getElementById('status-right').textContent = msg;
+}
+
 // ── CLOCK ──
 setInterval(() => {
   document.getElementById('clock').textContent = new Date().toLocaleTimeString('en-GB');
@@ -343,11 +363,22 @@ document.querySelectorAll('.tab').forEach(tab => {
 });
 
 // ── ENGINE MODE ──
-function setMode(mode) {
+async function setMode(mode) {
   currentMode = mode;
   document.getElementById('mode-auto').classList.toggle('active', mode === 'auto');
   document.getElementById('mode-manual').classList.toggle('active', mode === 'manual');
   document.getElementById('status-left').textContent = `MODE: ${mode.toUpperCase()}`;
+  try {
+    const res = await fetch(`${AI_URL}/admin/set-mode`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${adminToken}` },
+      body: JSON.stringify({ mode })
+    });
+    if (res.status === 401) { logout401(); return; }
+    setStatus(`MODE SET: ${mode.toUpperCase()}`);
+  } catch(e) {
+    setStatus('MODE SAVE FAILED');
+  }
 }
 
 // ── RENDER ENGINES ──
@@ -386,18 +417,20 @@ async function toggleEngine(name, active) {
       },
       body: JSON.stringify({ name, active })
     });
+    if (res.status === 401) { logout401(); return; }
     const data = await res.json();
     if (data.success) {
-      document.getElementById('status-right').textContent = `${name}: ${active ? 'ON' : 'OFF'}`;
-      // Update label
+      setStatus(`${name}: ${active ? 'ON' : 'OFF'}`);
       document.querySelectorAll('.engine-card').forEach(card => {
         if (card.querySelector('.engine-name').textContent === name) {
           card.querySelector('.toggle-label').textContent = active ? 'ON' : 'OFF';
         }
       });
+    } else {
+      setStatus(`TOGGLE FAILED: ${name}`);
     }
   } catch(e) {
-    alert('Failed to toggle: ' + e.message);
+    setStatus('TOGGLE ERROR: ' + e.message);
   }
 }
 
@@ -409,6 +442,7 @@ async function loadUsers() {
     const res = await fetch(`${AI_URL}/admin/user-stats`, {
       headers: { 'Authorization': `Bearer ${adminToken}` }
     });
+    if (res.status === 401) { logout401(); return; }
     const data = await res.json();
     if (!data.users || data.users.length === 0) {
       list.innerHTML = '<div class="empty">NO USER DATA YET</div>';
@@ -447,6 +481,7 @@ async function loadLogs() {
     const res = await fetch(`${AI_URL}/admin/recent-logs`, {
       headers: { 'Authorization': `Bearer ${adminToken}` }
     });
+    if (res.status === 401) { logout401(); return; }
     const data = await res.json();
     if (!data.logs || data.logs.length === 0) {
       list.innerHTML = '<div class="empty">NO LOGS YET</div>';
@@ -463,8 +498,8 @@ async function loadLogs() {
           <span class="log-provider">${log.provider || 'unknown'}</span>
           <span>${time}</span>
         </div>
-        <div class="log-query">&gt; ${log.user_query || ''}</div>
-        <div class="log-response">${log.ai_response || ''}</div>
+        <div class="log-query">&gt; ${esc(log.user_query)}</div>
+        <div class="log-response">${esc(log.ai_response)}</div>
         <div class="log-tokens">~${log.tokens_used || 0} tokens</div>
       `;
       list.appendChild(entry);
