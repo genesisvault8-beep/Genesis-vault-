@@ -258,24 +258,8 @@ async function boot() {
   print('[SYS]: INITIALIZING VAULT RECOVERY...', 'sys');
   await sleep(400);
 
-  try {
-    const res = await fetch(`${BACKEND_URL}/api/session`);
-    const data = await res.json();
-    if (data.status === 'success') {
-      document.querySelector('.rank-badge').textContent = data.rank.toUpperCase();
-      if (data.history && data.history.length > 0) {
-        print(`[SYS]: RECOVERING ${data.history.length} PREVIOUS LOGS...`, 'sys');
-        await sleep(300);
-        data.history.forEach(log => {
-          printHTML(`<span style="color:var(--green);opacity:.7">GHOST:~$</span> ${esc(log.user_query)}`, 'user');
-          printHTML(`<span style="color:var(--green);opacity:.7">[VAULT-AI]:</span> ${esc(log.ai_response ? log.ai_response.slice(0,120)+'...' : '')}`, 'ai');
-        });
-      }
-      print(`[SYS]: SESSION RESTORED. RANK: ${data.rank.toUpperCase()}. LOGS: ${data.total_logs}`, 'sys');
-    }
-  } catch(e) {
-    print('[SYS]: FRESH SESSION INITIALIZED.', 'sys');
-  }
+  // Session recovery not yet implemented — fresh start each time
+  print('[SYS]: FRESH SESSION INITIALIZED.', 'sys');
 
   await sleep(300);
   print('[SYS]: ALL SYSTEMS NOMINAL. VAULT ONLINE.', 'sys');
@@ -342,21 +326,22 @@ async function send(msg) {
     const target = msg.slice(5).trim();
     print(`[LOG]: DISPATCHING NMAP JOB → ${target.toUpperCase()}...`, 'logc');
     try {
+      const _t = localStorage.getItem("gv_token");
       const res = await fetch(`${BACKEND_URL}/api/jobs/create`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${_t}` },
         body: JSON.stringify({ target: target, command: 'nmap' })
       });
       const data = await res.json();
       const jobId = data.job[0].id;
-      print(`[LOG]: JOB #${jobId} QUEUED. AWAITING BRIDGE...`, 'sys');
+      const waitLine = print(`[LOG]: JOB #${jobId} QUEUED. AWAITING BRIDGE...`, 'sys');
       let result = null;
       for (let i = 0; i < 24; i++) {
         await sleep(5000);
-        const poll = await fetch(`${BACKEND_URL}/api/jobs/result/${jobId}`);
+        const poll = await fetch(`${BACKEND_URL}/api/jobs/result/${jobId}`, { headers: { 'Authorization': `Bearer ${localStorage.getItem("gv_token")}` } });
         const pollData = await poll.json();
         if (pollData.result) { result = pollData.result; break; }
-        else { print(`[LOG]: WAITING FOR BRIDGE... (${(i+1)*5}s)`, 'logc'); }
+        else { waitLine.textContent = `[LOG]: JOB #${jobId} QUEUED. BRIDGE PROCESSING... (${(i+1)*5}s elapsed)`; }
       }
       if (result) {
         const el = document.createElement('div');
@@ -380,7 +365,7 @@ async function send(msg) {
     try {
       const res = await fetch(`${BACKEND_URL}/recon`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem("gv_token")}` },
         body: JSON.stringify({ target: target })
       });
       const data = await res.json();
@@ -407,12 +392,17 @@ async function send(msg) {
   try {
     const res = await fetch(`${BACKEND_URL}/api/vault-ai`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem("gv_token")}` },
       body: JSON.stringify({ message: msg, rank: USER_RANK, user_id: USER_ID, username: USERNAME })
     });
     const data = await res.json();
     analyzing.remove();
 
+    if (res.status === 429) {
+      analyzing.remove();
+      print('[ERR]: RATE LIMIT REACHED. PLEASE WAIT A MOMENT BEFORE RETRYING.', 'err');
+      busy = false; btn.disabled = false; return;
+    }
     if (data.response) {
       const el = document.createElement('div');
       el.className = 'line ai';
@@ -447,20 +437,37 @@ btn.addEventListener('click', () => {
 });
 
 async function init() {
-  const token = localStorage.getItem("vault_token");
-  if (token) {
-    try {
-      const r = await fetch("https://genesis-vault-backend.onrender.com/api/auth/me", {
-        headers: { "Authorization": "Bearer " + token }
-      });
-      const d = await r.json();
-      if (d.status === "success" && d.user) {
-        USER_ID = d.user.id;
-        USERNAME = d.user.username;
-        USER_RANK = d.user.rank || "Ghost";
-        document.querySelector(".rank-badge").textContent = USER_RANK.toUpperCase();
-      }
-    } catch(e) { console.warn('[VAULT]: Auth verification failed — continuing as anonymous.', e); }
+  const token = localStorage.getItem("gv_token");
+  if (!token) {
+    // No token — redirect to login
+    location.href = 'login.html';
+    return;
+  }
+  try {
+    const r = await fetch("https://genesis-vault-backend.onrender.com/api/auth/me", {
+      headers: { "Authorization": "Bearer " + token }
+    });
+    if (r.status === 401) {
+      localStorage.removeItem("gv_token");
+      location.href = 'login.html';
+      return;
+    }
+    const d = await r.json();
+    if (d.status === "success" && d.user) {
+      USER_ID   = d.user.id;
+      USERNAME  = d.user.username;
+      USER_RANK = d.user.rank || "Ghost";
+      document.querySelector(".rank-badge").textContent = USER_RANK.toUpperCase();
+      // Update input prefix with real username
+      document.querySelector(".input-prefix").textContent = USERNAME.toUpperCase() + ":~$";
+    } else {
+      localStorage.removeItem("gv_token");
+      location.href = 'login.html';
+      return;
+    }
+  } catch(e) {
+    // Network error — allow continue as degraded mode
+    print("[WARN]: Could not verify session. Running in limited mode.", "err");
   }
   boot();
 }
