@@ -747,8 +747,23 @@ const API = 'https://genesis-vault-backend.onrender.com/api';
 const token = localStorage.getItem('gv_token');
 if (!token) window.location.href = 'login.html';
 
-// ── LAB DEFINITIONS ──────────────────────────────────────────────────
-const LABS = [
+// ── AUTH-AWARE FETCH — redirects to login on 401 ──────────────────────
+async function fetchWithAuth(url, options = {}) {
+  options.headers = {
+    'Authorization': `Bearer ${token}`,
+    ...(options.headers || {})
+  };
+  const res = await fetch(url, options);
+  if (res.status === 401) {
+    localStorage.removeItem('gv_token');
+    window.location.href = 'login.html';
+    throw new Error('Session expired');
+  }
+  return res;
+}
+
+// ── FALLBACK LAB DEFINITIONS (used if backend is unreachable) ─────────
+const FALLBACK_LABS = [
   {
     id:         'fakebank',
     title:      'FakeBank Login',
@@ -807,9 +822,7 @@ async function loadLabs() {
   const grid = document.getElementById('labs-grid');
   grid.innerHTML = '<div style="text-align:center;padding:40px;font-family:\'Share Tech Mono\',monospace;font-size:0.75rem;color:var(--dim);">// Loading labs...</div>';
   try {
-    const res  = await fetch(`${API}/labs`, {
-      headers: { 'Authorization': `Bearer ${token}` }
-    });
+    const res  = await fetchWithAuth(`${API}/labs`);
     const data = await res.json();
     if (data.status === 'success') {
       LABS   = data.labs || [];
@@ -821,7 +834,12 @@ async function loadLabs() {
       grid.innerHTML = '<div style="text-align:center;padding:40px;font-family:\'Share Tech Mono\',monospace;font-size:0.75rem;color:var(--dim);">// No labs available yet.</div>';
     }
   } catch(e) {
-    grid.innerHTML = '<div style="text-align:center;padding:40px;font-family:\'Share Tech Mono\',monospace;font-size:0.75rem;color:var(--accent3);">// Failed to load labs. Check connection.</div>';
+    // Fallback to static labs if backend is unreachable
+    LABS   = FALLBACK_LABS;
+    solved = JSON.parse(localStorage.getItem('gv_lab_solved') || '[]');
+    document.getElementById('stat-total').textContent  = LABS.length;
+    document.getElementById('stat-solved').textContent = solved.length;
+    renderLabs(currentFilter);
   }
 }
 
@@ -889,9 +907,7 @@ async function openLab(id) {
   window.scrollTo(0,0);
 
   try {
-    const res  = await fetch(`${API}/labs/${id}`, {
-      headers: { 'Authorization': `Bearer ${token}` }
-    });
+    const res  = await fetchWithAuth(`${API}/labs/${id}`);
     const data = await res.json();
     if (data.status !== 'success' || !data.lab) {
       document.getElementById('viewer-title').textContent = '// Lab not found';
@@ -971,9 +987,9 @@ async function markComplete() {
   const btn = document.getElementById('complete-btn');
   btn.disabled = true;
   try {
-    const res  = await fetch(`${API}/labs/${currentLab.id}/complete`, {
+    const res  = await fetchWithAuth(`${API}/labs/${currentLab.id}/complete`, {
       method:  'POST',
-      headers: { 'Content-Type':'application/json', 'Authorization': `Bearer ${token}` }
+      headers: { 'Content-Type': 'application/json' }
     });
     const data = await res.json();
     if (data.status === 'success') {
@@ -1001,9 +1017,7 @@ let USER_ID = null, USERNAME = 'ghost', USER_RANK = 'Ghost';
 
 async function initUser() {
   try {
-    const r = await fetch('https://genesis-vault-backend.onrender.com/api/auth/me', {
-      headers: { 'Authorization': `Bearer ${token}` }
-    });
+    const r = await fetchWithAuth('https://genesis-vault-backend.onrender.com/api/auth/me');
     const d = await r.json();
     if (d.status === 'success' && d.user) {
       USER_ID   = d.user.id;
@@ -1044,7 +1058,7 @@ async function sendAI() {
 
     const res = await fetch(`${AI_URL}/api/vault-ai`, {
       method:  'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
       body:    JSON.stringify({
         message:  message,
         rank:     USER_RANK,
