@@ -486,17 +486,6 @@
       <button class="btn" id="reg-btn" onclick="handleRegister()">[ JOIN THE VAULT ]</button>
     </div>
 
-    <!-- ── FORGOT PASSWORD ── -->
-    <div id="panel-forgot" class="form-panel">
-      <div class="form-group">
-        <label>Email</label>
-        <input type="email" id="forgot-email" placeholder="hunter@email.com" autocomplete="email">
-      </div>
-      <button class="btn" id="forgot-btn" onclick="handleForgot()">[ SEND RESET LINK ]</button>
-      <div class="divider">or</div>
-      <button class="btn btn-secondary" onclick="switchTab('login')">← Back to Login</button>
-    </div>
-
   </div>
 
   <div class="back-link">
@@ -846,30 +835,6 @@ async function handleRegister() {
   }
 }
 
-// ── FORGOT PASSWORD ───────────────────────────────────────────────────
-async function handleForgot() {
-  const email = document.getElementById('forgot-email').value.trim();
-  const btn   = document.getElementById('forgot-btn');
-
-  if (!email) return showMsg('Enter your email address.');
-
-  btn.disabled = true;
-  btn.textContent = '[ SENDING... ]';
-  clearMsg();
-
-  const { error } = await sb.auth.resetPasswordForEmail(email, {
-    redirectTo: window.location.origin + '/login.html'
-  });
-
-  btn.disabled = false;
-  btn.textContent = '[ SEND RESET LINK ]';
-
-  if (error) {
-    showMsg(error.message);
-  } else {
-    showMsg('Reset link sent. Check your inbox.', 'info');
-  }
-}
 
 // ── GENERATE REFERRAL CODE ────────────────────────────────────────────
 function generateCode(username) {
@@ -885,7 +850,6 @@ document.addEventListener('keydown', e => {
   if (!active) return;
   if (active.id === 'panel-login')    handleLogin();
   if (active.id === 'panel-register') handleRegister();
-  if (active.id === 'panel-forgot')   handleForgot();
 });
 </script>
 </body>
