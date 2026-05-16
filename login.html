@@ -700,6 +700,13 @@ async function handleLogin() {
 
     addLog('Authentication successful!', 'log-ok');
     setWakeStatus('Access granted. Redirecting...');
+
+    // Store the session token for dashboard
+    const { data: { session } } = await sb.auth.getSession();
+    if (session?.access_token) {
+      localStorage.setItem('gv_token', session.access_token);
+    }
+
     await sleep(800);
     hideWakeup();
     showMsg('Access granted. Welcome back.', 'success');
@@ -889,6 +896,12 @@ async function handleRegister() {
     setWakeStatus(`+${startVC} VC credited. Welcome to the Vault.`);
     await sleep(1200);
     hideWakeup();
+
+    // Store session token if available (email already confirmed)
+    if (authData.session?.access_token) {
+      localStorage.setItem('gv_token', authData.session.access_token);
+    }
+
     showMsg(`Account created! ${startVC} VC credited. Welcome to Genesis Vault.`, 'success');
     setTimeout(() => window.location.replace('dashboard.html'), 1500);
 
