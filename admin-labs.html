@@ -1,0 +1,749 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Genesis Vault | Lab Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:      #020608;
+    --bg2:     #060d10;
+    --bg3:     #0a1520;
+    --accent:  #00f5c4;
+    --accent2: #00a8ff;
+    --accent3: #ff003c;
+    --accent4: #ffaa00;
+    --text:    #c8e6f0;
+    --dim:     #4a7a8a;
+    --border:  #0f2a35;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    background:var(--bg); color:var(--text);
+    font-family:'Rajdhani',sans-serif; min-height:100vh;
+  }
+  body::before {
+    content:''; position:fixed; inset:0;
+    background-image:
+      linear-gradient(rgba(255,0,60,0.02) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,0,60,0.02) 1px, transparent 1px);
+    background-size:40px 40px; pointer-events:none; z-index:0;
+  }
+
+  /* NAV */
+  nav {
+    position:fixed; top:0; left:0; right:0;
+    background:rgba(2,6,8,0.97);
+    border-bottom:1px solid var(--accent3);
+    height:56px; padding:0 20px;
+    display:flex; align-items:center; justify-content:space-between;
+    z-index:100; backdrop-filter:blur(10px);
+  }
+  .nav-logo { font-family:'Share Tech Mono',monospace; font-size:0.9rem; letter-spacing:3px; }
+  .nav-logo span:first-child { color:var(--accent3); }
+  .nav-logo span:last-child  { color:white; }
+  .nav-logo .sub { display:block; font-size:0.6rem; color:var(--accent3); letter-spacing:2px; margin-top:-2px; }
+  .back-btn {
+    background:none; border:1px solid var(--accent3); color:var(--accent3);
+    padding:4px 12px; font-family:'Share Tech Mono',monospace;
+    font-size:0.7rem; cursor:pointer; letter-spacing:1px; transition:all 0.2s;
+  }
+  .back-btn:hover { background:var(--accent3); color:white; }
+
+  /* BOTTOM NAV */
+  .bottom-nav {
+    position:fixed; bottom:0; left:0; right:0;
+    background:rgba(2,6,8,0.97); border-top:1px solid var(--accent3);
+    display:flex; z-index:100;
+  }
+  .nav-item {
+    flex:1; padding:10px 4px; text-align:center;
+    cursor:pointer; border-top:2px solid transparent; transition:all 0.2s;
+  }
+  .nav-item.active { border-top-color:var(--accent3); }
+  .nav-icon { font-size:1.1rem; display:block; }
+  .nav-label {
+    font-size:0.55rem; letter-spacing:1px; text-transform:uppercase;
+    color:var(--dim); font-family:'Share Tech Mono',monospace;
+    margin-top:2px; display:block;
+  }
+  .nav-item.active .nav-label { color:var(--accent3); }
+
+  /* MAIN */
+  main { padding-top:76px; padding-bottom:80px; position:relative; z-index:1; }
+  .page { display:none; padding:16px; }
+  .page.active { display:block; }
+
+  /* SECTION TITLE */
+  .section-title {
+    font-family:'Share Tech Mono',monospace; font-size:0.75rem;
+    color:var(--accent3); letter-spacing:3px; text-transform:uppercase;
+    margin-bottom:14px; border-bottom:1px solid var(--border);
+    padding-bottom:8px; display:flex; align-items:center; justify-content:space-between;
+  }
+
+  /* STAT CARDS */
+  .stats-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:20px; }
+  .stat-card {
+    background:var(--bg2); border:1px solid var(--border);
+    border-left:3px solid var(--accent3); padding:14px;
+  }
+  .stat-card.green  { border-left-color:var(--accent); }
+  .stat-card.blue   { border-left-color:var(--accent2); }
+  .stat-card.yellow { border-left-color:var(--accent4); }
+  .stat-val {
+    font-size:1.8rem; font-weight:700;
+    font-family:'Share Tech Mono',monospace; color:var(--accent);
+  }
+  .stat-card.red    .stat-val { color:var(--accent3); }
+  .stat-card.yellow .stat-val { color:var(--accent4); }
+  .stat-card.blue   .stat-val { color:var(--accent2); }
+  .stat-label { font-size:0.6rem; color:var(--dim); letter-spacing:2px; margin-top:4px; }
+
+  /* BUTTONS */
+  .btn-green {
+    background:var(--accent); color:var(--bg); border:none;
+    padding:8px 16px; font-family:'Rajdhani',sans-serif;
+    font-weight:700; font-size:0.8rem; letter-spacing:2px;
+    cursor:pointer; transition:all 0.2s;
+  }
+  .btn-green:hover { background:white; }
+  .btn-green:disabled { opacity:0.4; cursor:not-allowed; }
+
+  .btn-red {
+    background:none; color:var(--accent3); border:1px solid var(--accent3);
+    padding:8px 16px; font-family:'Rajdhani',sans-serif;
+    font-weight:700; font-size:0.8rem; letter-spacing:2px;
+    cursor:pointer; transition:all 0.2s;
+  }
+  .btn-red:hover { background:var(--accent3); color:white; }
+  .btn-red:disabled { opacity:0.4; cursor:not-allowed; }
+
+  .btn-blue {
+    background:none; color:var(--accent2); border:1px solid var(--accent2);
+    padding:6px 14px; font-family:'Rajdhani',sans-serif;
+    font-weight:700; font-size:0.75rem; letter-spacing:1px;
+    cursor:pointer; transition:all 0.2s;
+  }
+  .btn-blue:hover { background:var(--accent2); color:var(--bg); }
+
+  .btn-full {
+    width:100%; padding:13px; background:var(--accent); color:var(--bg);
+    border:none; font-family:'Rajdhani',sans-serif;
+    font-weight:700; font-size:0.9rem; letter-spacing:2px;
+    cursor:pointer; transition:all 0.2s; margin-top:4px;
+  }
+  .btn-full:hover { background:white; }
+  .btn-full:disabled { opacity:0.4; cursor:not-allowed; }
+
+  /* INPUTS */
+  input[type="text"], input[type="number"], textarea, select {
+    width:100%; background:var(--bg); border:1px solid var(--border);
+    color:var(--text); padding:10px; font-family:'Share Tech Mono',monospace;
+    font-size:0.82rem; outline:none; margin-bottom:10px; transition:border-color 0.2s;
+  }
+  input:focus, textarea:focus, select:focus { border-color:var(--accent3); }
+  textarea { resize:vertical; min-height:80px; }
+  label {
+    display:block; font-family:'Share Tech Mono',monospace;
+    font-size:0.65rem; color:var(--dim); letter-spacing:1px;
+    margin-bottom:4px; text-transform:uppercase;
+  }
+
+  /* LAB CARDS */
+  .lab-item {
+    background:var(--bg2); border:1px solid var(--border);
+    padding:16px; margin-bottom:10px;
+  }
+  .lab-item-top {
+    display:flex; justify-content:space-between;
+    align-items:flex-start; margin-bottom:8px; gap:8px;
+  }
+  .lab-item h4 { font-size:1rem; font-weight:700; color:white; letter-spacing:1px; }
+  .lab-item-meta {
+    font-family:'Share Tech Mono',monospace; font-size:0.65rem;
+    color:var(--dim); margin-bottom:10px;
+  }
+  .lab-item-meta span { color:var(--accent2); }
+  .lab-actions { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+
+  /* TOGGLE SWITCH */
+  .toggle-wrap { display:flex; align-items:center; gap:8px; }
+  .toggle-label {
+    font-family:'Share Tech Mono',monospace; font-size:0.6rem;
+    color:var(--dim); letter-spacing:1px;
+  }
+  .toggle {
+    position:relative; width:40px; height:22px; cursor:pointer;
+  }
+  .toggle input { opacity:0; width:0; height:0; }
+  .toggle-slider {
+    position:absolute; inset:0;
+    background:var(--border); border:1px solid var(--dim);
+    transition:all 0.3s;
+  }
+  .toggle-slider::before {
+    content:''; position:absolute;
+    width:14px; height:14px; left:3px; top:3px;
+    background:var(--dim); transition:all 0.3s;
+  }
+  .toggle input:checked + .toggle-slider { background:rgba(0,245,196,0.1); border-color:var(--accent); }
+  .toggle input:checked + .toggle-slider::before { background:var(--accent); transform:translateX(18px); }
+
+  /* DIFF BADGE */
+  .diff { font-family:'Share Tech Mono',monospace; font-size:0.6rem; padding:2px 8px; border:1px solid; letter-spacing:1px; }
+  .diff-easy   { color:var(--accent);  border-color:var(--accent); }
+  .diff-medium { color:var(--accent4); border-color:var(--accent4); }
+  .diff-hard   { color:var(--accent3); border-color:var(--accent3); }
+
+  /* COMPLETIONS BAR */
+  .completions-row {
+    display:flex; align-items:center; gap:8px; margin-top:8px;
+  }
+  .comp-bar-wrap {
+    flex:1; background:var(--border); height:4px;
+  }
+  .comp-bar { height:4px; background:var(--accent); transition:width 0.5s; }
+  .comp-count {
+    font-family:'Share Tech Mono',monospace; font-size:0.65rem;
+    color:var(--accent); white-space:nowrap;
+  }
+
+  /* FORM SECTION */
+  .form-card {
+    background:var(--bg2); border:1px solid var(--border); padding:16px; margin-bottom:16px;
+  }
+
+  /* HTML EDITOR */
+  #lab-html-content {
+    min-height:200px; font-size:0.75rem; line-height:1.6;
+    font-family:'Share Tech Mono',monospace;
+  }
+
+  /* HINTS EDITOR */
+  .hint-row {
+    display:flex; gap:8px; margin-bottom:8px; align-items:center;
+  }
+  .hint-row input { margin-bottom:0; flex:1; }
+  .hint-del {
+    background:none; border:1px solid var(--accent3); color:var(--accent3);
+    width:32px; height:38px; cursor:pointer; font-size:1rem; flex-shrink:0;
+    transition:all 0.2s;
+  }
+  .hint-del:hover { background:var(--accent3); color:white; }
+  .add-hint-btn {
+    background:none; border:1px solid var(--border); color:var(--dim);
+    padding:6px 14px; font-family:'Share Tech Mono',monospace;
+    font-size:0.65rem; cursor:pointer; letter-spacing:1px;
+    transition:all 0.2s; margin-bottom:10px;
+  }
+  .add-hint-btn:hover { border-color:var(--accent); color:var(--accent); }
+
+  /* TAG INPUT */
+  .tags-input-wrap { display:flex; gap:8px; margin-bottom:10px; }
+  .tags-input-wrap input { margin-bottom:0; flex:1; }
+  .tag-add-btn {
+    background:none; border:1px solid var(--accent); color:var(--accent);
+    padding:0 14px; font-family:'Share Tech Mono',monospace; font-size:0.65rem;
+    cursor:pointer; letter-spacing:1px; transition:all 0.2s; flex-shrink:0;
+  }
+  .tag-add-btn:hover { background:var(--accent); color:var(--bg); }
+  .tags-list { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:10px; }
+  .tag-chip {
+    background:var(--bg3); border:1px solid var(--border);
+    font-family:'Share Tech Mono',monospace; font-size:0.6rem;
+    color:var(--dim); padding:2px 8px; cursor:pointer; letter-spacing:1px;
+    transition:all 0.2s;
+  }
+  .tag-chip:hover { border-color:var(--accent3); color:var(--accent3); }
+
+  /* TOAST */
+  .toast {
+    position:fixed; bottom:90px; left:50%; transform:translateX(-50%);
+    background:var(--accent); color:var(--bg); padding:10px 24px;
+    font-family:'Share Tech Mono',monospace; font-size:0.75rem; letter-spacing:2px;
+    z-index:300; opacity:0; transition:opacity 0.3s; pointer-events:none; white-space:nowrap;
+  }
+  .toast.show { opacity:1; }
+
+  .spinner {
+    display:inline-block; width:14px; height:14px;
+    border:2px solid var(--border); border-top-color:var(--accent3);
+    border-radius:50%; animation:spin 0.8s linear infinite;
+    vertical-align:middle; margin-right:6px;
+  }
+  .loading { text-align:center; padding:30px; color:var(--dim); font-family:'Share Tech Mono',monospace; font-size:0.75rem; }
+  .empty   { text-align:center; padding:30px; color:var(--dim); font-family:'Share Tech Mono',monospace; font-size:0.75rem; }
+
+  @keyframes spin    { to { transform:rotate(360deg); } }
+  @keyframes fadeIn  { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-logo">
+    <span>GENESIS</span><span>VAULT</span>
+    <span class="sub">// LAB ADMIN</span>
+  </div>
+  <button class="back-btn" onclick="window.location.href='admin.html'">← ADMIN</button>
+</nav>
+
+<main>
+
+  <!-- ══ OVERVIEW ══ -->
+  <div class="page active" id="page-overview">
+    <div class="section-title">// Lab Overview</div>
+    <div class="stats-grid" id="stats-grid">
+      <div class="loading" style="grid-column:1/-1"><span class="spinner"></span>Loading...</div>
+    </div>
+    <div class="section-title" style="margin-top:4px;">
+      // All Labs
+      <button class="btn-blue" onclick="loadLabs()">↻ REFRESH</button>
+    </div>
+    <div id="labs-overview-list">
+      <div class="loading"><span class="spinner"></span>Loading...</div>
+    </div>
+  </div>
+
+  <!-- ══ ADD LAB ══ -->
+  <div class="page" id="page-add">
+    <div class="section-title">// Add New Lab</div>
+
+    <div class="form-card">
+      <label>Lab Title *</label>
+      <input type="text" id="f-title" placeholder="e.g. FakeBank Login">
+
+      <label>Short Description *</label>
+      <textarea id="f-desc" placeholder="Brief description of the lab objective..." style="min-height:70px;"></textarea>
+
+      <label>Objective (shown to user) *</label>
+      <textarea id="f-objective" placeholder="Exact task the user must complete..." style="min-height:60px;"></textarea>
+
+      <label>Category</label>
+      <select id="f-category">
+        <option value="AUTH">AUTH</option>
+        <option value="WEB">WEB</option>
+        <option value="API">API</option>
+        <option value="RECON">RECON</option>
+        <option value="OSINT">OSINT</option>
+        <option value="MISC">MISC</option>
+      </select>
+
+      <label>Difficulty</label>
+      <select id="f-difficulty">
+        <option value="easy">Easy</option>
+        <option value="medium">Medium</option>
+        <option value="hard">Hard</option>
+      </select>
+
+      <label>Tags (click to remove)</label>
+      <div class="tags-input-wrap">
+        <input type="text" id="f-tag-input" placeholder="e.g. sql-injection" onkeydown="if(event.key==='Enter'){addTag();event.preventDefault()}">
+        <button class="tag-add-btn" onclick="addTag()">+ ADD</button>
+      </div>
+      <div class="tags-list" id="tags-list"></div>
+
+      <label>Hints (one per line)</label>
+      <div id="hints-list"></div>
+      <button class="add-hint-btn" onclick="addHintRow()">+ ADD HINT</button>
+    </div>
+
+    <div class="form-card">
+      <div class="section-title" style="margin-bottom:12px;">// Lab HTML Content *</div>
+      <p style="font-size:0.75rem;color:var(--dim);margin-bottom:10px;line-height:1.6;">
+        Paste the full HTML of the vulnerable target app. This will be rendered inside a sandboxed iframe.
+        Include intentional vulnerabilities, flags, and any embedded JavaScript.
+      </p>
+      <textarea id="lab-html-content" placeholder="<!DOCTYPE html><html>..."></textarea>
+    </div>
+
+    <button class="btn-full" onclick="publishLab()" id="publish-btn">[ PUBLISH LAB ]</button>
+  </div>
+
+  <!-- ══ COMPLETIONS ══ -->
+  <div class="page" id="page-completions">
+    <div class="section-title">
+      // Completions
+      <button class="btn-blue" onclick="loadCompletions()">↻ REFRESH</button>
+    </div>
+    <div id="completions-list">
+      <div class="loading"><span class="spinner"></span>Loading...</div>
+    </div>
+  </div>
+
+</main>
+
+<!-- BOTTOM NAV -->
+<div class="bottom-nav">
+  <div class="nav-item active" onclick="showPage('overview',this)">
+    <span class="nav-icon">◈</span>
+    <span class="nav-label">Overview</span>
+  </div>
+  <div class="nav-item" onclick="showPage('add',this)">
+    <span class="nav-icon">⊕</span>
+    <span class="nav-label">Add Lab</span>
+  </div>
+  <div class="nav-item" onclick="showPage('completions',this)">
+    <span class="nav-icon">◉</span>
+    <span class="nav-label">Completions</span>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const API   = 'https://genesis-vault-backend.onrender.com/api';
+const token = localStorage.getItem('gv_admin_token');
+if (!token) window.location.href = 'admin-login.html';
+
+let currentTags  = [];
+let editingLabId = null;
+
+// ── AUTH HEADER ───────────────────────────────────────────────────────
+function authH() {
+  return { 'Content-Type':'application/json', 'Authorization':`Bearer ${token}` };
+}
+
+// ── TOAST ─────────────────────────────────────────────────────────────
+function toast(msg, color = 'var(--accent)') {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.style.background = color === 'var(--accent)' ? 'var(--accent)' : color;
+  el.style.color = color === 'var(--accent)' ? 'var(--bg)' : 'white';
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 2800);
+}
+
+// ── PAGE NAV ──────────────────────────────────────────────────────────
+function showPage(name, el) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById(`page-${name}`).classList.add('active');
+  el.classList.add('active');
+  if (name === 'overview')    { loadStats(); loadLabs(); }
+  if (name === 'completions') loadCompletions();
+  if (name === 'add' && !editingLabId) resetForm();
+}
+
+// ── STATS ─────────────────────────────────────────────────────────────
+async function loadStats() {
+  const grid = document.getElementById('stats-grid');
+  try {
+    const res  = await fetch(`${API}/admin/labs/stats`, { headers: authH() });
+    const data = await res.json();
+    const d    = data.stats || {};
+    grid.innerHTML = `
+      <div class="stat-card green">
+        <div class="stat-val">${d.total_labs ?? 0}</div>
+        <div class="stat-label">Total Labs</div>
+      </div>
+      <div class="stat-card blue">
+        <div class="stat-val">${d.live_labs ?? 0}</div>
+        <div class="stat-label">Live</div>
+      </div>
+      <div class="stat-card yellow">
+        <div class="stat-val">${d.total_completions ?? 0}</div>
+        <div class="stat-label">Completions</div>
+      </div>
+      <div class="stat-card red">
+        <div class="stat-val">${d.offline_labs ?? 0}</div>
+        <div class="stat-label">Offline</div>
+      </div>`;
+  } catch(e) {
+    grid.innerHTML = `
+      <div class="stat-card green"><div class="stat-val">—</div><div class="stat-label">Total Labs</div></div>
+      <div class="stat-card blue"><div class="stat-val">—</div><div class="stat-label">Live</div></div>
+      <div class="stat-card yellow"><div class="stat-val">—</div><div class="stat-label">Completions</div></div>
+      <div class="stat-card red"><div class="stat-val">—</div><div class="stat-label">Offline</div></div>`;
+  }
+}
+
+// ── LABS LIST ─────────────────────────────────────────────────────────
+async function loadLabs() {
+  const list = document.getElementById('labs-overview-list');
+  list.innerHTML = '<div class="loading"><span class="spinner"></span>Loading...</div>';
+  try {
+    const res  = await fetch(`${API}/admin/labs`, { headers: authH() });
+    const data = await res.json();
+    const labs = data.labs || [];
+
+    if (!labs.length) {
+      list.innerHTML = '<div class="empty">// No labs yet. Add your first lab.</div>';
+      return;
+    }
+
+    list.innerHTML = labs.map(lab => `
+      <div class="lab-item" id="lab-item-${lab.id}">
+        <div class="lab-item-top">
+          <div>
+            <h4>${lab.title}</h4>
+            <div class="lab-item-meta">
+              <span>${lab.category}</span> ·
+              <span class="diff diff-${lab.difficulty}">${lab.difficulty.toUpperCase()}</span>
+            </div>
+          </div>
+          <div class="toggle-wrap">
+            <span class="toggle-label">${lab.is_live ? 'LIVE' : 'OFF'}</span>
+            <label class="toggle">
+              <input type="checkbox" ${lab.is_live ? 'checked' : ''} onchange="toggleLive(${lab.id}, this)">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+        </div>
+        <div class="completions-row">
+          <div class="comp-bar-wrap">
+            <div class="comp-bar" style="width:${Math.min((lab.completions||0)/10*100,100)}%"></div>
+          </div>
+          <span class="comp-count">${lab.completions || 0} solved</span>
+        </div>
+        <div class="lab-actions" style="margin-top:12px;">
+          <button class="btn-blue" style="font-size:0.65rem;padding:4px 10px;" onclick="editLab(${lab.id})">[ EDIT ]</button>
+          <button class="btn-red"  style="font-size:0.65rem;padding:4px 10px;" onclick="deleteLab(${lab.id}, this)">[ DELETE ]</button>
+        </div>
+      </div>`).join('');
+  } catch(e) {
+    list.innerHTML = '<div class="empty">// Failed to load labs.</div>';
+  }
+}
+
+// ── TOGGLE LIVE ───────────────────────────────────────────────────────
+async function toggleLive(id, checkbox) {
+  const isLive = checkbox.checked;
+  const label  = checkbox.closest('.toggle-wrap').querySelector('.toggle-label');
+  label.textContent = isLive ? 'LIVE' : 'OFF';
+  try {
+    const res = await fetch(`${API}/admin/labs/${id}/toggle`, {
+      method:  'POST',
+      headers: authH(),
+      body:    JSON.stringify({ is_live: isLive })
+    });
+    const d = await res.json();
+    if (d.status === 'success') {
+      toast(isLive ? '// Lab is now LIVE' : '// Lab taken OFFLINE');
+      loadStats();
+    } else {
+      checkbox.checked = !isLive;
+      label.textContent = !isLive ? 'LIVE' : 'OFF';
+      toast('// Toggle failed', 'var(--accent3)');
+    }
+  } catch(e) {
+    checkbox.checked = !isLive;
+    label.textContent = !isLive ? 'LIVE' : 'OFF';
+    toast('// Network error', 'var(--accent3)');
+  }
+}
+
+// ── DELETE LAB ────────────────────────────────────────────────────────
+async function deleteLab(id, btn) {
+  if (!confirm('Permanently delete this lab? This cannot be undone.')) return;
+  btn.disabled = true; btn.textContent = '...';
+  try {
+    const res = await fetch(`${API}/admin/labs/${id}/delete`, { method:'POST', headers:authH() });
+    if (res.ok) {
+      document.getElementById(`lab-item-${id}`).remove();
+      toast('// Lab deleted', 'var(--accent3)');
+      loadStats();
+    } else {
+      toast('// Delete failed', 'var(--accent3)');
+      btn.disabled = false; btn.textContent = '[ DELETE ]';
+    }
+  } catch(e) {
+    toast('// Network error', 'var(--accent3)');
+    btn.disabled = false; btn.textContent = '[ DELETE ]';
+  }
+}
+
+// ── EDIT LAB ──────────────────────────────────────────────────────────
+async function editLab(id) {
+  try {
+    const res  = await fetch(`${API}/admin/labs/${id}`, { headers: authH() });
+    const data = await res.json();
+    const lab  = data.lab;
+    if (!lab) { toast('// Failed to load lab', 'var(--accent3)'); return; }
+
+    editingLabId = id;
+    document.getElementById('f-title').value     = lab.title || '';
+    document.getElementById('f-desc').value      = lab.description || '';
+    document.getElementById('f-objective').value = lab.objective || '';
+    document.getElementById('f-category').value  = lab.category || 'AUTH';
+    document.getElementById('f-difficulty').value= lab.difficulty || 'easy';
+    document.getElementById('lab-html-content').value = lab.html_content || '';
+
+    currentTags = lab.tags || [];
+    renderTags();
+
+    // Load hints
+    document.getElementById('hints-list').innerHTML = '';
+    (lab.hints || []).forEach(h => addHintRow(h));
+
+    document.getElementById('publish-btn').textContent = '[ UPDATE LAB ]';
+
+    // Switch to add page
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    document.getElementById('page-add').classList.add('active');
+    document.querySelectorAll('.nav-item')[1].classList.add('active');
+    document.querySelector('.section-title').textContent = `// Edit Lab #${id}`;
+    window.scrollTo(0,0);
+    toast('// Lab loaded for editing');
+  } catch(e) {
+    toast('// Failed to load lab', 'var(--accent3)');
+  }
+}
+
+// ── TAGS ──────────────────────────────────────────────────────────────
+function addTag() {
+  const input = document.getElementById('f-tag-input');
+  const val   = input.value.trim().toLowerCase().replace(/\s+/g,'-');
+  if (!val || currentTags.includes(val)) { input.value=''; return; }
+  currentTags.push(val);
+  input.value = '';
+  renderTags();
+}
+
+function removeTag(tag) {
+  currentTags = currentTags.filter(t => t !== tag);
+  renderTags();
+}
+
+function renderTags() {
+  document.getElementById('tags-list').innerHTML =
+    currentTags.map(t => `<span class="tag-chip" onclick="removeTag('${t}')">${t} ×</span>`).join('');
+}
+
+// ── HINTS ─────────────────────────────────────────────────────────────
+function addHintRow(value = '') {
+  const wrap = document.createElement('div');
+  wrap.className = 'hint-row';
+  wrap.innerHTML = `
+    <input type="text" placeholder="Hint text..." value="${value.replace(/"/g,'&quot;')}">
+    <button class="hint-del" onclick="this.parentElement.remove()">×</button>`;
+  document.getElementById('hints-list').appendChild(wrap);
+}
+
+function getHints() {
+  return [...document.querySelectorAll('#hints-list .hint-row input')]
+    .map(i => i.value.trim()).filter(Boolean);
+}
+
+// ── PUBLISH / UPDATE ──────────────────────────────────────────────────
+async function publishLab() {
+  const btn  = document.getElementById('publish-btn');
+  const title    = document.getElementById('f-title').value.trim();
+  const desc     = document.getElementById('f-desc').value.trim();
+  const objective= document.getElementById('f-objective').value.trim();
+  const category = document.getElementById('f-category').value;
+  const difficulty=document.getElementById('f-difficulty').value;
+  const html     = document.getElementById('lab-html-content').value.trim();
+  const hints    = getHints();
+
+  if (!title || !desc || !objective || !html) {
+    toast('// Title, description, objective and HTML are required', 'var(--accent3)');
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = editingLabId ? '[ UPDATING... ]' : '[ PUBLISHING... ]';
+
+  const payload = { title, description: desc, objective, category, difficulty,
+                    tags: currentTags, hints, html_content: html, is_live: true };
+
+  const url    = editingLabId ? `${API}/admin/labs/${editingLabId}/update` : `${API}/admin/labs/create`;
+  const method = 'POST';
+
+  try {
+    const res  = await fetch(url, { method, headers: authH(), body: JSON.stringify(payload) });
+    const data = await res.json();
+    if (data.status === 'success') {
+      toast(editingLabId ? '// Lab updated!' : '// Lab published!');
+      resetForm();
+      loadStats();
+      loadLabs();
+    } else {
+      toast(`// ${data.message || 'Failed'}`, 'var(--accent3)');
+      btn.disabled = false;
+      btn.textContent = editingLabId ? '[ UPDATE LAB ]' : '[ PUBLISH LAB ]';
+    }
+  } catch(e) {
+    toast('// Network error', 'var(--accent3)');
+    btn.disabled = false;
+    btn.textContent = editingLabId ? '[ UPDATE LAB ]' : '[ PUBLISH LAB ]';
+  }
+}
+
+function resetForm() {
+  editingLabId = null;
+  document.getElementById('f-title').value      = '';
+  document.getElementById('f-desc').value       = '';
+  document.getElementById('f-objective').value  = '';
+  document.getElementById('f-category').value   = 'AUTH';
+  document.getElementById('f-difficulty').value = 'easy';
+  document.getElementById('lab-html-content').value = '';
+  document.getElementById('hints-list').innerHTML   = '';
+  document.getElementById('publish-btn').textContent = '[ PUBLISH LAB ]';
+  document.getElementById('publish-btn').disabled    = false;
+  currentTags = [];
+  renderTags();
+  // Add 2 blank hint rows by default
+  addHintRow(); addHintRow();
+}
+
+// ── COMPLETIONS ───────────────────────────────────────────────────────
+async function loadCompletions() {
+  const list = document.getElementById('completions-list');
+  list.innerHTML = '<div class="loading"><span class="spinner"></span>Loading...</div>';
+  try {
+    const res  = await fetch(`${API}/admin/labs/completions`, { headers: authH() });
+    const data = await res.json();
+    const rows = data.completions || [];
+
+    if (!rows.length) {
+      list.innerHTML = '<div class="empty">// No completions yet.</div>';
+      return;
+    }
+
+    // Group by lab
+    const grouped = {};
+    rows.forEach(r => {
+      if (!grouped[r.lab_title]) grouped[r.lab_title] = [];
+      grouped[r.lab_title].push(r);
+    });
+
+    list.innerHTML = Object.entries(grouped).map(([labTitle, comps]) => `
+      <div class="lab-item">
+        <h4>${labTitle}</h4>
+        <div class="lab-item-meta">${comps.length} completion${comps.length !== 1 ? 's' : ''}</div>
+        <div style="margin-top:8px;">
+          ${comps.slice(0,8).map(c => `
+            <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);font-size:0.78rem;">
+              <span style="color:var(--accent2);font-family:'Share Tech Mono',monospace;">${c.username || 'Unknown'}</span>
+              <span style="color:var(--dim);font-family:'Share Tech Mono',monospace;font-size:0.65rem;">${timeAgo(c.completed_at)}</span>
+            </div>`).join('')}
+          ${comps.length > 8 ? `<div style="padding:6px 0;font-family:'Share Tech Mono',monospace;font-size:0.65rem;color:var(--dim);">+${comps.length - 8} more</div>` : ''}
+        </div>
+      </div>`).join('');
+  } catch(e) {
+    list.innerHTML = '<div class="empty">// Failed to load completions.</div>';
+  }
+}
+
+function timeAgo(dateStr) {
+  if (!dateStr) return 'unknown';
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1)  return 'just now';
+  if (mins < 60) return `${mins}m ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24)  return `${hrs}h ago`;
+  return `${Math.floor(hrs / 24)}d ago`;
+}
+
+// ── INIT ──────────────────────────────────────────────────────────────
+loadStats();
+loadLabs();
+resetForm();
+</script>
+</body>
+</html>
