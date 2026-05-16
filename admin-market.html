@@ -442,13 +442,26 @@
 </div>
 
 <script>
-const API = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
-  ? 'http://localhost:3000/api'
-  : '/api';
+const API = 'https://genesis-vault-backend.onrender.com/api';
+
+const _token = localStorage.getItem('gv_token') || sessionStorage.getItem('gv_token');
+if (!_token) location.href = 'admin-login.html';
 
 function h() {
-  const token = localStorage.getItem('gv_token') || sessionStorage.getItem('gv_token');
-  return { 'Content-Type':'application/json', 'Authorization': `Bearer ${token}` };
+  return { 'Content-Type':'application/json', 'Authorization': `Bearer ${_token}` };
+}
+
+// ── AUTH-AWARE FETCH — redirects to admin-login on 401 ──
+async function fetchWithAuth(url, options = {}) {
+  if (!options.headers) options.headers = h();
+  const res = await fetch(url, options);
+  if (res.status === 401) {
+    localStorage.removeItem('gv_token');
+    sessionStorage.removeItem('gv_token');
+    location.href = 'admin-login.html';
+    throw new Error('Unauthorized');
+  }
+  return res;
 }
 
 /* ── STATE ── */
@@ -477,7 +490,7 @@ async function boot() {
 /* ═══════════════════════════ 1. STATS ═══════════════════════════ */
 async function loadStats() {
   try {
-    const res  = await fetch(`${API}/admin/market/stats`, { headers: h() });
+    const res  = await fetchWithAuth(`${API}/admin/market/stats`);
     const data = await res.json();
     document.getElementById('stat-revenue').textContent = `$${(data.total_revenue || 0).toLocaleString()}`;
     document.getElementById('stat-pending').textContent = data.pending_count  || 0;
@@ -497,7 +510,7 @@ async function loadStats() {
 async function loadQueue() {
   const c = document.getElementById('queue-container');
   try {
-    const res  = await fetch(`${API}/admin/market/queue`, { headers: h() });
+    const res  = await fetchWithAuth(`${API}/admin/market/queue`);
     const data = await res.json();
     const items = data.queue || [];
     const pending = items.filter(i => i.status === 'pending');
@@ -569,7 +582,7 @@ async function approvePayment(id) {
   const btn = document.getElementById(`btn-approve-${id}`);
   btn.disabled = true; btn.textContent = '[ APPROVING... ]';
   try {
-    const res  = await fetch(`${API}/admin/market/approve`, {
+    const res  = await fetchWithAuth(`${API}/admin/market/approve`, {
       method:'POST', headers: h(), body: JSON.stringify({ payment_id: id })
     });
     const data = await res.json();
@@ -594,7 +607,7 @@ async function rejectPayment(id) {
   const reason = document.getElementById(`reject-reason-${id}`).value.trim();
   if (!reason) { toast('// Enter a rejection reason.', true); return; }
   try {
-    const res  = await fetch(`${API}/admin/market/reject`, {
+    const res  = await fetchWithAuth(`${API}/admin/market/reject`, {
       method:'POST', headers: h(), body: JSON.stringify({ payment_id: id, reason })
     });
     const data = await res.json();
@@ -614,7 +627,7 @@ async function rejectPayment(id) {
 async function loadToolsMgr() {
   const c = document.getElementById('tools-mgr-container');
   try {
-    const res  = await fetch(`${API}/marketplace`, { headers: h() });
+    const res  = await fetchWithAuth(`${API}/marketplace`);
     const data = await res.json();
     allTools   = data.tools || [];
     renderToolsMgr();
@@ -650,7 +663,7 @@ async function toggleToolActive(id, el) {
   track.classList.toggle('on', !isOn);
   lbl.textContent = !isOn ? 'ACTIVE' : 'INACTIVE';
   try {
-    await fetch(`${API}/admin/tools/${id}/toggle`, {
+    await fetchWithAuth(`${API}/admin/tools/${id}/toggle`, {
       method:'POST', headers: h(), body: JSON.stringify({ is_active: !isOn })
     });
   } catch(e) {
@@ -704,7 +717,7 @@ async function confirmDelete() {
   const msg = document.getElementById('delete-status');
   btn.disabled = true; btn.textContent = '[ DELETING... ]';
   try {
-    const res  = await fetch(`${API}/admin/tools/${deletingToolId}`, { method:'DELETE', headers: h() });
+    const res  = await fetchWithAuth(`${API}/admin/tools/${deletingToolId}`, { method:'DELETE', headers: h() });
     const data = await res.json();
     if (data.status === 'success') {
       closeModal('modal-delete');
@@ -742,7 +755,7 @@ async function submitTool() {
   try {
     const url    = editingToolId ? `${API}/admin/tools/${editingToolId}` : `${API}/admin/tools`;
     const method = editingToolId ? 'PUT' : 'POST';
-    const res    = await fetch(url, { method, headers: h(), body: JSON.stringify(payload) });
+    const res    = await fetchWithAuth(url, { method, headers: h(), body: JSON.stringify(payload) });
     const data   = await res.json();
     if (data.status === 'success') {
       closeModal('modal-tool');
@@ -763,7 +776,7 @@ async function submitTool() {
 async function loadPromos() {
   const c = document.getElementById('promos-container');
   try {
-    const res  = await fetch(`${API}/admin/promos`, { headers: h() });
+    const res  = await fetchWithAuth(`${API}/admin/promos`);
     const data = await res.json();
     allPromos  = data.promos || [];
     renderPromos();
@@ -810,7 +823,7 @@ async function submitPromo() {
   };
   if (!payload.code || !payload.value) { showStatus(msg,'// Code and value required.',true); return; }
   try {
-    const res  = await fetch(`${API}/admin/promos`, { method:'POST', headers: h(), body: JSON.stringify(payload) });
+    const res  = await fetchWithAuth(`${API}/admin/promos`, { method:'POST', headers: h(), body: JSON.stringify(payload) });
     const data = await res.json();
     if (data.status === 'success') {
       closeModal('modal-promo');
@@ -824,7 +837,7 @@ async function submitPromo() {
 
 async function deactivatePromo(id) {
   try {
-    const res  = await fetch(`${API}/admin/promos/${id}/deactivate`, { method:'POST', headers: h() });
+    const res  = await fetchWithAuth(`${API}/admin/promos/${id}/deactivate`, { method:'POST', headers: h() });
     const data = await res.json();
     if (data.status === 'success') { loadPromos(); toast('// Code deactivated.'); }
     else toast('// Failed: ' + (data.message||''), true);
@@ -834,7 +847,7 @@ async function deactivatePromo(id) {
 /* ═══════════════════════════ 5. REVENUE ═══════════════════════════ */
 async function loadRevenue() {
   try {
-    const res  = await fetch(`${API}/admin/market/revenue`, { headers: h() });
+    const res  = await fetchWithAuth(`${API}/admin/market/revenue`);
     const data = await res.json();
     allRevenue = data.transactions || [];
     renderRevenue();
