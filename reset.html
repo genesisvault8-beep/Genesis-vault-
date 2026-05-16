@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Genesis Vault | Reset</title>
+<meta name="robots" content="noindex, nofollow, noarchive">
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:      #020608;
+    --bg2:     #060d10;
+    --accent:  #00f5c4;
+    --accent2: #00a8ff;
+    --accent3: #ff003c;
+    --text:    #c8e6f0;
+    --text-dim:#4a7a8a;
+    --border:  #0f2a35;
+    --glow:    0 0 20px rgba(0,245,196,0.3);
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Rajdhani', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    overflow-x: hidden;
+    overflow-y: auto;
+  }
+
+  /* Grid */
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image:
+      linear-gradient(rgba(0,245,196,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,245,196,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none; z-index: 0;
+  }
+
+  /* Scanlines */
+  body::after {
+    content: '';
+    position: fixed; inset: 0;
+    background: repeating-linear-gradient(
+      0deg, transparent, transparent 2px,
+      rgba(0,0,0,0.07) 2px, rgba(0,0,0,0.07) 4px
+    );
+    pointer-events: none; z-index: 1;
+  }
+
+  .scanner {
+    position: fixed; top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--accent3), transparent);
+    animation: scan 4s linear infinite;
+    z-index: 10;
+  }
+  @keyframes scan {
+    0%   { top: 0;     opacity: 1; }
+    100% { top: 100vh; opacity: 0; }
+  }
+
+  .container {
+    position: relative; z-index: 2;
+    width: 100%; max-width: 420px;
+    padding: 20px;
+  }
+
+  /* LOGO */
+  .logo {
+    text-align: center;
+    margin-bottom: 32px;
+    animation: fadeDown 0.5s ease;
+  }
+  .logo-text {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 1.4rem; letter-spacing: 4px;
+    text-decoration: none; display: block;
+  }
+  .logo-text .g { color: var(--accent); }
+  .logo-text .v { color: white; }
+  .logo p {
+    color: var(--text-dim);
+    font-size: 0.72rem; letter-spacing: 3px;
+    margin-top: 6px;
+    font-family: 'Share Tech Mono', monospace;
+  }
+
+  /* CARD */
+  .card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-top: 2px solid var(--accent3);
+    padding: 32px 28px;
+    animation: fadeUp 0.5s ease;
+    position: relative;
+  }
+  .card::before {
+    content: '// IDENTITY VERIFICATION';
+    position: absolute; top: 0; right: 14px;
+    transform: translateY(-50%);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.5rem; color: var(--accent3);
+    letter-spacing: 2px; background: var(--bg2); padding: 0 6px;
+  }
+
+  .card h2 {
+    font-size: 1.2rem; font-weight: 700;
+    letter-spacing: 3px; text-transform: uppercase;
+    margin-bottom: 4px; color: white;
+  }
+  .card .sub {
+    color: var(--text-dim); font-size: 0.75rem;
+    letter-spacing: 1px; margin-bottom: 24px;
+    font-family: 'Share Tech Mono', monospace;
+    line-height: 1.6;
+  }
+
+  /* STEPS */
+  .steps {
+    display: flex; gap: 0;
+    margin-bottom: 24px;
+  }
+  .step {
+    flex: 1; text-align: center;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.55rem; letter-spacing: 1px;
+    color: var(--text-dim); padding: 6px 4px;
+    border-bottom: 2px solid var(--border);
+    transition: all 0.3s;
+  }
+  .step.active {
+    color: var(--accent3);
+    border-bottom-color: var(--accent3);
+  }
+  .step.done {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+  }
+
+  /* MSG */
+  .msg-box {
+    padding: 10px 14px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.75rem; margin-bottom: 16px;
+    display: none; line-height: 1.5; letter-spacing: 0.5px;
+  }
+  .msg-box.error {
+    background: rgba(255,0,60,0.08);
+    border: 1px solid var(--accent3);
+    color: var(--accent3);
+  }
+  .msg-box.success {
+    background: rgba(0,245,196,0.08);
+    border: 1px solid var(--accent);
+    color: var(--accent);
+  }
+  .msg-box.info {
+    background: rgba(0,168,255,0.08);
+    border: 1px solid var(--accent2);
+    color: var(--accent2);
+  }
+
+  /* PANELS */
+  .panel { display: none; }
+  .panel.active { display: block; }
+
+  /* FORM */
+  .form-group { margin-bottom: 16px; }
+  label {
+    display: block;
+    font-size: 0.65rem; letter-spacing: 2px;
+    text-transform: uppercase; color: var(--text-dim);
+    margin-bottom: 7px;
+    font-family: 'Share Tech Mono', monospace;
+  }
+  input {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 11px 14px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.85rem; outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    letter-spacing: 0.5px;
+  }
+  input:focus { border-color: var(--accent3); box-shadow: 0 0 20px rgba(255,0,60,0.15); }
+  input::placeholder { color: var(--text-dim); }
+
+  /* PASSWORD WRAPPER */
+  .input-wrapper { position: relative; display: flex; align-items: center; }
+  .input-wrapper input { width: 100%; padding-right: 50px; }
+  .toggle-pw {
+    position: absolute; right: 12px;
+    background: none; border: none; cursor: pointer;
+    color: var(--text-dim);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.62rem; letter-spacing: 1px;
+    padding: 0; transition: color 0.2s;
+  }
+  .toggle-pw:hover { color: var(--accent); }
+
+  /* PASSWORD STRENGTH */
+  .strength-bar {
+    height: 3px; background: var(--border);
+    margin-top: 6px; overflow: hidden;
+  }
+  .strength-fill { height: 100%; width: 0%; transition: width 0.3s, background 0.3s; }
+  .strength-label {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.6rem; letter-spacing: 2px;
+    margin-top: 4px; color: var(--text-dim);
+  }
+
+  /* BTN */
+  .btn {
+    width: 100%; padding: 13px;
+    background: var(--accent3); color: white;
+    border: none;
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 700; font-size: 0.95rem;
+    letter-spacing: 3px; text-transform: uppercase;
+    cursor: pointer; transition: all 0.2s;
+    margin-top: 6px;
+    clip-path: polygon(8px 0%, 100% 0%, calc(100% - 8px) 100%, 0% 100%);
+  }
+  .btn:hover { background: white; color: var(--bg); }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  /* COOLDOWN BAR */
+  .cooldown-wrap {
+    display: none;
+    margin-top: 14px;
+  }
+  .cooldown-label {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.6rem; color: var(--accent3);
+    letter-spacing: 2px; margin-bottom: 6px;
+    text-align: center;
+  }
+  .cooldown-bar {
+    height: 3px; background: var(--border); overflow: hidden;
+  }
+  .cooldown-fill {
+    height: 100%; background: var(--accent3);
+    transition: width 1s linear;
+  }
+
+  /* WARNING BOX */
+  .warning-box {
+    background: rgba(255,0,60,0.05);
+    border: 1px solid rgba(255,0,60,0.2);
+    border-left: 3px solid var(--accent3);
+    padding: 12px 14px; margin-bottom: 20px;
+  }
+  .warning-box p {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.62rem; color: var(--text-dim);
+    letter-spacing: 1px; line-height: 1.8;
+  }
+  .warning-box p span { color: var(--accent3); }
+
+  /* SUCCESS STATE */
+  .success-state {
+    text-align: center; padding: 10px 0;
+  }
+  .success-icon {
+    font-size: 2.5rem; margin-bottom: 14px;
+    display: block; color: var(--accent);
+    animation: pulse 2s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%,100% { opacity: 1; } 50% { opacity: 0.5; }
+  }
+  .success-state h3 {
+    font-size: 1rem; letter-spacing: 3px;
+    color: white; margin-bottom: 8px;
+  }
+  .success-state p {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.65rem; color: var(--text-dim);
+    letter-spacing: 1px; line-height: 1.8;
+  }
+
+  .back-link {
+    text-align: center; margin-top: 20px;
+  }
+  .back-link a {
+    color: var(--text-dim); text-decoration: none;
+    font-size: 0.72rem; letter-spacing: 2px;
+    font-family: 'Share Tech Mono', monospace;
+    transition: color 0.2s;
+  }
+  .back-link a:hover { color: var(--accent); }
+
+  @keyframes fadeDown {
+    from { opacity:0; transform:translateY(-16px); }
+    to   { opacity:1; transform:none; }
+  }
+  @keyframes fadeUp {
+    from { opacity:0; transform:translateY(16px); }
+    to   { opacity:1; transform:none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="scanner"></div>
+
+<div class="container">
+
+  <div class="logo">
+    <a class="logo-text" href="login.html"><span class="g">GENESIS</span><span class="v">VAULT</span></a>
+    <p>// Access Recovery Protocol</p>
+  </div>
+
+  <div class="card">
+    <h2>Identity Check</h2>
+    <p class="sub">$ vault --recover-access<br>// Verify your identity to reset credentials</p>
+
+    <!-- STEPS -->
+    <div class="steps">
+      <div class="step active" id="step-1">01 · VERIFY</div>
+      <div class="step" id="step-2">02 · CONFIRM</div>
+      <div class="step" id="step-3">03 · RESET</div>
+    </div>
+
+    <div id="msg-box" class="msg-box"></div>
+
+    <!-- PANEL 1: Identity Verification -->
+    <div id="panel-verify" class="panel active">
+      <div class="warning-box">
+        <p>
+          <span>// SECURITY GATE</span><br>
+          All three fields must match your account exactly.<br>
+          Failed attempts are logged.
+        </p>
+      </div>
+
+      <div class="form-group">
+        <label>Email Address</label>
+        <input type="email" id="v-email" placeholder="hunter@email.com" autocomplete="off">
+      </div>
+      <div class="form-group">
+        <label>Username</label>
+        <input type="text" id="v-username" placeholder="your_handle" autocomplete="off">
+      </div>
+      <div class="form-group">
+        <label>Referral Code</label>
+        <input type="text" id="v-referral" placeholder="XXXXXXXX"
+          oninput="this.value = this.value.toUpperCase()"
+          maxlength="8" autocomplete="off">
+      </div>
+
+      <button class="btn" id="verify-btn" onclick="handleVerify()">[ VERIFY IDENTITY ]</button>
+
+      <!-- Cooldown -->
+      <div class="cooldown-wrap" id="cooldown-wrap">
+        <div class="cooldown-label" id="cooldown-label">// COOLDOWN ACTIVE</div>
+        <div class="cooldown-bar"><div class="cooldown-fill" id="cooldown-fill"></div></div>
+      </div>
+    </div>
+
+    <!-- PANEL 2: Confirmation -->
+    <div id="panel-confirm" class="panel">
+      <div class="warning-box">
+        <p>
+          <span>// IDENTITY CONFIRMED</span><br>
+          A reset link will be sent to your registered email.<br>
+          Link expires in 1 hour.
+        </p>
+      </div>
+      <div class="form-group">
+        <label>Confirm Email</label>
+        <input type="email" id="c-email" readonly
+          style="opacity:0.5; cursor:not-allowed;">
+      </div>
+      <button class="btn" id="confirm-btn" onclick="handleSendReset()">[ SEND RESET LINK ]</button>
+    </div>
+
+    <!-- PANEL 3: New Password (after email link) -->
+    <div id="panel-reset" class="panel">
+      <div class="form-group">
+        <label>New Password</label>
+        <div class="input-wrapper">
+          <input type="password" id="new-password" placeholder="min 8 characters"
+            oninput="checkStrength(this.value)" autocomplete="new-password">
+          <button class="toggle-pw" onclick="togglePw('new-password', this)">SHOW</button>
+        </div>
+        <div class="strength-bar"><div class="strength-fill" id="strength-fill"></div></div>
+        <div class="strength-label" id="strength-label"></div>
+      </div>
+      <div class="form-group">
+        <label>Confirm Password</label>
+        <div class="input-wrapper">
+          <input type="password" id="confirm-password" placeholder="repeat password"
+            autocomplete="new-password">
+          <button class="toggle-pw" onclick="togglePw('confirm-password', this)">SHOW</button>
+        </div>
+      </div>
+      <button class="btn" id="reset-btn" onclick="handleNewPassword()">[ SET NEW PASSWORD ]</button>
+    </div>
+
+    <!-- SUCCESS STATE -->
+    <div id="panel-success" class="panel">
+      <div class="success-state">
+        <span class="success-icon">◈</span>
+        <h3>PASSWORD UPDATED</h3>
+        <p>
+          Your credentials have been reset.<br>
+          Redirecting to login...<br><br>
+          <span style="color:var(--accent)">// Session secured.</span>
+        </p>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="back-link">
+    <a href="login.html">← Return to login</a>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+// ── SUPABASE ──────────────────────────────────────────────────────────
+const SUPABASE_URL = 'https://pesrhpgixkronvzeouek.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_LPyioDvbIyZ3oy1PhccOMg_EcwWJjnr';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+const COOLDOWN_MINUTES = 15;
+let verifiedEmail = '';
+
+// ── ON LOAD: Check if this is a password reset redirect ──────────────
+window.addEventListener('load', async () => {
+  const hash = window.location.hash;
+
+  // Supabase sends #access_token=... after clicking reset email link
+  if (hash && hash.includes('access_token')) {
+    // Parse the session from URL
+    const { data, error } = await sb.auth.getSession();
+    if (data?.session) {
+      showPanel('reset');
+      setStep(3);
+    }
+  }
+});
+
+// ── STEP DISPLAY ──────────────────────────────────────────────────────
+function setStep(n) {
+  for (let i = 1; i <= 3; i++) {
+    const el = document.getElementById(`step-${i}`);
+    if (i < n)  { el.className = 'step done'; }
+    else if (i === n) { el.className = 'step active'; }
+    else        { el.className = 'step'; }
+  }
+}
+
+// ── PANEL SWITCH ──────────────────────────────────────────────────────
+function showPanel(name) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.getElementById(`panel-${name}`).classList.add('active');
+  clearMsg();
+}
+
+// ── MESSAGES ──────────────────────────────────────────────────────────
+function showMsg(text, type = 'error') {
+  const el = document.getElementById('msg-box');
+  el.className = `msg-box ${type}`;
+  el.textContent = (type === 'error' ? '// ERROR: ' : '// ') + text;
+  el.style.display = 'block';
+}
+function clearMsg() {
+  const el = document.getElementById('msg-box');
+  el.style.display = 'none';
+  el.textContent = '';
+}
+
+// ── PASSWORD TOGGLE ───────────────────────────────────────────────────
+function togglePw(id, btn) {
+  const inp = document.getElementById(id);
+  const show = inp.type === 'password';
+  inp.type = show ? 'text' : 'password';
+  btn.textContent = show ? 'HIDE' : 'SHOW';
+  btn.style.color = show ? 'var(--accent)' : 'var(--text-dim)';
+}
+
+// ── PASSWORD STRENGTH ─────────────────────────────────────────────────
+function checkStrength(val) {
+  const fill  = document.getElementById('strength-fill');
+  const label = document.getElementById('strength-label');
+  let s = 0;
+  if (val.length >= 8)  s++;
+  if (val.length >= 12) s++;
+  if (/[A-Z]/.test(val)) s++;
+  if (/[0-9]/.test(val)) s++;
+  if (/[^A-Za-z0-9]/.test(val)) s++;
+  const levels = [
+    { pct:'0%',   color:'transparent', text:'' },
+    { pct:'25%',  color:'#ff003c',     text:'// WEAK' },
+    { pct:'50%',  color:'#ff9500',     text:'// FAIR' },
+    { pct:'75%',  color:'#00a8ff',     text:'// GOOD' },
+    { pct:'100%', color:'#00f5c4',     text:'// STRONG' },
+    { pct:'100%', color:'#00f5c4',     text:'// STRONG' },
+  ];
+  const lvl = levels[s] || levels[0];
+  fill.style.width      = lvl.pct;
+  fill.style.background = lvl.color;
+  label.textContent     = lvl.text;
+  label.style.color     = lvl.color;
+}
+
+// ── COOLDOWN CHECK ────────────────────────────────────────────────────
+function startCooldown(lastAttempt) {
+  const btn = document.getElementById('verify-btn');
+  const wrap = document.getElementById('cooldown-wrap');
+  const fill = document.getElementById('cooldown-fill');
+  const label = document.getElementById('cooldown-label');
+
+  const cooldownMs = COOLDOWN_MINUTES * 60 * 1000;
+  const elapsed = Date.now() - new Date(lastAttempt).getTime();
+  const remaining = cooldownMs - elapsed;
+
+  if (remaining <= 0) return false; // no cooldown
+
+  btn.disabled = true;
+  wrap.style.display = 'block';
+
+  const totalSecs = Math.ceil(remaining / 1000);
+  let secsLeft = totalSecs;
+
+  // Set initial width
+  fill.style.width = '100%';
+
+  const interval = setInterval(() => {
+    secsLeft--;
+    const pct = (secsLeft / (COOLDOWN_MINUTES * 60)) * 100;
+    fill.style.width = pct + '%';
+    const mins = Math.floor(secsLeft / 60);
+    const secs = secsLeft % 60;
+    label.textContent = `// COOLDOWN: ${mins}:${secs.toString().padStart(2,'0')} remaining`;
+
+    if (secsLeft <= 0) {
+      clearInterval(interval);
+      btn.disabled = false;
+      wrap.style.display = 'none';
+      label.textContent = '// COOLDOWN ACTIVE';
+    }
+  }, 1000);
+
+  return true;
+}
+
+// ── STEP 1: VERIFY IDENTITY ───────────────────────────────────────────
+async function handleVerify() {
+  const email    = document.getElementById('v-email').value.trim().toLowerCase();
+  const username = document.getElementById('v-username').value.trim();
+  const referral = document.getElementById('v-referral').value.trim().toUpperCase();
+  const btn      = document.getElementById('verify-btn');
+
+  if (!email || !username || !referral) return showMsg('All three fields are required.');
+
+  btn.disabled = true;
+  btn.textContent = '[ VERIFYING... ]';
+  clearMsg();
+
+  try {
+    // Look up user — all 3 must match
+    const { data: user, error } = await sb
+      .from('users')
+      .select('id, email, username, referral_code, last_reset_attempt')
+      .eq('email', email)
+      .eq('username', username)
+      .eq('referral_code', referral)
+      .maybeSingle();
+
+    // Always show same vague message — never confirm if account exists
+    if (error || !user) {
+      // Log attempt silently — try to update if email exists
+      await sb.from('users')
+        .update({ last_reset_attempt: new Date().toISOString() })
+        .eq('email', email);
+
+      showMsg('Verification failed. Check your details and try again.');
+      btn.disabled = false;
+      btn.textContent = '[ VERIFY IDENTITY ]';
+      return;
+    }
+
+    // ── Check cooldown ──
+    if (user.last_reset_attempt) {
+      const cooldownMs = COOLDOWN_MINUTES * 60 * 1000;
+      const elapsed = Date.now() - new Date(user.last_reset_attempt).getTime();
+      if (elapsed < cooldownMs) {
+        showMsg(`Too many attempts. Please wait ${COOLDOWN_MINUTES} minutes.`);
+        startCooldown(user.last_reset_attempt);
+        btn.textContent = '[ VERIFY IDENTITY ]';
+        return;
+      }
+    }
+
+    // ── Update last_reset_attempt ──
+    await sb.from('users')
+      .update({ last_reset_attempt: new Date().toISOString() })
+      .eq('id', user.id);
+
+    // ── Verified — move to step 2 ──
+    verifiedEmail = email;
+    document.getElementById('c-email').value = email;
+    setStep(2);
+    showPanel('confirm');
+    showMsg('Identity verified. Proceed to send reset link.', 'success');
+
+  } catch(e) {
+    showMsg('Connection error. Please try again.');
+    btn.disabled = false;
+    btn.textContent = '[ VERIFY IDENTITY ]';
+  }
+}
+
+// ── STEP 2: SEND RESET EMAIL ──────────────────────────────────────────
+async function handleSendReset() {
+  const btn = document.getElementById('confirm-btn');
+  btn.disabled = true;
+  btn.textContent = '[ SENDING... ]';
+  clearMsg();
+
+  const { error } = await sb.auth.resetPasswordForEmail(verifiedEmail, {
+    redirectTo: window.location.origin + '/reset.html'
+  });
+
+  btn.disabled = false;
+  btn.textContent = '[ SEND RESET LINK ]';
+
+  if (error) {
+    showMsg(error.message);
+  } else {
+    setStep(3);
+    showMsg('Reset link sent. Check your inbox — link expires in 1 hour.', 'info');
+  }
+}
+
+// ── STEP 3: SET NEW PASSWORD ──────────────────────────────────────────
+async function handleNewPassword() {
+  const password = document.getElementById('new-password').value;
+  const confirm  = document.getElementById('confirm-password').value;
+  const btn      = document.getElementById('reset-btn');
+
+  if (!password || !confirm) return showMsg('Both fields required.');
+  if (password.length < 8)   return showMsg('Password must be at least 8 characters.');
+  if (password !== confirm)  return showMsg('Passwords do not match.');
+
+  btn.disabled = true;
+  btn.textContent = '[ UPDATING... ]';
+  clearMsg();
+
+  const { error } = await sb.auth.updateUser({ password });
+
+  if (error) {
+    showMsg(error.message);
+    btn.disabled = false;
+    btn.textContent = '[ SET NEW PASSWORD ]';
+  } else {
+    setStep(3);
+    document.getElementById('step-3').className = 'step done';
+    showPanel('success');
+    setTimeout(() => window.location.replace('login.html'), 3000);
+  }
+}
+
+// ── ENTER KEY ─────────────────────────────────────────────────────────
+document.addEventListener('keydown', e => {
+  if (e.key !== 'Enter') return;
+  const active = document.querySelector('.panel.active');
+  if (!active) return;
+  if (active.id === 'panel-verify')  handleVerify();
+  if (active.id === 'panel-confirm') handleSendReset();
+  if (active.id === 'panel-reset')   handleNewPassword();
+});
+</script>
+</body>
+</html>
