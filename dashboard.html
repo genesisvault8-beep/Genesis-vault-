@@ -982,7 +982,7 @@
 
 <script>
 const API   = 'https://genesis-vault-backend.onrender.com/api';
-const token = localStorage.getItem('gv_token');
+let token = localStorage.getItem('gv_token');
 if (!token) location.href = 'login.html';
 
 let currentFilter   = '';
@@ -991,6 +991,18 @@ let activeThreadId  = null;
 
 function h() {
   return { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` };
+}
+
+// ── AUTH-AWARE FETCH — redirects to login on 401 ──────────────────────
+async function fetchWithAuth(url, options = {}) {
+  options.headers = { ...h(), ...(options.headers || {}) };
+  const res = await fetch(url, options);
+  if (res.status === 401) {
+    localStorage.removeItem('gv_token');
+    location.href = 'login.html';
+    throw new Error('Session expired');
+  }
+  return res;
 }
 
 /* ── VAULT AGE ─────────────────────────────────────────────────────── */
@@ -1009,7 +1021,7 @@ function calcVaultAge(createdAt) {
 /* ── BOOT ──────────────────────────────────────────────────────────── */
 async function boot() {
   try {
-    const res  = await fetch(`${API}/profile`, { headers: h() });
+    const res  = await fetchWithAuth(`${API}/profile`, { headers: h() });
     const data = await res.json();
     if (data.status !== 'success') { logout(); return; }
 
@@ -1079,7 +1091,7 @@ function closeSlideMenu() {
 async function loadSlideNotifs() {
   const list = document.getElementById('slide-notif-list');
   try {
-    const res  = await fetch(`${API}/notifications`, { headers: h() });
+    const res  = await fetchWithAuth(`${API}/notifications`, { headers: h() });
     const data = await res.json();
     if (!data.notifications?.length) {
       list.innerHTML = `<div style="padding:20px;text-align:center;color:var(--text-dim);font-family:'Share Tech Mono',monospace;font-size:0.8rem;">// No notifications yet.</div>`;
@@ -1195,7 +1207,7 @@ async function createPost() {
   const code    = codeInputOpen ? document.getElementById('post-code').value.trim() : '';
   if (!content) return;
   try {
-    const res  = await fetch(`${API}/posts`, {
+    const res  = await fetchWithAuth(`${API}/posts`, {
       method:'POST', headers:h(),
       body: JSON.stringify({ content, category: postCategory, code_content: code || null })
     });
@@ -1211,7 +1223,7 @@ async function createPost() {
 
 async function reactPost(postId, emoji, btn) {
   try {
-    const res  = await fetch(`${API}/posts/${postId}/react`, {
+    const res  = await fetchWithAuth(`${API}/posts/${postId}/react`, {
       method:'POST', headers:h(), body: JSON.stringify({ emoji })
     });
     const data = await res.json();
@@ -1235,7 +1247,7 @@ async function loadReplies(postId) {
   const list = document.getElementById(`rlist-${postId}`);
   list.innerHTML = '<div class="loading"><span class="spinner"></span>Loading...</div>';
   try {
-    const res  = await fetch(`${API}/posts/${postId}/replies`, { headers:h() });
+    const res  = await fetchWithAuth(`${API}/posts/${postId}/replies`, { headers:h() });
     const data = await res.json();
     if (!data.replies?.length) {
       list.innerHTML = `<div style="color:var(--text-dim);font-family:'Share Tech Mono',monospace;font-size:0.75rem;padding:8px 0;">// No replies yet.</div>`;
@@ -1257,7 +1269,7 @@ async function sendReply(postId) {
   const content = input.value.trim();
   if (!content) return;
   try {
-    const res  = await fetch(`${API}/posts/${postId}/reply`, {
+    const res  = await fetchWithAuth(`${API}/posts/${postId}/reply`, {
       method:'POST', headers:h(), body: JSON.stringify({ content })
     });
     const data = await res.json();
@@ -1275,7 +1287,7 @@ async function sendReply(postId) {
 
 async function flagPost(postId) {
   try {
-    await fetch(`${API}/posts/${postId}/flag`, { method:'POST', headers:h() });
+    await fetchWithAuth(`${API}/posts/${postId}/flag`, { method:'POST', headers:h() });
     toast('Post flagged for review.');
   } catch(e) {}
 }
@@ -1286,7 +1298,7 @@ async function loadMarketplace() {
   if (!c) return;
   c.innerHTML = '<div class="loading"><span class="spinner"></span>Loading...</div>';
   try {
-    const res  = await fetch(`${API}/marketplace?owned=true`, { headers:h() });
+    const res  = await fetchWithAuth(`${API}/marketplace?owned=true`, { headers:h() });
     const data = await res.json();
     const owned = (data.tools||[]).filter(t => t.owned);
     if (!owned.length) {
@@ -1328,7 +1340,7 @@ async function submitPayment() {
   if (!tx && buyTarget.price > 0) { showStatus(msg,'TX ID required.',true); return; }
   btn.disabled = true; btn.textContent = '[ SUBMITTING... ]'; msg.style.display = 'none';
   try {
-    const res  = await fetch(`${API}/payments/submit`, {
+    const res  = await fetchWithAuth(`${API}/payments/submit`, {
       method:'POST', headers:h(),
       body: JSON.stringify({ tool_id: buyTarget.id, binance_tx_id: tx || 'FREE' })
     });
@@ -1356,7 +1368,7 @@ async function loadMessages() {
 
   try {
     // Load broadcasts
-    const br = await fetch(`${API}/messages/broadcasts`, { headers:h() });
+    const br = await fetchWithAuth(`${API}/messages/broadcasts`, { headers:h() });
     const bd = await br.json();
     if (bd.broadcasts?.length) {
       bc.innerHTML = `<p class="section-title">// Admin Broadcasts</p>` +
@@ -1371,7 +1383,7 @@ async function loadMessages() {
 
   try {
     // Load DM threads
-    const res  = await fetch(`${API}/messages/threads`, { headers:h() });
+    const res  = await fetchWithAuth(`${API}/messages/threads`, { headers:h() });
     const data = await res.json();
     if (!data.threads?.length) {
       tc.innerHTML = `<div class="empty">// No messages yet.<br><br>Tap [ + MESSAGE ADMIN ] to start.</div>`;
@@ -1404,7 +1416,7 @@ async function submitNewMessage() {
   if (!body) { showStatus(msg, 'Message cannot be empty.', true); return; }
   btn.disabled = true; btn.textContent = '[ SENDING... ]';
   try {
-    const res  = await fetch(`${API}/messages/send`, {
+    const res  = await fetchWithAuth(`${API}/messages/send`, {
       method:'POST', headers:h(),
       body: JSON.stringify({ subject: subject || 'General', message: body })
     });
@@ -1436,7 +1448,7 @@ async function openConversation(threadId, subject) {
   bubbles.innerHTML = '<div class="loading"><span class="spinner"></span>Loading...</div>';
 
   try {
-    const res  = await fetch(`${API}/messages/threads/${threadId}`, { headers:h() });
+    const res  = await fetchWithAuth(`${API}/messages/threads/${threadId}`, { headers:h() });
     const data = await res.json();
     if (!data.messages?.length) {
       bubbles.innerHTML = `<div class="empty">// No messages in this thread.</div>`; return;
@@ -1459,7 +1471,7 @@ async function sendMessage() {
   if (!message) return;
   input.value = '';
   try {
-    const res  = await fetch(`${API}/messages/threads/${activeThreadId}/reply`, {
+    const res  = await fetchWithAuth(`${API}/messages/threads/${activeThreadId}/reply`, {
       method:'POST', headers:h(), body: JSON.stringify({ message })
     });
     const data = await res.json();
@@ -1484,7 +1496,7 @@ function closeConversation() {
 /* ── PROFILE ───────────────────────────────────────────────────────── */
 async function loadProfile() {
   try {
-    const res  = await fetch(`${API}/profile`, { headers:h() });
+    const res  = await fetchWithAuth(`${API}/profile`, { headers:h() });
     const data = await res.json();
     const u    = data.username || data.email?.split('@')[0] || 'Operative';
     const age  = calcVaultAge(data.created_at);
@@ -1515,7 +1527,7 @@ async function loadProfile() {
 async function loadNotifications() {
   const nc = document.getElementById('notif-container');
   try {
-    const res  = await fetch(`${API}/notifications`, { headers:h() });
+    const res  = await fetchWithAuth(`${API}/notifications`, { headers:h() });
     const data = await res.json();
     if (!data.notifications?.length) {
       nc.innerHTML = '<div class="empty">// No notifications yet.</div>'; return;
@@ -1532,7 +1544,7 @@ async function loadNotifications() {
 
 async function markAllRead() {
   try {
-    await fetch(`${API}/notifications/read-all`, { method:'POST', headers:h() });
+    await fetchWithAuth(`${API}/notifications/read-all`, { method:'POST', headers:h() });
     document.getElementById('notif-count-badge').style.display = 'none';
     toast('All notifications marked read.');
     loadNotifications();
@@ -1547,7 +1559,7 @@ async function callAI(prompt, btnId, outId, cpyId, label) {
   btn.disabled = true; btn.textContent = '[ THINKING... ]';
   out.style.display = 'none'; cpy.style.display = 'none';
   try {
-    const res  = await fetch(`${API}/vault-ai`, {
+    const res  = await fetchWithAuth(`${API}/vault-ai`, {
       method:'POST', headers:h(),
       body: JSON.stringify({ message:prompt })
     });
