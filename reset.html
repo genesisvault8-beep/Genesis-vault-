@@ -341,8 +341,8 @@
       <div class="warning-box">
         <p>
           <span>// SECURITY GATE</span><br>
-          All three fields must match your account exactly.<br>
-          Failed attempts are logged.
+          Enter your email and username. If an account is found,<br>
+          a reset link will be sent to your inbox.
         </p>
       </div>
 
@@ -353,12 +353,6 @@
       <div class="form-group">
         <label>Username</label>
         <input type="text" id="v-username" placeholder="your_handle" autocomplete="off">
-      </div>
-      <div class="form-group">
-        <label>Referral Code</label>
-        <input type="text" id="v-referral" placeholder="XXXXXXXX"
-          oninput="this.value = this.value.toUpperCase()"
-          maxlength="8" autocomplete="off">
       </div>
 
       <button class="btn" id="verify-btn" onclick="handleVerify()">[ VERIFY IDENTITY ]</button>
@@ -442,16 +436,28 @@ let verifiedEmail = '';
 
 // ── ON LOAD: Check if this is a password reset redirect ──────────────
 window.addEventListener('load', async () => {
-  const hash = window.location.hash;
+  // First check for existing session (Supabase may have already parsed the hash)
+  const { data: { session } } = await sb.auth.getSession();
+  if (session) {
+    showPanel('reset');
+    setStep(3);
+    return;
+  }
 
-  // Supabase sends #access_token=... after clicking reset email link
-  if (hash && hash.includes('access_token')) {
-    // Parse the session from URL
-    const { data, error } = await sb.auth.getSession();
-    if (data?.session) {
-      showPanel('reset');
-      setStep(3);
-    }
+  // Manually check the URL hash for access_token
+  const hashParams = new URLSearchParams(window.location.hash.substring(1));
+  const accessToken = hashParams.get('access_token');
+  if (accessToken) {
+    // Give Supabase client a moment to process the token
+    setTimeout(async () => {
+      const { data: { session } } = await sb.auth.getSession();
+      if (session) {
+        showPanel('reset');
+        setStep(3);
+      } else {
+        showMsg('Reset link expired or invalid. Please request a new one.');
+      }
+    }, 600);
   }
 });
 
@@ -564,33 +570,26 @@ function startCooldown(lastAttempt) {
 async function handleVerify() {
   const email    = document.getElementById('v-email').value.trim().toLowerCase();
   const username = document.getElementById('v-username').value.trim();
-  const referral = document.getElementById('v-referral').value.trim().toUpperCase();
   const btn      = document.getElementById('verify-btn');
 
-  if (!email || !username || !referral) return showMsg('All three fields are required.');
+  if (!email || !username) return showMsg('Email and username are required.');
 
   btn.disabled = true;
   btn.textContent = '[ VERIFYING... ]';
   clearMsg();
 
   try {
-    // Look up user — all 3 must match
+    // Look up user by email + username only
     const { data: user, error } = await sb
       .from('users')
-      .select('id, email, username, referral_code, last_reset_attempt')
+      .select('id, last_reset_attempt')
       .eq('email', email)
       .eq('username', username)
-      .eq('referral_code', referral)
       .maybeSingle();
 
-    // Always show same vague message — never confirm if account exists
+    // Never reveal whether account exists
     if (error || !user) {
-      // Log attempt silently — try to update if email exists
-      await sb.from('users')
-        .update({ last_reset_attempt: new Date().toISOString() })
-        .eq('email', email);
-
-      showMsg('Verification failed. Check your details and try again.');
+      showMsg('If the account exists, a reset link will be sent.', 'info');
       btn.disabled = false;
       btn.textContent = '[ VERIFY IDENTITY ]';
       return;
@@ -601,14 +600,15 @@ async function handleVerify() {
       const cooldownMs = COOLDOWN_MINUTES * 60 * 1000;
       const elapsed = Date.now() - new Date(user.last_reset_attempt).getTime();
       if (elapsed < cooldownMs) {
-        showMsg(`Too many attempts. Please wait ${COOLDOWN_MINUTES} minutes.`);
+        showMsg(`Too many attempts. Please wait ${Math.ceil((cooldownMs - elapsed) / 60000)} minutes.`);
         startCooldown(user.last_reset_attempt);
+        btn.disabled = false;
         btn.textContent = '[ VERIFY IDENTITY ]';
         return;
       }
     }
 
-    // ── Update last_reset_attempt ──
+    // ── Update last_reset_attempt (once only) ──
     await sb.from('users')
       .update({ last_reset_attempt: new Date().toISOString() })
       .eq('id', user.id);
@@ -635,7 +635,7 @@ async function handleSendReset() {
   clearMsg();
 
   const { error } = await sb.auth.resetPasswordForEmail(verifiedEmail, {
-    redirectTo: window.location.origin + '/reset.html'
+    redirectTo: 'https://genesisvault8-beep.github.io/Genesis-vault-/reset.html'
   });
 
   btn.disabled = false;
@@ -673,6 +673,9 @@ async function handleNewPassword() {
     setStep(3);
     document.getElementById('step-3').className = 'step done';
     showPanel('success');
+    // Sign out so the reset session doesn't carry over to login
+    await sb.auth.signOut();
+    localStorage.removeItem('gv_token');
     setTimeout(() => window.location.replace('login.html'), 3000);
   }
 }
