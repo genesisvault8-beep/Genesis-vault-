@@ -270,14 +270,45 @@
   .copy-btn:hover { background:var(--accent); color:var(--bg); }
 
   /* ── COMMUNITY ── */
+  .feed-tabs {
+    display:flex; gap:0; border-bottom:1px solid var(--border);
+    margin-bottom:16px; overflow-x:auto;
+  }
+  .feed-tab {
+    padding:7px 14px; font-family:'Share Tech Mono',monospace;
+    font-size:0.65rem; letter-spacing:2px; color:var(--text-dim);
+    cursor:pointer; border-bottom:2px solid transparent;
+    white-space:nowrap; transition:all 0.2s;
+  }
+  .feed-tab.active { color:var(--accent); border-bottom-color:var(--accent); }
+  .feed-tab:hover  { color:var(--text); }
+
+  .post-category-row {
+    display:flex; gap:8px; margin-bottom:10px; flex-wrap:wrap;
+  }
+  .cat-btn {
+    background:none; border:1px solid var(--border); color:var(--text-dim);
+    padding:4px 12px; font-family:'Share Tech Mono',monospace;
+    font-size:0.65rem; cursor:pointer; letter-spacing:1px; transition:all 0.2s;
+  }
+  .cat-btn.active, .cat-btn:hover { border-color:var(--accent); color:var(--accent); }
+  .cat-btn.active { background:rgba(0,245,196,0.06); }
+
   .post-box { background:var(--bg2); border:1px solid var(--border); padding:16px; margin-bottom:16px; }
   .post-box textarea { margin-bottom:10px; min-height:80px; }
+  .post-box-footer { display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; }
   .post-btn {
     background:var(--accent); color:var(--bg); border:none; padding:10px 24px;
     font-family:'Rajdhani',sans-serif; font-weight:700;
     letter-spacing:2px; cursor:pointer; font-size:0.85rem; transition:all 0.2s;
   }
   .post-btn:hover { background:white; }
+  .code-toggle {
+    background:none; border:1px solid var(--border); color:var(--text-dim);
+    padding:6px 12px; font-family:'Share Tech Mono',monospace;
+    font-size:0.65rem; cursor:pointer; letter-spacing:1px; transition:all 0.2s;
+  }
+  .code-toggle:hover, .code-toggle.active { border-color:var(--accent2); color:var(--accent2); }
 
   .post-card {
     background:var(--bg2); border:1px solid var(--border);
@@ -285,10 +316,28 @@
     transition:border-color 0.2s;
   }
   .post-card:hover { border-color:rgba(0,245,196,0.2); }
-  .post-meta { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }
+  .post-meta { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; flex-wrap:wrap; gap:6px; }
+  .post-meta-left { display:flex; align-items:center; gap:8px; }
   .post-author { font-family:'Share Tech Mono',monospace; font-size:0.8rem; color:var(--accent); }
   .post-time   { font-size:0.7rem; color:var(--text-dim); font-family:'Share Tech Mono',monospace; }
-  .post-content { font-size:0.9rem; line-height:1.6; color:var(--text); margin-bottom:12px; }
+  .post-rank-badge {
+    font-family:'Share Tech Mono',monospace; font-size:0.55rem;
+    color:var(--accent2); border:1px solid var(--accent2);
+    padding:1px 6px; letter-spacing:1px;
+  }
+  .post-cat-badge {
+    font-family:'Share Tech Mono',monospace; font-size:0.55rem;
+    color:var(--text-dim); border:1px solid var(--border);
+    padding:1px 6px; letter-spacing:1px;
+  }
+  .post-content { font-size:0.9rem; line-height:1.6; color:var(--text); margin-bottom:12px; white-space:pre-wrap; word-break:break-word; }
+  .post-code {
+    background:var(--bg3); border:1px solid var(--border);
+    border-left:3px solid var(--accent2); padding:12px 14px;
+    font-family:'Share Tech Mono',monospace; font-size:0.78rem;
+    line-height:1.7; color:var(--accent2); white-space:pre; overflow-x:auto;
+    margin-bottom:12px;
+  }
 
   .post-actions { display:flex; gap:6px; flex-wrap:wrap; align-items:center; margin-bottom:8px; }
   .react-btn {
@@ -320,7 +369,7 @@
   .reply-meta { display:flex; justify-content:space-between; margin-bottom:4px; }
   .reply-author { font-family:'Share Tech Mono',monospace; font-size:0.75rem; color:var(--accent2); }
   .reply-time   { font-size:0.65rem; color:var(--text-dim); font-family:'Share Tech Mono',monospace; }
-  .reply-content { font-size:0.85rem; color:var(--text); line-height:1.5; }
+  .reply-content { font-size:0.85rem; color:var(--text); line-height:1.5; white-space:pre-wrap; word-break:break-word; }
   .reply-input-row { display:flex; gap:8px; margin-top:10px; }
   .reply-input-row input { margin-bottom:0; flex:1; font-size:0.8rem; padding:10px 12px; }
   .reply-send {
@@ -681,6 +730,11 @@
         <p>Cybersecurity courses, bug bounty guides, and hands-on labs.</p>
         <span class="tool-tag blue">LIVE</span>
       </div>
+      <div class="tool-card" onclick="location.href='vault-labs.html'">
+        <h3>🔬 VAULT LABS</h3>
+        <p>Sandboxed hacking environments. Practice real techniques on intentionally vulnerable targets.</p>
+        <span class="tool-tag">LIVE</span>
+      </div>
     </div>
 
     <p class="section-title">// AI Tools</p>
@@ -706,10 +760,34 @@
   <!-- COMMUNITY -->
   <div class="page" id="page-community">
     <p class="section-title">// Community Feed</p>
+
+    <!-- Post composer -->
     <div class="post-box">
+      <div class="post-category-row" id="post-cat-row">
+        <button class="cat-btn active" onclick="selectCat('General',this)">General</button>
+        <button class="cat-btn" onclick="selectCat('Help',this)">Help</button>
+        <button class="cat-btn" onclick="selectCat('Showcase',this)">Showcase</button>
+        <button class="cat-btn" onclick="selectCat('News',this)">News</button>
+      </div>
       <textarea id="post-content" placeholder="// Share your findings, tips, or wins..."></textarea>
-      <button class="post-btn" onclick="createPost()">[ POST ]</button>
+      <div id="post-code-wrap" style="display:none;">
+        <textarea id="post-code" placeholder="// Paste code here..." style="font-family:'Share Tech Mono',monospace;font-size:0.8rem;min-height:100px;border-color:var(--accent2);margin-bottom:10px;"></textarea>
+      </div>
+      <div class="post-box-footer">
+        <button class="code-toggle" id="code-toggle-btn" onclick="toggleCodeInput()">{ } CODE</button>
+        <button class="post-btn" onclick="createPost()">[ POST ]</button>
+      </div>
     </div>
+
+    <!-- Feed filter tabs -->
+    <div class="feed-tabs">
+      <div class="feed-tab active" onclick="filterFeed('',this)">ALL</div>
+      <div class="feed-tab" onclick="filterFeed('General',this)">GENERAL</div>
+      <div class="feed-tab" onclick="filterFeed('Help',this)">HELP</div>
+      <div class="feed-tab" onclick="filterFeed('Showcase',this)">SHOWCASE</div>
+      <div class="feed-tab" onclick="filterFeed('News',this)">NEWS</div>
+    </div>
+
     <div id="feed-container"><div class="loading"><span class="spinner"></span>Loading feed...</div></div>
   </div>
 
@@ -1003,11 +1081,35 @@ function openModal(id)  { document.getElementById(id).classList.add('active'); }
 function closeModal(id) { document.getElementById(id).classList.remove('active'); }
 
 /* ── COMMUNITY ─────────────────────────────────────────────────────── */
+let postCategory  = 'General';
+let feedFilter    = '';
+let codeInputOpen = false;
+
+function selectCat(cat, el) {
+  postCategory = cat;
+  document.querySelectorAll('#post-cat-row .cat-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+}
+
+function toggleCodeInput() {
+  codeInputOpen = !codeInputOpen;
+  document.getElementById('post-code-wrap').style.display = codeInputOpen ? 'block' : 'none';
+  document.getElementById('code-toggle-btn').classList.toggle('active', codeInputOpen);
+}
+
+function filterFeed(cat, el) {
+  feedFilter = cat;
+  document.querySelectorAll('.feed-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  loadFeed();
+}
+
 async function loadFeed() {
   const c = document.getElementById('feed-container');
   c.innerHTML = '<div class="loading"><span class="spinner"></span>Loading feed...</div>';
   try {
-    const res  = await fetch(`${API}/posts`, { headers: h() });
+    const url  = feedFilter ? `${API}/posts?category=${encodeURIComponent(feedFilter)}` : `${API}/posts`;
+    const res  = await fetch(url, { headers: h() });
     const data = await res.json();
     if (!data.posts?.length) {
       c.innerHTML = '<div class="empty">// No posts yet. Be the first.</div>'; return;
@@ -1025,13 +1127,23 @@ function renderPost(p) {
     const cnt = rx[e] || 0;
     return `<button class="react-btn" onclick="reactPost(${p.id},'${e}',this)">${e}${cnt>0?' '+cnt:''}</button>`;
   }).join('');
+
+  const codeBlock = p.code_content
+    ? `<div class="post-code">${esc(p.code_content)}</div>`
+    : '';
+
   return `
   <div class="post-card" id="post-${p.id}">
     <div class="post-meta">
-      <span class="post-author">${esc(p.username||'Operative')}</span>
+      <div class="post-meta-left">
+        <span class="post-author">${esc(p.username||'Operative')}</span>
+        ${p.rank ? `<span class="post-rank-badge">${esc(p.rank)}</span>` : ''}
+        ${p.category && p.category !== 'General' ? `<span class="post-cat-badge">${esc(p.category)}</span>` : ''}
+      </div>
       <span class="post-time">${ago(p.created_at)}</span>
     </div>
     <div class="post-content">${esc(p.content)}</div>
+    ${codeBlock}
     <div class="post-actions">
       ${rxHTML}
       <button class="reply-toggle" onclick="toggleReplies(${p.id},this)">💬 ${p.reply_count||0}</button>
@@ -1040,7 +1152,7 @@ function renderPost(p) {
     <div class="replies-section" id="replies-${p.id}">
       <div id="rlist-${p.id}"><div class="loading"><span class="spinner"></span>Loading...</div></div>
       <div class="reply-input-row">
-        <input type="text" id="rinput-${p.id}" placeholder="// write a reply...">
+        <input type="text" id="rinput-${p.id}" placeholder="// write a reply..." onkeydown="if(event.key==='Enter')sendReply(${p.id})">
         <button class="reply-send" onclick="sendReply(${p.id})">SEND</button>
       </div>
     </div>
@@ -1049,15 +1161,18 @@ function renderPost(p) {
 
 async function createPost() {
   const content = document.getElementById('post-content').value.trim();
+  const code    = codeInputOpen ? document.getElementById('post-code').value.trim() : '';
   if (!content) return;
   try {
     const res  = await fetch(`${API}/posts`, {
       method:'POST', headers:h(),
-      body: JSON.stringify({ content, category:'General' })
+      body: JSON.stringify({ content, category: postCategory, code_content: code || null })
     });
     const data = await res.json();
     if (data.status === 'success') {
       document.getElementById('post-content').value = '';
+      document.getElementById('post-code').value    = '';
+      if (codeInputOpen) toggleCodeInput();
       loadFeed();
     }
   } catch(e) {}
@@ -1098,7 +1213,7 @@ async function loadReplies(postId) {
     list.innerHTML = data.replies.map(r => `
       <div class="reply-item">
         <div class="reply-meta">
-          <span class="reply-author">${esc(r.username)}</span>
+          <span class="reply-author">${esc(r.username)}${r.rank?` <span style="font-size:0.6rem;color:var(--text-dim);border:1px solid var(--border);padding:1px 5px;">${esc(r.rank)}</span>`:''}</span>
           <span class="reply-time">${ago(r.created_at)}</span>
         </div>
         <div class="reply-content">${esc(r.content)}</div>
