@@ -1,0 +1,1039 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Genesis Vault | Firewall Observer</title>
+<meta name="robots" content="noindex, nofollow">
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:      #020608;
+    --bg2:     #060d10;
+    --bg3:     #081218;
+    --accent:  #00f5c4;
+    --accent2: #00a8ff;
+    --accent3: #ff003c;
+    --warn:    #ffaa00;
+    --text:    #c8e6f0;
+    --text-dim:#4a7a8a;
+    --border:  #0f2a35;
+    --glow:    0 0 20px rgba(0,245,196,0.25);
+    --glow-r:  0 0 20px rgba(255,0,60,0.25);
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html, body { height:100%; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Rajdhani', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Grid */
+  body::before {
+    content:''; position:fixed; inset:0;
+    background-image:
+      linear-gradient(rgba(0,245,196,0.02) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,245,196,0.02) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events:none; z-index:0;
+  }
+
+  /* Scanlines */
+  body::after {
+    content:''; position:fixed; inset:0;
+    background: repeating-linear-gradient(
+      0deg, transparent, transparent 2px,
+      rgba(0,0,0,0.06) 2px, rgba(0,0,0,0.06) 4px
+    );
+    pointer-events:none; z-index:1;
+  }
+
+  .scanner {
+    position:fixed; top:0; left:0; right:0; height:2px;
+    background: linear-gradient(90deg, transparent, var(--accent3), transparent);
+    animation: scan 3s linear infinite; z-index:100;
+  }
+  @keyframes scan {
+    0%{top:0;opacity:1} 100%{top:100vh;opacity:0}
+  }
+
+  /* ── AUTH GATE ── */
+  #auth-gate {
+    position:fixed; inset:0; z-index:200;
+    background: var(--bg);
+    display:flex; align-items:center; justify-content:center;
+    padding:20px;
+  }
+
+  .auth-box {
+    width:100%; max-width:380px;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-top: 2px solid var(--accent3);
+    padding: 36px 28px;
+    position: relative;
+    animation: fadeUp 0.5s ease;
+  }
+  .auth-box::before {
+    content:'// RESTRICTED ACCESS';
+    position:absolute; top:0; right:14px;
+    transform:translateY(-50%);
+    font-family:'Share Tech Mono', monospace;
+    font-size:0.5rem; color:var(--accent3);
+    letter-spacing:2px; background:var(--bg2); padding:0 6px;
+  }
+
+  .auth-logo {
+    text-align:center; margin-bottom:28px;
+    font-family:'Share Tech Mono', monospace;
+    font-size:1.1rem; letter-spacing:4px;
+  }
+  .auth-logo .g { color:var(--accent); }
+  .auth-logo .v { color:white; }
+  .auth-logo p {
+    font-size:0.58rem; letter-spacing:3px;
+    color:var(--text-dim); margin-top:5px;
+  }
+
+  .auth-label {
+    font-family:'Share Tech Mono', monospace;
+    font-size:0.65rem; letter-spacing:2px;
+    color:var(--text-dim); display:block;
+    margin-bottom:8px; text-transform:uppercase;
+  }
+
+  .auth-input {
+    width:100%; background:var(--bg);
+    border:1px solid var(--border); color:var(--text);
+    padding:11px 14px;
+    font-family:'Share Tech Mono', monospace;
+    font-size:0.85rem; outline:none;
+    transition:border-color 0.2s, box-shadow 0.2s;
+    margin-bottom:16px;
+  }
+  .auth-input:focus { border-color:var(--accent); box-shadow:var(--glow); }
+
+  .auth-btn {
+    width:100%; padding:13px;
+    background:var(--accent3); color:white;
+    border:none; font-family:'Rajdhani', sans-serif;
+    font-weight:700; font-size:0.9rem;
+    letter-spacing:3px; text-transform:uppercase;
+    cursor:pointer; transition:all 0.2s;
+    clip-path:polygon(8px 0%,100% 0%,calc(100% - 8px) 100%,0% 100%);
+  }
+  .auth-btn:hover { background:white; color:var(--bg); box-shadow:var(--glow-r); }
+
+  .auth-err {
+    font-family:'Share Tech Mono', monospace;
+    font-size:0.7rem; color:var(--accent3);
+    letter-spacing:1px; margin-top:10px;
+    display:none; text-align:center;
+  }
+
+  /* ── MAIN LAYOUT ── */
+  #main { display:none; position:relative; z-index:2; }
+
+  /* ── TOP BAR ── */
+  .topbar {
+    position:sticky; top:0; z-index:50;
+    background:rgba(2,6,8,0.95);
+    border-bottom:1px solid var(--border);
+    backdrop-filter:blur(8px);
+    padding:12px 24px;
+    display:flex; align-items:center; justify-content:space-between;
+    flex-wrap:wrap; gap:10px;
+  }
+
+  .topbar-left {
+    display:flex; align-items:center; gap:16px;
+  }
+
+  .topbar-logo {
+    font-family:'Share Tech Mono', monospace;
+    font-size:0.95rem; letter-spacing:4px;
+  }
+  .topbar-logo .g { color:var(--accent); }
+  .topbar-logo .v { color:white; }
+
+  .topbar-title {
+    font-family:'Share Tech Mono', monospace;
+    font-size:0.6rem; letter-spacing:3px;
+    color:var(--accent3); text-transform:uppercase;
+    border-left:1px solid var(--border); padding-left:16px;
+  }
+
+  .topbar-right {
+    display:flex; align-items:center; gap:12px;
+  }
+
+  .status-dot {
+    width:8px; height:8px; border-radius:50%;
+    background:var(--accent);
+    box-shadow:0 0 8px var(--accent);
+    animation:pulse 2s ease-in-out infinite;
+  }
+  .status-dot.offline { background:var(--accent3); box-shadow:0 0 8px var(--accent3); animation:none; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+  .status-text {
+    font-family:'Share Tech Mono', monospace;
+    font-size:0.6rem; letter-spacing:2px;
+    color:var(--text-dim);
+  }
+
+  .topbar-btn {
+    padding:6px 16px; background:none;
+    border:1px solid var(--border); color:var(--text-dim);
+    font-family:'Share Tech Mono', monospace;
+    font-size:0.6rem; letter-spacing:2px;
+    cursor:pointer; transition:all 0.2s; text-transform:uppercase;
+  }
+  .topbar-btn:hover { border-color:var(--accent); color:var(--accent); }
+  .topbar-btn.danger:hover { border-color:var(--accent3); color:var(--accent3); }
+
+  .last-refresh {
+    font-family:'Share Tech Mono', monospace;
+    font-size:0.55rem; letter-spacing:1px; color:var(--border);
+  }
+
+  /* ── CONTENT ── */
+  .content {
+    padding:24px;
+    max-width:1400px; margin:0 auto;
+  }
+
+  /* ── ALERT BANNER ── */
+  #alert-banner {
+    display:none;
+    background:rgba(255,0,60,0.08);
+    border:1px solid var(--accent3);
+    border-left:4px solid var(--accent3);
+    padding:14px 20px;
+    margin-bottom:20px;
+    font-family:'Share Tech Mono', monospace;
+    font-size:0.72rem; color:var(--accent3);
+    letter-spacing:1px;
+    animation:alertPulse 1s ease-in-out infinite;
+  }
+  @keyframes alertPulse {
+    0%,100%{border-left-color:var(--accent3);}
+    50%{border-left-color:transparent;}
+  }
+
+  /* ── STAT CARDS ── */
+  .stats-row {
+    display:grid;
+    grid-template-columns:repeat(auto-fit, minmax(180px, 1fr));
+    gap:1px; background:var(--border);
+    border:1px solid var(--border);
+    margin-bottom:20px;
+  }
+
+  .stat-card {
+    background:var(--bg2);
+    padding:20px 18px;
+    position:relative; overflow:hidden;
+    transition:background 0.2s;
+  }
+  .stat-card:hover { background:var(--bg3); }
+
+  .stat-card::before {
+    content:'';
+    position:absolute; top:0; left:0; right:0; height:2px;
+  }
+  .stat-card.green::before { background:var(--accent); }
+  .stat-card.red::before   { background:var(--accent3); }
+  .stat-card.blue::before  { background:var(--accent2); }
+  .stat-card.warn::before  { background:var(--warn); }
+
+  .stat-tag {
+    font-family:'Share Tech Mono', monospace;
+    font-size:0.52rem; letter-spacing:3px;
+    color:var(--text-dim); text-transform:uppercase;
+    margin-bottom:8px; display:block;
+  }
+
+  .stat-val {
+    font-family:'Share Tech Mono', monospace;
+    font-size:2rem; line-height:1;
+    display:block; margin-bottom:4px;
+  }
+  .stat-card.green .stat-val { color:var(--accent); }
+  .stat-card.red   .stat-val { color:var(--accent3); }
+  .stat-card.blue  .stat-val { color:var(--accent2); }
+  .stat-card.warn  .stat-val { color:var(--warn); }
+
+  .stat-label {
+    font-size:0.8rem; font-weight:600;
+    letter-spacing:1px; color:var(--text);
+    text-transform:uppercase;
+  }
+
+  /* ── GRID ── */
+  .grid-2 {
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:20px; margin-bottom:20px;
+  }
+
+  @media(max-width:900px) { .grid-2 { grid-template-columns:1fr; } }
+
+  /* ── PANEL ── */
+  .panel {
+    background:var(--bg2);
+    border:1px solid var(--border);
+    position:relative;
+  }
+
+  .panel-header {
+    padding:14px 18px;
+    border-bottom:1px solid var(--border);
+    display:flex; align-items:center; justify-content:space-between;
+  }
+
+  .panel-title {
+    font-family:'Share Tech Mono', monospace;
+    font-size:0.65rem; letter-spacing:3px;
+    color:var(--accent); text-transform:uppercase;
+  }
+
+  .panel-sub {
+    font-family:'Share Tech Mono', monospace;
+    font-size:0.55rem; letter-spacing:1px;
+    color:var(--text-dim);
+  }
+
+  .panel-body { padding:16px 18px; }
+
+  /* ── ATTACK TYPE BARS ── */
+  .type-row {
+    display:flex; align-items:center; gap:12px;
+    margin-bottom:12px;
+  }
+
+  .type-label {
+    font-family:'Share Tech Mono', monospace;
+    font-size:0.65rem; letter-spacing:1px;
+    color:var(--text); width:120px; flex-shrink:0;
+    text-transform:uppercase;
+  }
+
+  .type-bar-wrap {
+    flex:1; height:6px; background:var(--border);
+    position:relative; overflow:hidden;
+  }
+
+  .type-bar-fill {
+    height:100%; width:0%;
+    transition:width 1s ease;
+  }
+
+  .type-count {
+    font-family:'Share Tech Mono', monospace;
+    font-size:0.6rem; color:var(--text-dim);
+    width:40px; text-align:right; flex-shrink:0;
+  }
+
+  /* ── TOP IPs ── */
+  .ip-row {
+    display:flex; align-items:center; justify-content:space-between;
+    padding:8px 0;
+    border-bottom:1px solid var(--border);
+    font-family:'Share Tech Mono', monospace;
+    font-size:0.68rem;
+  }
+  .ip-row:last-child { border-bottom:none; }
+
+  .ip-addr { color:var(--accent2); letter-spacing:1px; }
+  .ip-count {
+    color:var(--text-dim); font-size:0.6rem;
+    background:var(--bg);
+    padding:2px 8px;
+    border:1px solid var(--border);
+  }
+
+  /* ── LIVE FEED ── */
+  #live-feed {
+    font-family:'Share Tech Mono', monospace;
+    font-size:0.68rem;
+    max-height:420px; overflow-y:auto;
+    scrollbar-width:thin;
+    scrollbar-color:var(--border) transparent;
+  }
+
+  .feed-item {
+    padding:10px 12px;
+    border-bottom:1px solid var(--border);
+    display:grid;
+    grid-template-columns:90px 80px 1fr 110px;
+    gap:12px; align-items:center;
+    animation:feedIn 0.3s ease;
+    transition:background 0.2s;
+  }
+  .feed-item:hover { background:var(--bg3); }
+  .feed-item:last-child { border-bottom:none; }
+
+  @keyframes feedIn {
+    from { opacity:0; transform:translateX(-6px); }
+    to   { opacity:1; transform:none; }
+  }
+
+  .feed-time { color:var(--text-dim); font-size:0.6rem; letter-spacing:1px; }
+  .feed-ip   { color:var(--accent2); }
+
+  .feed-type {
+    display:inline-block;
+    padding:2px 8px;
+    font-size:0.58rem; letter-spacing:2px;
+    text-transform:uppercase;
+  }
+  .feed-type.sqli          { background:rgba(255,0,60,0.1);   color:var(--accent3); border:1px solid rgba(255,0,60,0.3); }
+  .feed-type.xss           { background:rgba(255,170,0,0.1);  color:var(--warn);    border:1px solid rgba(255,170,0,0.3); }
+  .feed-type.bad_origin    { background:rgba(0,168,255,0.1);  color:var(--accent2); border:1px solid rgba(0,168,255,0.3); }
+  .feed-type.no_origin     { background:rgba(0,168,255,0.1);  color:var(--accent2); border:1px solid rgba(0,168,255,0.3); }
+  .feed-type.bad_agent     { background:rgba(0,245,196,0.08); color:var(--accent);  border:1px solid rgba(0,245,196,0.3); }
+  .feed-type.path_traversal{ background:rgba(255,0,60,0.1);   color:var(--accent3); border:1px solid rgba(255,0,60,0.3); }
+  .feed-type.cmd_injection { background:rgba(255,0,60,0.15);  color:var(--accent3); border:1px solid rgba(255,0,60,0.4); }
+  .feed-type.oversized_payload{ background:rgba(255,170,0,0.1); color:var(--warn); border:1px solid rgba(255,170,0,0.3); }
+
+  .feed-path {
+    color:var(--text-dim); font-size:0.6rem;
+    overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+  }
+
+  /* feed header */
+  .feed-header {
+    display:grid;
+    grid-template-columns:90px 80px 1fr 110px;
+    gap:12px; padding:8px 12px;
+    border-bottom:1px solid var(--border);
+    font-family:'Share Tech Mono', monospace;
+    font-size:0.52rem; letter-spacing:2px;
+    color:var(--text-dim); text-transform:uppercase;
+    background:var(--bg);
+  }
+
+  /* ── PAYLOAD PREVIEW ── */
+  .payload-preview {
+    font-family:'Share Tech Mono', monospace;
+    font-size:0.62rem; color:var(--accent3);
+    background:rgba(255,0,60,0.04);
+    border:1px solid rgba(255,0,60,0.15);
+    padding:8px 10px; margin-top:4px;
+    letter-spacing:0.5px;
+    word-break:break-all;
+    display:none;
+    max-height:60px; overflow:hidden;
+  }
+  .feed-item:hover .payload-preview { display:block; }
+
+  /* ── EMPTY STATE ── */
+  .empty-state {
+    text-align:center; padding:40px;
+    font-family:'Share Tech Mono', monospace;
+    font-size:0.7rem; color:var(--text-dim);
+    letter-spacing:2px;
+  }
+  .empty-icon { font-size:2rem; display:block; margin-bottom:12px; opacity:0.3; }
+
+  /* ── PING CHECKER ── */
+  .ping-row {
+    display:flex; gap:10px; align-items:center;
+    margin-bottom:14px;
+  }
+  .ping-input {
+    flex:1; background:var(--bg);
+    border:1px solid var(--border); color:var(--text);
+    padding:9px 12px;
+    font-family:'Share Tech Mono', monospace;
+    font-size:0.75rem; outline:none;
+    transition:border-color 0.2s;
+  }
+  .ping-input:focus { border-color:var(--accent); }
+  .ping-btn {
+    padding:9px 18px; background:var(--accent); color:var(--bg);
+    border:none; font-family:'Rajdhani', sans-serif;
+    font-weight:700; font-size:0.8rem; letter-spacing:2px;
+    cursor:pointer; transition:all 0.2s; text-transform:uppercase;
+    white-space:nowrap;
+    clip-path:polygon(6px 0%,100% 0%,calc(100% - 6px) 100%,0% 100%);
+  }
+  .ping-btn:hover { background:white; }
+
+  .ping-result {
+    font-family:'Share Tech Mono', monospace;
+    font-size:0.68rem; padding:10px 12px;
+    border:1px solid var(--border); background:var(--bg);
+    min-height:40px; letter-spacing:0.5px;
+    display:none;
+  }
+  .ping-result.ok  { border-color:rgba(0,245,196,0.3); color:var(--accent); }
+  .ping-result.err { border-color:rgba(255,0,60,0.3);  color:var(--accent3); }
+
+  /* ── AUTO REFRESH TOGGLE ── */
+  .refresh-row {
+    display:flex; align-items:center; gap:12px;
+    font-family:'Share Tech Mono', monospace;
+    font-size:0.62rem; color:var(--text-dim);
+    letter-spacing:1px;
+  }
+
+  .toggle-wrap {
+    position:relative; width:36px; height:18px;
+    cursor:pointer;
+  }
+  .toggle-wrap input { display:none; }
+  .toggle-track {
+    position:absolute; inset:0;
+    background:var(--border); border-radius:9px;
+    transition:background 0.2s;
+  }
+  .toggle-thumb {
+    position:absolute; top:2px; left:2px;
+    width:14px; height:14px; border-radius:50%;
+    background:var(--text-dim); transition:all 0.2s;
+  }
+  .toggle-wrap input:checked ~ .toggle-track { background:rgba(0,245,196,0.3); }
+  .toggle-wrap input:checked ~ .toggle-thumb {
+    transform:translateX(18px);
+    background:var(--accent);
+  }
+
+  /* ── FILTER BAR ── */
+  .filter-bar {
+    display:flex; gap:8px; flex-wrap:wrap;
+    padding:12px 18px;
+    border-bottom:1px solid var(--border);
+    background:var(--bg);
+  }
+
+  .filter-btn {
+    padding:4px 12px; background:none;
+    border:1px solid var(--border); color:var(--text-dim);
+    font-family:'Share Tech Mono', monospace;
+    font-size:0.58rem; letter-spacing:2px;
+    cursor:pointer; transition:all 0.2s; text-transform:uppercase;
+  }
+  .filter-btn:hover,
+  .filter-btn.active { border-color:var(--accent); color:var(--accent); }
+  .filter-btn.active { background:rgba(0,245,196,0.06); }
+
+  /* ── ANIMATIONS ── */
+  @keyframes fadeUp {
+    from{opacity:0;transform:translateY(16px);}
+    to{opacity:1;transform:none;}
+  }
+
+  /* ── SCROLLBAR ── */
+  ::-webkit-scrollbar { width:4px; }
+  ::-webkit-scrollbar-track { background:transparent; }
+  ::-webkit-scrollbar-thumb { background:var(--border); }
+
+  /* ── MOBILE ── */
+  @media(max-width:640px) {
+    .content { padding:12px; }
+    .topbar { padding:10px 12px; }
+    .feed-item,
+    .feed-header { grid-template-columns:70px 1fr 90px; }
+    .feed-item > .feed-ip,
+    .feed-header > :nth-child(2) { display:none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="scanner"></div>
+
+<!-- ── AUTH GATE ── -->
+<div id="auth-gate">
+  <div class="auth-box">
+    <div class="auth-logo">
+      <span><span class="g">GENESIS</span><span class="v">VAULT</span></span>
+      <p>// FIREWALL OBSERVER — ADMIN ONLY</p>
+    </div>
+    <label class="auth-label">Admin Token</label>
+    <input class="auth-input" type="password" id="token-input"
+           placeholder="paste your admin token" autocomplete="off">
+    <button class="auth-btn" onclick="authenticate()">[ ENTER OBSERVER ]</button>
+    <div class="auth-err" id="auth-err">// AUTH FAILED — INVALID TOKEN</div>
+  </div>
+</div>
+
+<!-- ── MAIN ── -->
+<div id="main">
+
+  <!-- TOP BAR -->
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="topbar-logo"><span class="g">GENESIS</span><span class="v">VAULT</span></div>
+      <div class="topbar-title">// FIREWALL OBSERVER</div>
+    </div>
+    <div class="topbar-right">
+      <div class="refresh-row">
+        <label class="toggle-wrap">
+          <input type="checkbox" id="auto-refresh" checked onchange="toggleAutoRefresh()">
+          <div class="toggle-track"></div>
+          <div class="toggle-thumb"></div>
+        </label>
+        AUTO-REFRESH
+      </div>
+      <span class="last-refresh" id="last-refresh">--:--:--</span>
+      <div class="status-dot" id="status-dot"></div>
+      <span class="status-text" id="status-text">CONNECTING...</span>
+      <button class="topbar-btn" onclick="loadAll()">[ REFRESH ]</button>
+      <button class="topbar-btn danger" onclick="clearLogs()">[ CLEAR LOGS ]</button>
+      <button class="topbar-btn" onclick="logout()" style="border-color:#1a3a3a">[ LOGOUT ]</button>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- ALERT BANNER -->
+    <div id="alert-banner">
+      ⚠ ALERT — HIGH ATTACK VOLUME DETECTED IN LAST 24 HOURS
+    </div>
+
+    <!-- STAT CARDS -->
+    <div class="stats-row">
+      <div class="stat-card red">
+        <span class="stat-tag">// total</span>
+        <span class="stat-val" id="s-total">—</span>
+        <span class="stat-label">Blocked Requests</span>
+      </div>
+      <div class="stat-card warn">
+        <span class="stat-tag">// last 24h</span>
+        <span class="stat-val" id="s-24h">—</span>
+        <span class="stat-label">Recent Attacks</span>
+      </div>
+      <div class="stat-card blue">
+        <span class="stat-tag">// top threat</span>
+        <span class="stat-val" id="s-top-type" style="font-size:1rem;padding-top:6px;">—</span>
+        <span class="stat-label">Dominant Attack</span>
+      </div>
+      <div class="stat-card green">
+        <span class="stat-tag">// top attacker</span>
+        <span class="stat-val" id="s-top-ip" style="font-size:0.85rem;padding-top:8px;">—</span>
+        <span class="stat-label">Most Active IP</span>
+      </div>
+      <div class="stat-card green">
+        <span class="stat-tag">// backend</span>
+        <span class="stat-val" id="s-backend" style="font-size:1rem;padding-top:6px;">—</span>
+        <span class="stat-label">API Status</span>
+      </div>
+    </div>
+
+    <!-- ATTACK BREAKDOWN + TOP IPs -->
+    <div class="grid-2">
+
+      <div class="panel">
+        <div class="panel-header">
+          <span class="panel-title">// Attack Type Breakdown</span>
+          <span class="panel-sub">by volume</span>
+        </div>
+        <div class="panel-body" id="type-breakdown">
+          <div class="empty-state"><span class="empty-icon">◈</span>No data yet</div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-header">
+          <span class="panel-title">// Top Attacking IPs</span>
+          <span class="panel-sub">most blocked</span>
+        </div>
+        <div class="panel-body" id="top-ips">
+          <div class="empty-state"><span class="empty-icon">◈</span>No data yet</div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- PING CHECKER -->
+    <div class="panel" style="margin-bottom:20px;">
+      <div class="panel-header">
+        <span class="panel-title">// Backend Ping Checker</span>
+        <span class="panel-sub">check if any endpoint is live</span>
+      </div>
+      <div class="panel-body">
+        <div class="ping-row">
+          <input class="ping-input" type="text" id="ping-url"
+                 value="https://genesis-vault-backend.onrender.com/api/ping"
+                 placeholder="enter URL to ping">
+          <button class="ping-btn" onclick="doPing()">[ PING ]</button>
+        </div>
+        <div class="ping-result" id="ping-result"></div>
+      </div>
+    </div>
+
+    <!-- LIVE FEED -->
+    <div class="panel" style="margin-bottom:20px;">
+      <div class="panel-header">
+        <span class="panel-title">// Live Block Feed</span>
+        <span class="panel-sub" id="feed-count">0 entries</span>
+      </div>
+
+      <!-- Filter bar -->
+      <div class="filter-bar">
+        <button class="filter-btn active" onclick="filterFeed('all', this)">ALL</button>
+        <button class="filter-btn" onclick="filterFeed('sqli', this)">SQLi</button>
+        <button class="filter-btn" onclick="filterFeed('xss', this)">XSS</button>
+        <button class="filter-btn" onclick="filterFeed('bad_origin', this)">BAD ORIGIN</button>
+        <button class="filter-btn" onclick="filterFeed('no_origin', this)">NO ORIGIN</button>
+        <button class="filter-btn" onclick="filterFeed('bad_agent', this)">BAD AGENT</button>
+        <button class="filter-btn" onclick="filterFeed('path_traversal', this)">PATH TRAV</button>
+        <button class="filter-btn" onclick="filterFeed('cmd_injection', this)">CMD INJ</button>
+      </div>
+
+      <div class="feed-header">
+        <span>TIME</span>
+        <span>IP</span>
+        <span>PATH / ATTACK</span>
+        <span>TYPE</span>
+      </div>
+
+      <div id="live-feed">
+        <div class="empty-state">
+          <span class="empty-icon">◉</span>
+          Loading feed...
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+</div><!-- /main -->
+
+<script>
+const API = 'https://genesis-vault-backend.onrender.com';
+let adminToken   = '';
+let allLogs      = [];
+let activeFilter = 'all';
+let refreshTimer = null;
+const REFRESH_INTERVAL = 30000; // 30 seconds
+
+// ── AUTH ────────────────────────────────────────────────────────────
+async function authenticate() {
+  const token = document.getElementById('token-input').value.trim();
+  if (!token) return;
+
+  const btn = document.querySelector('.auth-btn');
+  btn.textContent = '[ VERIFYING... ]';
+  btn.disabled = true;
+
+  try {
+    const res = await fetch(`${API}/api/admin/firewall/stats`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    const data = await res.json();
+
+    if (data.status === 'success') {
+      adminToken = token;
+      sessionStorage.setItem('gv_admin_token', token);
+      document.getElementById('auth-gate').style.display = 'none';
+      document.getElementById('main').style.display = 'block';
+      loadAll();
+      startAutoRefresh();
+    } else {
+      showAuthErr();
+    }
+  } catch(e) {
+    showAuthErr();
+  } finally {
+    btn.textContent = '[ ENTER OBSERVER ]';
+    btn.disabled = false;
+  }
+}
+
+function showAuthErr() {
+  const err = document.getElementById('auth-err');
+  err.style.display = 'block';
+  setTimeout(() => err.style.display = 'none', 3000);
+}
+
+function logout() {
+  sessionStorage.removeItem('gv_admin_token');
+  location.reload();
+}
+
+// ── LOAD ALL ─────────────────────────────────────────────────────────
+async function loadAll() {
+  await Promise.all([loadStats(), loadLogs(), checkBackend()]);
+  updateRefreshTime();
+}
+
+// ── STATS ─────────────────────────────────────────────────────────────
+async function loadStats() {
+  try {
+    const res  = await fetch(`${API}/api/admin/firewall/stats`, {
+      headers: { 'Authorization': `Bearer ${adminToken}` }
+    });
+    const data = await res.json();
+    if (data.status !== 'success') return;
+
+    const s = data.stats;
+
+    setText('s-total', s.total_blocked ?? 0);
+    setText('s-24h',   s.last_24h ?? 0);
+
+    // Top attack type
+    const byType = s.by_attack_type || {};
+    const topType = Object.entries(byType).sort((a,b) => b[1]-a[1])[0];
+    setText('s-top-type', topType ? topType[0].toUpperCase() : 'NONE');
+
+    // Top IP
+    const topIp = (s.top_ips || [])[0];
+    setText('s-top-ip', topIp ? topIp.ip : 'NONE');
+
+    // Alert banner
+    const banner = document.getElementById('alert-banner');
+    banner.style.display = (s.last_24h >= 10) ? 'block' : 'none';
+
+    // Render type breakdown
+    renderTypeBreakdown(byType, s.total_blocked);
+
+    // Render top IPs
+    renderTopIPs(s.top_ips || []);
+
+    setOnline(true);
+  } catch(e) {
+    setOnline(false);
+  }
+}
+
+function renderTypeBreakdown(byType, total) {
+  const container = document.getElementById('type-breakdown');
+  if (!Object.keys(byType).length) {
+    container.innerHTML = '<div class="empty-state"><span class="empty-icon">◈</span>No attacks logged</div>';
+    return;
+  }
+
+  const colors = {
+    sqli:             '#ff003c',
+    xss:              '#ffaa00',
+    bad_origin:       '#00a8ff',
+    no_origin:        '#00a8ff',
+    bad_agent:        '#00f5c4',
+    path_traversal:   '#ff003c',
+    cmd_injection:    '#ff003c',
+    oversized_payload:'#ffaa00',
+  };
+
+  const sorted = Object.entries(byType).sort((a,b) => b[1]-a[1]);
+  const max    = sorted[0][1];
+
+  container.innerHTML = sorted.map(([type, count]) => `
+    <div class="type-row">
+      <span class="type-label">${type.replace(/_/g,' ')}</span>
+      <div class="type-bar-wrap">
+        <div class="type-bar-fill" data-pct="${(count/max*100).toFixed(1)}"
+             style="background:${colors[type]||'#4a7a8a'}"></div>
+      </div>
+      <span class="type-count">${count}</span>
+    </div>
+  `).join('');
+
+  // Animate bars
+  setTimeout(() => {
+    document.querySelectorAll('.type-bar-fill').forEach(el => {
+      el.style.width = el.dataset.pct + '%';
+    });
+  }, 50);
+}
+
+function renderTopIPs(ips) {
+  const container = document.getElementById('top-ips');
+  if (!ips.length) {
+    container.innerHTML = '<div class="empty-state"><span class="empty-icon">◈</span>No IPs logged</div>';
+    return;
+  }
+  container.innerHTML = ips.map((item, i) => `
+    <div class="ip-row">
+      <span class="ip-addr">${i+1}. ${item.ip}</span>
+      <span class="ip-count">${item.count} hits</span>
+    </div>
+  `).join('');
+}
+
+// ── LOGS FEED ─────────────────────────────────────────────────────────
+async function loadLogs() {
+  try {
+    const res  = await fetch(`${API}/api/admin/firewall/logs?limit=200`, {
+      headers: { 'Authorization': `Bearer ${adminToken}` }
+    });
+    const data = await res.json();
+    if (data.status !== 'success') return;
+    allLogs = data.logs || [];
+    renderFeed(allLogs);
+  } catch(e) {}
+}
+
+function renderFeed(logs) {
+  const filtered = activeFilter === 'all'
+    ? logs
+    : logs.filter(l => l.attack_type === activeFilter);
+
+  document.getElementById('feed-count').textContent = `${filtered.length} entries`;
+
+  const feed = document.getElementById('live-feed');
+  if (!filtered.length) {
+    feed.innerHTML = `<div class="empty-state"><span class="empty-icon">◉</span>${
+      activeFilter === 'all' ? 'No attacks recorded yet.' : `No "${activeFilter}" attacks found.`
+    }</div>`;
+    return;
+  }
+
+  feed.innerHTML = filtered.map(log => {
+    const time    = formatTime(log.blocked_at);
+    const atype   = log.attack_type || 'unknown';
+    const payload = log.payload_snippet || '';
+
+    return `
+      <div class="feed-item">
+        <span class="feed-time">${time}</span>
+        <span class="feed-ip">${log.ip || '—'}</span>
+        <div>
+          <div class="feed-path">${log.method || 'GET'} ${log.path || '/'}</div>
+          ${payload ? `<div class="payload-preview">${escHtml(payload.slice(0,120))}</div>` : ''}
+        </div>
+        <span class="feed-type ${atype}">${atype.replace(/_/g,' ')}</span>
+      </div>
+    `;
+  }).join('');
+}
+
+function filterFeed(type, btn) {
+  activeFilter = type;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderFeed(allLogs);
+}
+
+// ── BACKEND PING ───────────────────────────────────────────────────────
+async function checkBackend() {
+  try {
+    const t0  = Date.now();
+    const res = await fetch(`${API}/api/ping`);
+    const ms  = Date.now() - t0;
+    const ok  = res.ok;
+    setText('s-backend', ok ? 'ONLINE' : 'DOWN');
+    document.getElementById('s-backend').style.color = ok ? 'var(--accent)' : 'var(--accent3)';
+  } catch(e) {
+    setText('s-backend', 'DOWN');
+    document.getElementById('s-backend').style.color = 'var(--accent3)';
+  }
+}
+
+async function doPing() {
+  const url = document.getElementById('ping-url').value.trim();
+  if (!url) return;
+  const resultEl = document.getElementById('ping-result');
+  resultEl.style.display = 'block';
+  resultEl.className = 'ping-result';
+  resultEl.textContent = '> Pinging...';
+
+  try {
+    const t0  = Date.now();
+    const res = await fetch(url, { mode: 'cors' });
+    const ms  = Date.now() - t0;
+    const body = await res.text();
+    resultEl.className = `ping-result ${res.ok ? 'ok' : 'err'}`;
+    resultEl.textContent = `> HTTP ${res.status} — ${ms}ms\n> ${body.slice(0,120)}`;
+  } catch(e) {
+    resultEl.className = 'ping-result err';
+    resultEl.textContent = `> CONNECTION FAILED\n> ${e.message}`;
+  }
+}
+
+// ── CLEAR LOGS ────────────────────────────────────────────────────────
+async function clearLogs() {
+  if (!confirm('Clear all firewall logs? This cannot be undone.')) return;
+  try {
+    const res = await fetch(`${API}/api/admin/firewall/clear`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${adminToken}` }
+    });
+    const data = await res.json();
+    if (data.status === 'success') {
+      allLogs = [];
+      renderFeed([]);
+      setText('s-total', 0);
+      setText('s-24h', 0);
+      document.getElementById('type-breakdown').innerHTML =
+        '<div class="empty-state"><span class="empty-icon">◈</span>Logs cleared</div>';
+      document.getElementById('top-ips').innerHTML =
+        '<div class="empty-state"><span class="empty-icon">◈</span>No data</div>';
+    }
+  } catch(e) {}
+}
+
+// ── AUTO REFRESH ──────────────────────────────────────────────────────
+function startAutoRefresh() {
+  refreshTimer = setInterval(loadAll, REFRESH_INTERVAL);
+}
+
+function toggleAutoRefresh() {
+  const on = document.getElementById('auto-refresh').checked;
+  if (on) {
+    startAutoRefresh();
+  } else {
+    clearInterval(refreshTimer);
+    refreshTimer = null;
+  }
+}
+
+function updateRefreshTime() {
+  const now = new Date();
+  document.getElementById('last-refresh').textContent =
+    `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+}
+
+function setOnline(online) {
+  const dot  = document.getElementById('status-dot');
+  const text = document.getElementById('status-text');
+  dot.className  = `status-dot${online ? '' : ' offline'}`;
+  text.textContent = online ? 'VAULT ONLINE' : 'API UNREACHABLE';
+}
+
+// ── UTILS ─────────────────────────────────────────────────────────────
+function setText(id, val) {
+  const el = document.getElementById(id);
+  if (el) el.textContent = val;
+}
+
+function formatTime(iso) {
+  if (!iso) return '--:--';
+  try {
+    const d = new Date(iso);
+    return `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+  } catch(e) { return '--:--'; }
+}
+
+function pad(n) { return String(n).padStart(2, '0'); }
+
+function escHtml(str) {
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ── ENTER KEY ────────────────────────────────────────────────────────
+document.getElementById('token-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') authenticate();
+});
+document.getElementById('ping-url').addEventListener('keydown', e => {
+  if (e.key === 'Enter') doPing();
+});
+
+// ── SESSION RESTORE ───────────────────────────────────────────────────
+(function() {
+  const saved = sessionStorage.getItem('gv_admin_token');
+  if (saved) {
+    document.getElementById('token-input').value = saved;
+    authenticate();
+  }
+})();
+</script>
+</body>
+</html>
