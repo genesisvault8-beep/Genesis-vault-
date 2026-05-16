@@ -581,20 +581,17 @@
     </div>
   </div>
 
-  <!-- ══ PAYMENTS ══ -->
-  <div class="page" id="page-payments">
+  <!-- ══ VC SPENDING ══ -->
+  <div class="page" id="page-vc">
     <div class="section-title">
-      // Pending Payments
-      <button class="refresh-btn" onclick="loadPayments()">↻ REFRESH</button>
+      // VC Spending Logs
+      <button class="refresh-btn" onclick="loadVCLogs()">↻ REFRESH</button>
     </div>
-    <div id="payments-container">
-      <div class="loading"><span class="spinner"></span>Loading...</div>
+    <div style="margin-bottom:12px;">
+      <input type="text" id="vc-search" placeholder="Search by user or reason..." oninput="filterVCLogs()" style="margin-bottom:0;">
     </div>
-
-    <hr class="divider">
-
-    <div class="section-title">// Payout Requests</div>
-    <div id="payouts-container">
+    <div id="vc-stats" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;"></div>
+    <div id="vc-container">
       <div class="loading"><span class="spinner"></span>Loading...</div>
     </div>
   </div>
@@ -631,16 +628,19 @@
         <option value="Tools">Tools</option>
         <option value="BugBounty">Bug Bounty</option>
       </select>
-     <select id="c-rank">
-  <option value="Ghost">Ghost (All members)</option>
-  <option value="Scout">Scout+</option>
-  <option value="Hunter">Hunter+</option>
-  <option value="Predator">Predator+</option>
-  <option value="Phantom">Phantom+</option>
-  <option value="Architect">Architect+</option>
-  <option value="Guardian">Guardian only</option>
-     </select>
       <input type="number" id="c-price" placeholder="Price in USDT (0 = free)" min="0" step="0.01">
+
+      <!-- VC Lock Toggle -->
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px;padding:10px;border:1px solid var(--border);background:var(--bg);">
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-family:'Share Tech Mono',monospace;font-size:0.75rem;color:var(--text-dim);">
+          <input type="checkbox" id="c-vc-lock" onchange="toggleVCLock(this)" style="width:auto;margin:0;">
+          LOCK WITH VC
+        </label>
+        <div id="vc-lock-input" style="display:none;flex:1;">
+          <input type="number" id="c-vc-cost" placeholder="VC cost to unlock..." min="1" step="1" style="margin-bottom:0;">
+        </div>
+      </div>
+
       <button class="btn-approve" onclick="postCourse()" style="width:100%;">[ PUBLISH COURSE ]</button>
     </div>
 
@@ -648,6 +648,7 @@
       // Published Courses
       <button class="refresh-btn" onclick="loadCourses()">↻ REFRESH</button>
     </div>
+    <input type="text" id="course-search" placeholder="Search courses..." oninput="filterCourses()" style="margin-bottom:12px;">
     <div id="courses-container">
       <div class="loading"><span class="spinner"></span>Loading...</div>
     </div>
@@ -665,9 +666,9 @@
     <span class="nav-icon">⊞</span>
     <span class="nav-label">Tools</span>
   </div>
-  <div class="nav-item" onclick="showPage('payments', this)">
+  <div class="nav-item" onclick="showPage('vc', this)">
     <span class="nav-icon">◎</span>
-    <span class="nav-label">Payments</span>
+    <span class="nav-label">VC Logs</span>
   </div>
   <div class="nav-item" onclick="showPage('users', this)">
     <span class="nav-icon">◉</span>
@@ -847,7 +848,7 @@
     el.classList.add('active');
     if (name === 'dashboard') { loadDashboard(); loadAdmins(); loadMotions(); }
     if (name === 'tools')     loadPendingTools();
-    if (name === 'payments')  loadPayments();
+    if (name === 'vc')        loadVCLogs();
     if (name === 'users')     loadUsers();
     if (name === 'courses')   { loadCourses(); }
   }
@@ -1148,140 +1149,74 @@
   }
 
   // ══════════════════════════════════════════════════════════════════
-  // PAYMENTS
+  // VC SPENDING LOGS
   // ══════════════════════════════════════════════════════════════════
 
-  async function loadPayments() {
-    const pc  = document.getElementById('payments-container');
-    const pyc = document.getElementById('payouts-container');
-    pc.innerHTML  = '<div class="loading"><span class="spinner"></span>Loading...</div>';
-    pyc.innerHTML = '<div class="loading"><span class="spinner"></span>Loading...</div>';
+  let allVCLogs = [];
 
-    // Pending payments
+  function toggleVCLock(checkbox) {
+    document.getElementById('vc-lock-input').style.display = checkbox.checked ? 'flex' : 'none';
+  }
+
+  async function loadVCLogs() {
+    const c = document.getElementById('vc-container');
+    const s = document.getElementById('vc-stats');
+    c.innerHTML = '<div class="loading"><span class="spinner"></span>Loading...</div>';
+    s.innerHTML = '';
     try {
-      const res = await apiFetch(`${API}/admin/pending-payments`);
+      const res = await apiFetch(`${API}/admin/vc-transactions`);
       if (!res) return;
       const d = await res.json();
-      if (!d.purchases || !d.purchases.length) {
-        pc.innerHTML = '<div class="empty">// No payments awaiting confirmation. ✓</div>';
-      } else {
-        pc.innerHTML = d.purchases.map(p => `
-          <div class="item-card" id="payment-${p.id}">
-            <div class="item-meta">Buyer: <span>${p.buyer_name}</span> · ${timeAgo(p.purchased_at)}</div>
-            <h4>${p.title || 'Tool Purchase'}</h4>
-            <p class="payout-amount">$${parseFloat(p.amount_paid || 0).toFixed(2)} USDT</p>
-            <p style="font-family:'Share Tech Mono',monospace;font-size:0.7rem;color:var(--accent4);margin-bottom:10px;word-break:break-all;">
-              TX: ${p.binance_tx_id || 'Not provided'}
-            </p>
-            <div class="actions">
-              <button class="btn-approve" onclick="confirmPayment(${p.id}, this)">[ CONFIRM ]</button>
-              <button class="btn-reject"  onclick="rejectPayment(${p.id}, this)">[ REJECT ]</button>
-            </div>
+      allVCLogs = d.transactions || [];
+
+      // Stats summary
+      const totalSpent  = allVCLogs.filter(t => t.type === 'spend').reduce((a, t) => a + (t.amount || 0), 0);
+      const totalEarned = allVCLogs.filter(t => t.type === 'earn').reduce((a, t) => a + (t.amount || 0), 0);
+      s.innerHTML = `
+        <div class="stat-card green">
+          <div class="stat-value">${totalEarned}</div>
+          <div class="stat-label">VC Earned</div>
+        </div>
+        <div class="stat-card red">
+          <div class="stat-value">${totalSpent}</div>
+          <div class="stat-label">VC Spent</div>
+        </div>
+      `;
+      renderVCLogs(allVCLogs);
+    } catch(e) {
+      c.innerHTML = '<div class="empty">// Failed to load VC logs.</div>';
+    }
+  }
+
+  function filterVCLogs() {
+    const q = document.getElementById('vc-search').value.toLowerCase();
+    const filtered = allVCLogs.filter(t =>
+      (t.username || '').toLowerCase().includes(q) ||
+      (t.reason || '').toLowerCase().includes(q) ||
+      (t.type || '').toLowerCase().includes(q)
+    );
+    renderVCLogs(filtered);
+  }
+
+  function renderVCLogs(logs) {
+    const c = document.getElementById('vc-container');
+    if (!logs.length) {
+      c.innerHTML = '<div class="empty">// No VC transactions found.</div>';
+      return;
+    }
+    c.innerHTML = logs.map(t => `
+      <div class="item-card" style="border-left:3px solid ${t.type === 'earn' ? 'var(--accent)' : 'var(--accent3)'};">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+          <div>
+            <div style="font-family:'Share Tech Mono',monospace;font-size:0.85rem;color:white;">${t.username || 'Unknown'}</div>
+            <div class="item-meta" style="margin-top:3px;">${t.reason || '—'} · ${timeAgo(t.created_at)}</div>
           </div>
-        `).join('');
-      }
-    } catch(e) {
-      pc.innerHTML = '<div class="empty">// Failed to load payments.</div>';
-    }
-
-    // Payouts
-    try {
-      const res = await apiFetch(`${API}/admin/payouts`);
-      if (!res) return;
-      const d = await res.json();
-      if (!d.payouts || !d.payouts.length) {
-        pyc.innerHTML = '<div class="empty">// No payout requests. ✓</div>';
-      } else {
-        pyc.innerHTML = d.payouts.map(p => `
-  <div class="item-card" id="payout-${p.id}">
-    <div class="item-meta">
-      Seller: <span style="color:var(--accent2)">${p.seller_name || 'Unknown'}</span> ·
-      <span style="color:var(--accent)">$${p.amount} USDT</span> ·
-      ${timeAgo(p.created_at)}
-    </div>
-    <h4>${p.title || 'Payout Request'}</h4>
-    <div class="item-meta" style="margin-top:6px;">
-      Wallet: <span style="color:var(--accent);word-break:break-all;">${p.wallet_address || '—'}</span>
-    </div>
-    <div class="actions" style="margin-top:12px;">
-      <button class="btn-approve" onclick="markPayoutSent(${p.id}, this)">[ MARK SENT ]</button>
-    </div>
-  </div>`).join('');
-      }
-    } catch(e) {
-      pyc.innerHTML = '<div class="empty">// Failed to load payouts.</div>';
-    }
-  }
-
-  async function confirmPayment(id, btn) {
-    if (!confirm('Confirm this payment? This will unlock the tool for the buyer.')) return;
-    btn.disabled = true;
-    btn.textContent = '...';
-    try {
-      const res = await apiFetch(`${API}/payments/admin-confirm/${id}`, { method: 'POST' });
-      if (!res) return;
-      if (res.ok) {
-        document.getElementById(`payment-${id}`).remove();
-        toast('// Payment confirmed! Tool unlocked for buyer.');
-        loadDashboard();
-      } else {
-        const d = await res.json();
-        toast(`// ${d.message || 'Confirm failed.'}`, 'var(--accent3)');
-        btn.disabled = false;
-        btn.textContent = '[ CONFIRM ]';
-      }
-    } catch(e) {
-      toast('// Network error.', 'var(--accent3)');
-      btn.disabled = false;
-      btn.textContent = '[ CONFIRM ]';
-    }
-  }
-
-  async function rejectPayment(id, btn) {
-    if (!confirm('Reject this payment?')) return;
-    btn.disabled = true;
-    btn.textContent = '...';
-    try {
-      const res = await apiFetch(`${API}/payments/admin-reject/${id}`, { method: 'POST' });
-      if (!res) return;
-      if (res.ok) {
-        document.getElementById(`payment-${id}`).remove();
-        toast('// Payment rejected.', 'var(--accent3)');
-      } else {
-        const d = await res.json();
-        toast(`// ${d.message || 'Reject failed.'}`, 'var(--accent3)');
-        btn.disabled = false;
-        btn.textContent = '[ REJECT ]';
-      }
-    } catch(e) {
-      toast('// Network error.', 'var(--accent3)');
-      btn.disabled = false;
-      btn.textContent = '[ REJECT ]';
-    }
-  }
-
-  async function markPayoutSent(id, btn) {
-    if (!confirm('Mark this payout as sent? Only confirm after you have transferred the USDT.')) return;
-    btn.disabled = true;
-    btn.textContent = '...';
-    try {
-      const res = await apiFetch(`${API}/admin/payouts/${id}/mark-sent`, { method: 'POST' });
-      if (!res) return;
-      if (res.ok) {
-        document.getElementById(`payout-${id}`).remove();
-        toast('// Payout marked as sent!');
-        loadDashboard();
-      } else {
-        const d = await res.json();
-        toast(`// ${d.message || 'Failed.'}`, 'var(--accent3)');
-        btn.disabled = false;
-        btn.textContent = '[ MARK SENT ]';
-      }
-    } catch(e) {
-      toast('// Network error.', 'var(--accent3)');
-      btn.disabled = false;
-      btn.textContent = '[ MARK SENT ]';
-    }
+          <div style="font-family:'Share Tech Mono',monospace;font-size:1.1rem;color:${t.type === 'earn' ? 'var(--accent)' : 'var(--accent3)'};">
+            ${t.type === 'earn' ? '+' : '-'}${t.amount} VC
+          </div>
+        </div>
+      </div>
+    `).join('');
   }
 
   // ══════════════════════════════════════════════════════════════════
@@ -1443,22 +1378,27 @@
   // ══════════════════════════════════════════════════════════════════
 
   async function postCourse() {
-    const title   = document.getElementById('c-title').value.trim();
-    const desc    = document.getElementById('c-desc').value.trim();
-    const content = document.getElementById('c-content').value.trim();
-    const category= document.getElementById('c-category').value;
-    const rank    = document.getElementById('c-rank').value;
-    const price   = parseFloat(document.getElementById('c-price').value) || 0;
+    const title    = document.getElementById('c-title').value.trim();
+    const desc     = document.getElementById('c-desc').value.trim();
+    const content  = document.getElementById('c-content').value.trim();
+    const category = document.getElementById('c-category').value;
+    const price    = parseFloat(document.getElementById('c-price').value) || 0;
+    const vcLock   = document.getElementById('c-vc-lock').checked;
+    const vcCost   = vcLock ? (parseInt(document.getElementById('c-vc-cost').value) || 0) : 0;
 
     if (!title || !content) {
       toast('// Title and content are required.', 'var(--accent3)');
+      return;
+    }
+    if (vcLock && vcCost < 1) {
+      toast('// Set a VC cost to lock the course.', 'var(--accent3)');
       return;
     }
 
     try {
       const res = await apiFetch(`${API}/admin/courses/create`, {
         method: 'POST',
-        body: JSON.stringify({ title, description: desc, content, category, rank_required: rank, price, is_free: price === 0 })
+        body: JSON.stringify({ title, description: desc, content, category, price, is_free: price === 0, vc_locked: vcLock, vc_cost: vcCost })
       });
       if (!res) return;
       const d = await res.json();
@@ -1468,6 +1408,9 @@
         document.getElementById('c-desc').value    = '';
         document.getElementById('c-content').value = '';
         document.getElementById('c-price').value   = '';
+        document.getElementById('c-vc-lock').checked = false;
+        document.getElementById('c-vc-cost').value = '';
+        document.getElementById('vc-lock-input').style.display = 'none';
         loadCourses();
       } else {
         toast(`// ${d.message || 'Publish failed.'}`, 'var(--accent3)');
@@ -1477,32 +1420,52 @@
     }
   }
 
+  let allCourses = [];
+
   async function loadCourses() {
     const c = document.getElementById('courses-container');
     c.innerHTML = '<div class="loading"><span class="spinner"></span>Loading...</div>';
     try {
       const res = await apiFetch(`${API}/admin/courses`);
       if (!res) return;
-      const d   = await res.json();
-      if (!d.courses || !d.courses.length) {
-        c.innerHTML = '<div class="empty">// No courses yet.</div>';
-        return;
-      }
-      c.innerHTML = d.courses.map(course => `
-        <div class="item-card" id="course-${course.id}">
-          <div class="item-meta">${course.category} · ${course.is_free ? 'FREE' : '$' + course.price + ' USDT'} · ${course.rank_required}</div>
-          <h4>${course.title}</h4>
-          <p>${course.description || ''}</p>
-          <div class="actions" style="margin-top:10px;">
-            <button class="btn-approve" style="font-size:0.7rem;padding:5px 12px;" onclick="viewCourse(${course.id}, \`${course.title}\`)">[ VIEW ]</button>
-            <button class="btn-action" style="font-size:0.7rem;padding:5px 12px;" onclick="editCourse(${course.id})">[ EDIT ]</button>
-            <button class="btn-reject" style="font-size:0.7rem;padding:5px 12px;" onclick="deleteCourse(${course.id}, this)">[ DELETE ]</button>
-          </div>
-        </div>
-      `).join('');
+      const d = await res.json();
+      allCourses = d.courses || [];
+      renderCourses(allCourses);
     } catch(e) {
       c.innerHTML = '<div class="empty">// Failed to load courses.</div>';
     }
+  }
+
+  function filterCourses() {
+    const q = document.getElementById('course-search').value.toLowerCase();
+    const filtered = allCourses.filter(c =>
+      (c.title || '').toLowerCase().includes(q) ||
+      (c.category || '').toLowerCase().includes(q) ||
+      (c.description || '').toLowerCase().includes(q)
+    );
+    renderCourses(filtered);
+  }
+
+  function renderCourses(courses) {
+    const c = document.getElementById('courses-container');
+    if (!courses.length) {
+      c.innerHTML = '<div class="empty">// No courses found.</div>';
+      return;
+    }
+    c.innerHTML = courses.map(course => `
+      <div class="item-card" id="course-${course.id}">
+        <div class="item-meta">${course.category} · ${course.is_free ? 'FREE' : '$' + course.price + ' USDT'}
+          ${course.vc_locked ? `· <span style="color:var(--accent4);">🔒 ${course.vc_cost} VC</span>` : ''}
+        </div>
+        <h4>${course.title}</h4>
+        <p>${course.description || ''}</p>
+        <div class="actions" style="margin-top:10px;">
+          <button class="btn-approve" style="font-size:0.7rem;padding:5px 12px;" onclick="viewCourse(${course.id}, \`${course.title}\`)">[ VIEW ]</button>
+          <button class="btn-action" style="font-size:0.7rem;padding:5px 12px;" onclick="editCourse(${course.id})">[ EDIT ]</button>
+          <button class="btn-reject" style="font-size:0.7rem;padding:5px 12px;" onclick="deleteCourse(${course.id}, this)">[ DELETE ]</button>
+        </div>
+      </div>
+    `).join('');
   }
 
   async function viewCourse(id, title) {
@@ -1526,35 +1489,42 @@
     if (!res) return;
     const d = await res.json();
     const course = d.course || d;
-    document.getElementById('c-title').value   = course.title || '';
-    document.getElementById('c-desc').value    = course.description || '';
-    document.getElementById('c-content').value = course.content || '';
+    document.getElementById('c-title').value    = course.title || '';
+    document.getElementById('c-desc').value     = course.description || '';
+    document.getElementById('c-content').value  = course.content || '';
     document.getElementById('c-category').value = course.category || 'Beginner';
-    document.getElementById('c-rank').value    = course.rank_required || 'Ghost';
-    document.getElementById('c-price').value   = course.price || 0;
+    document.getElementById('c-price').value    = course.price || 0;
+    const vcLocked = course.vc_locked || false;
+    document.getElementById('c-vc-lock').checked = vcLocked;
+    document.getElementById('vc-lock-input').style.display = vcLocked ? 'flex' : 'none';
+    if (vcLocked) document.getElementById('c-vc-cost').value = course.vc_cost || '';
     // Swap publish button to update mode
     const btn = document.querySelector('[onclick="postCourse()"]');
     btn.textContent = '[ UPDATE COURSE ]';
     btn.onclick = async () => {
-      const title   = document.getElementById('c-title').value.trim();
-      const desc    = document.getElementById('c-desc').value.trim();
-      const content = document.getElementById('c-content').value.trim();
-      const category= document.getElementById('c-category').value;
-      const rank    = document.getElementById('c-rank').value;
-      const price   = parseFloat(document.getElementById('c-price').value) || 0;
+      const title    = document.getElementById('c-title').value.trim();
+      const desc     = document.getElementById('c-desc').value.trim();
+      const content  = document.getElementById('c-content').value.trim();
+      const category = document.getElementById('c-category').value;
+      const price    = parseFloat(document.getElementById('c-price').value) || 0;
+      const vcLock   = document.getElementById('c-vc-lock').checked;
+      const vcCost   = vcLock ? (parseInt(document.getElementById('c-vc-cost').value) || 0) : 0;
       if (!title || !content) { toast('// Title and content are required.', 'var(--accent3)'); return; }
       const updateRes = await apiFetch(`${API}/admin/courses/${id}/update`, {
         method: 'POST',
-        body: JSON.stringify({ title, description: desc, content, category, rank_required: rank, price, is_free: price === 0 })
+        body: JSON.stringify({ title, description: desc, content, category, price, is_free: price === 0, vc_locked: vcLock, vc_cost: vcCost })
       });
       if (!updateRes) return;
       const ud = await updateRes.json();
       if (ud.status === 'success') {
         toast('// Course updated!');
-        document.getElementById('c-title').value = '';
-        document.getElementById('c-desc').value  = '';
+        document.getElementById('c-title').value   = '';
+        document.getElementById('c-desc').value    = '';
         document.getElementById('c-content').value = '';
-        document.getElementById('c-price').value = '';
+        document.getElementById('c-price').value   = '';
+        document.getElementById('c-vc-lock').checked = false;
+        document.getElementById('c-vc-cost').value = '';
+        document.getElementById('vc-lock-input').style.display = 'none';
         btn.textContent = '[ PUBLISH COURSE ]';
         btn.onclick = postCourse;
         loadCourses();
