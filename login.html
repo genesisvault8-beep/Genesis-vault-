@@ -4,21 +4,22 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Genesis Vault | Access</title>
+<meta name="robots" content="noindex, nofollow">
 <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: #020608;
-    --bg2: #060d10;
-    --accent: #00f5c4;
+    --bg:      #020608;
+    --bg2:     #060d10;
+    --accent:  #00f5c4;
     --accent2: #00a8ff;
     --accent3: #ff003c;
-    --text: #c8e6f0;
-    --text-dim: #4a7a8a;
-    --border: #0f2a35;
-    --glow: 0 0 20px rgba(0,245,196,0.3);
+    --text:    #c8e6f0;
+    --text-dim:#4a7a8a;
+    --border:  #0f2a35;
+    --glow:    0 0 20px rgba(0,245,196,0.3);
   }
 
-  * { margin: 0; padding: 0; box-sizing: border-box; }
+  * { margin:0; padding:0; box-sizing:border-box; }
 
   body {
     background: var(--bg);
@@ -33,387 +34,363 @@
     overflow-y: auto;
   }
 
-  /* Grid background */
+  /* Grid */
   body::before {
     content: '';
-    position: fixed;
-    inset: 0;
+    position: fixed; inset: 0;
     background-image:
       linear-gradient(rgba(0,245,196,0.03) 1px, transparent 1px),
       linear-gradient(90deg, rgba(0,245,196,0.03) 1px, transparent 1px);
     background-size: 40px 40px;
-    pointer-events: none;
-    z-index: 0;
+    pointer-events: none; z-index: 0;
+  }
+
+  /* Scanlines */
+  body::after {
+    content: '';
+    position: fixed; inset: 0;
+    background: repeating-linear-gradient(
+      0deg, transparent, transparent 2px,
+      rgba(0,0,0,0.07) 2px, rgba(0,0,0,0.07) 4px
+    );
+    pointer-events: none; z-index: 1;
+  }
+
+  .scanner {
+    position: fixed; top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--accent), transparent);
+    animation: scan 3s linear infinite;
+    z-index: 10;
+  }
+  @keyframes scan {
+    0%   { top: 0;     opacity: 1; }
+    100% { top: 100vh; opacity: 0; }
   }
 
   .container {
-    position: relative;
-    z-index: 1;
-    width: 100%;
-    max-width: 420px;
+    position: relative; z-index: 2;
+    width: 100%; max-width: 420px;
     padding: 20px;
   }
 
+  /* LOGO */
   .logo {
     text-align: center;
-    margin-bottom: 40px;
-    animation: fadeDown 0.6s ease;
+    margin-bottom: 36px;
+    animation: fadeDown 0.5s ease;
   }
-
-  .logo a {
-    text-decoration: none;
+  .logo-text {
     font-family: 'Share Tech Mono', monospace;
-    font-size: 1.4rem;
-    letter-spacing: 4px;
+    font-size: 1.4rem; letter-spacing: 4px;
+    text-decoration: none;
   }
-
-  .logo a span:first-child { color: var(--accent); }
-  .logo a span:last-child { color: white; }
-
+  .logo-text .g { color: var(--accent); }
+  .logo-text .v { color: white; }
   .logo p {
     color: var(--text-dim);
-    font-size: 0.75rem;
-    letter-spacing: 3px;
-    margin-top: 6px;
-    text-transform: uppercase;
+    font-size: 0.72rem; letter-spacing: 3px;
+    margin-top: 6px; text-transform: uppercase;
+    font-family: 'Share Tech Mono', monospace;
   }
 
+  /* CARD */
   .card {
     background: var(--bg2);
     border: 1px solid var(--border);
-    padding: 36px 32px;
-    animation: fadeUp 0.6s ease;
+    border-top: 2px solid var(--accent);
+    padding: 32px 28px;
+    animation: fadeUp 0.5s ease;
+    position: relative;
+  }
+  .card::before {
+    content: '// SECURE ACCESS TERMINAL';
+    position: absolute; top: 0; right: 14px;
+    transform: translateY(-50%);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.5rem; color: var(--accent);
+    letter-spacing: 2px; background: var(--bg2); padding: 0 6px;
   }
 
   .card h2 {
-    font-size: 1.4rem;
-    font-weight: 700;
-    letter-spacing: 3px;
-    text-transform: uppercase;
-    margin-bottom: 6px;
-    color: white;
+    font-size: 1.3rem; font-weight: 700;
+    letter-spacing: 3px; text-transform: uppercase;
+    margin-bottom: 4px; color: white;
   }
-
   .card .sub {
-    color: var(--text-dim);
-    font-size: 0.85rem;
-    letter-spacing: 1px;
-    margin-bottom: 28px;
+    color: var(--text-dim); font-size: 0.78rem;
+    letter-spacing: 1px; margin-bottom: 24px;
     font-family: 'Share Tech Mono', monospace;
   }
 
+  /* TABS */
   .tabs {
-    display: flex;
-    gap: 0;
-    margin-bottom: 28px;
+    display: flex; gap: 0;
+    margin-bottom: 24px;
     border-bottom: 1px solid var(--border);
   }
-
   .tab {
-    flex: 1;
-    padding: 10px;
-    text-align: center;
+    flex: 1; padding: 10px; text-align: center;
     cursor: pointer;
     font-family: 'Rajdhani', sans-serif;
-    font-weight: 600;
-    font-size: 0.85rem;
-    letter-spacing: 2px;
-    text-transform: uppercase;
+    font-weight: 600; font-size: 0.85rem;
+    letter-spacing: 2px; text-transform: uppercase;
     color: var(--text-dim);
     border-bottom: 2px solid transparent;
     transition: all 0.2s;
   }
+  .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
 
-  .tab.active {
+  /* MESSAGES */
+  .msg-box {
+    padding: 10px 14px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.78rem; margin-bottom: 16px;
+    display: none; line-height: 1.5; letter-spacing: 0.5px;
+  }
+  .msg-box.error {
+    background: rgba(255,0,60,0.08);
+    border: 1px solid var(--accent3);
+    color: var(--accent3);
+  }
+  .msg-box.success {
+    background: rgba(0,245,196,0.08);
+    border: 1px solid var(--accent);
     color: var(--accent);
-    border-bottom-color: var(--accent);
+  }
+  .msg-box.info {
+    background: rgba(0,168,255,0.08);
+    border: 1px solid var(--accent2);
+    color: var(--accent2);
   }
 
-  .form-group {
-    margin-bottom: 18px;
-  }
+  /* FORMS */
+  .form-panel { display: none; }
+  .form-panel.active { display: block; }
+
+  .form-group { margin-bottom: 16px; }
 
   label {
     display: block;
-    font-size: 0.75rem;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    color: var(--text-dim);
-    margin-bottom: 8px;
+    font-size: 0.68rem; letter-spacing: 2px;
+    text-transform: uppercase; color: var(--text-dim);
+    margin-bottom: 7px;
     font-family: 'Share Tech Mono', monospace;
   }
-
-  /* Password wrapper for show/hide toggle */
-  .input-wrapper {
-    position: relative;
-    display: flex;
-    align-items: center;
+  label .optional {
+    color: #1e4a5a; font-size: 0.6rem; letter-spacing: 1px;
   }
 
-  .input-wrapper input {
-    width: 100%;
-    padding-right: 44px;
-  }
+  .input-wrapper { position: relative; display: flex; align-items: center; }
+  .input-wrapper input { width: 100%; padding-right: 50px; }
 
-  .toggle-pw {
-    position: absolute;
-    right: 12px;
-    background: none;
-    border: none;
-    cursor: pointer;
-    color: var(--text-dim);
-    font-size: 1rem;
-    padding: 0;
-    line-height: 1;
-    transition: color 0.2s;
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 0.7rem;
-    letter-spacing: 1px;
-  }
-
-  .toggle-pw:hover { color: var(--accent); }
-
-  input {
+  input, textarea {
     width: 100%;
     background: var(--bg);
     border: 1px solid var(--border);
     color: var(--text);
-    padding: 12px 16px;
+    padding: 11px 14px;
     font-family: 'Share Tech Mono', monospace;
-    font-size: 0.9rem;
-    outline: none;
+    font-size: 0.85rem; outline: none;
     transition: border-color 0.2s, box-shadow 0.2s;
+    letter-spacing: 0.5px;
   }
-
-  input:focus {
-    border-color: var(--accent);
-    box-shadow: var(--glow);
-  }
-
+  input:focus { border-color: var(--accent); box-shadow: var(--glow); }
   input::placeholder { color: var(--text-dim); }
 
+  .toggle-pw {
+    position: absolute; right: 12px;
+    background: none; border: none; cursor: pointer;
+    color: var(--text-dim);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.62rem; letter-spacing: 1px;
+    padding: 0; transition: color 0.2s;
+  }
+  .toggle-pw:hover { color: var(--accent); }
+
+  /* PASSWORD STRENGTH */
+  .strength-bar {
+    height: 3px; background: var(--border);
+    margin-top: 6px; overflow: hidden;
+  }
+  .strength-fill {
+    height: 100%; width: 0%;
+    transition: width 0.3s, background 0.3s;
+  }
+  .strength-label {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.6rem; letter-spacing: 2px;
+    margin-top: 4px; color: var(--text-dim);
+  }
+
+  /* REFERRAL FIELD */
+  .referral-wrap {
+    position: relative;
+  }
+  .referral-badge {
+    position: absolute; right: 10px; top: 50%;
+    transform: translateY(-50%);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.6rem; color: var(--accent);
+    letter-spacing: 1px; display: none;
+  }
+
+  /* VC BONUS HINT */
+  .vc-hint {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.62rem; color: var(--accent);
+    letter-spacing: 1px; margin-top: 5px;
+    display: none;
+  }
+
+  /* BUTTONS */
   .btn {
-    width: 100%;
-    padding: 14px;
-    background: var(--accent);
-    color: var(--bg);
+    width: 100%; padding: 13px;
+    background: var(--accent); color: var(--bg);
     border: none;
     font-family: 'Rajdhani', sans-serif;
-    font-weight: 700;
-    font-size: 1rem;
-    letter-spacing: 3px;
-    text-transform: uppercase;
-    cursor: pointer;
-    transition: all 0.2s;
-    margin-top: 8px;
+    font-weight: 700; font-size: 0.95rem;
+    letter-spacing: 3px; text-transform: uppercase;
+    cursor: pointer; transition: all 0.2s;
+    margin-top: 6px;
     clip-path: polygon(8px 0%, 100% 0%, calc(100% - 8px) 100%, 0% 100%);
   }
-
-  .btn:hover {
-    background: white;
-    box-shadow: var(--glow);
+  .btn:hover { background: white; box-shadow: var(--glow); }
+  .btn:disabled { opacity: 0.45; cursor: not-allowed; }
+  .btn.btn-secondary {
+    background: none; border: 1px solid var(--border);
+    color: var(--text-dim); clip-path: none;
+    font-size: 0.8rem; letter-spacing: 2px;
   }
+  .btn.btn-secondary:hover { border-color: var(--accent2); color: var(--accent2); box-shadow: none; }
 
-  .btn:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
+  /* FORGOT + LINKS */
+  .forgot-link {
+    text-align: right; margin-top: -8px; margin-bottom: 14px;
   }
-
-  .error {
-    background: rgba(255,0,60,0.1);
-    border: 1px solid var(--accent3);
-    color: var(--accent3);
-    padding: 10px 14px;
+  .forgot-link a {
     font-family: 'Share Tech Mono', monospace;
-    font-size: 0.8rem;
-    margin-bottom: 16px;
-    display: none;
-    line-height: 1.5;
+    font-size: 0.62rem; color: var(--text-dim);
+    text-decoration: none; letter-spacing: 1px;
+    transition: color 0.2s;
   }
+  .forgot-link a:hover { color: var(--accent2); }
 
-  .success {
-    background: rgba(0,245,196,0.1);
-    border: 1px solid var(--accent);
-    color: var(--accent);
-    padding: 10px 14px;
+  .divider {
+    text-align: center; margin: 16px 0;
     font-family: 'Share Tech Mono', monospace;
-    font-size: 0.8rem;
-    margin-bottom: 16px;
-    display: none;
+    font-size: 0.6rem; color: var(--border);
+    letter-spacing: 2px; position: relative;
   }
+  .divider::before, .divider::after {
+    content: ''; position: absolute; top: 50%;
+    width: 38%; height: 1px; background: var(--border);
+  }
+  .divider::before { left: 0; }
+  .divider::after { right: 0; }
 
-  .form-panel { display: none; }
-  .form-panel.active { display: block; }
-
-  .referral-note {
-    color: var(--text-dim);
-    font-size: 0.75rem;
+  /* SIGNUP STARTER INFO */
+  .starter-info {
+    display: flex; gap: 10px; margin-bottom: 18px;
+  }
+  .starter-box {
+    flex: 1; background: var(--bg);
+    border: 1px solid var(--border);
+    padding: 10px 8px; text-align: center;
+  }
+  .starter-val {
     font-family: 'Share Tech Mono', monospace;
-    margin-top: 16px;
-    text-align: center;
-    letter-spacing: 1px;
+    font-size: 1rem; color: var(--accent);
+    display: block; line-height: 1; margin-bottom: 4px;
+  }
+  .starter-label {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.52rem; color: var(--text-dim);
+    letter-spacing: 1px; display: block;
   }
 
   .back-link {
-    text-align: center;
-    margin-top: 24px;
+    text-align: center; margin-top: 20px;
     animation: fadeUp 0.8s ease;
   }
-
   .back-link a {
-    color: var(--text-dim);
-    text-decoration: none;
-    font-size: 0.8rem;
-    letter-spacing: 2px;
+    color: var(--text-dim); text-decoration: none;
+    font-size: 0.72rem; letter-spacing: 2px;
     font-family: 'Share Tech Mono', monospace;
     transition: color 0.2s;
   }
-
   .back-link a:hover { color: var(--accent); }
 
   @keyframes fadeDown {
-    from { opacity: 0; transform: translateY(-20px); }
-    to { opacity: 1; transform: translateY(0); }
+    from { opacity:0; transform:translateY(-16px); }
+    to   { opacity:1; transform:none; }
   }
-
   @keyframes fadeUp {
-    from { opacity: 0; transform: translateY(20px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-
-  .scanner {
-    position: fixed;
-    top: 0; left: 0; right: 0;
-    height: 2px;
-    background: linear-gradient(90deg, transparent, var(--accent), transparent);
-    animation: scan 3s linear infinite;
-    z-index: 0;
-  }
-
-  @keyframes scan {
-    0% { top: 0; opacity: 1; }
-    100% { top: 100vh; opacity: 0; }
-  }
-
-  /* Password strength bar */
-  .strength-bar {
-    height: 3px;
-    background: var(--border);
-    margin-top: 6px;
-    position: relative;
-    overflow: hidden;
-  }
-
-  .strength-fill {
-    height: 100%;
-    width: 0%;
-    transition: width 0.3s, background 0.3s;
-  }
-
-  .strength-label {
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 0.65rem;
-    letter-spacing: 2px;
-    margin-top: 4px;
-    color: var(--text-dim);
+    from { opacity:0; transform:translateY(16px); }
+    to   { opacity:1; transform:none; }
   }
 
   /* ── WAKE-UP OVERLAY ── */
   #wakeup-overlay {
-    display: none;
-    position: fixed;
-    inset: 0;
-    background: var(--bg);
-    z-index: 1000;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 20px;
+    display: none; position: fixed; inset: 0;
+    background: var(--bg); z-index: 1000;
+    flex-direction: column; align-items: center;
+    justify-content: center; padding: 20px;
   }
   #wakeup-overlay.active { display: flex; }
 
   .wakeup-logo {
     font-family: 'Share Tech Mono', monospace;
-    font-size: 1.1rem;
-    letter-spacing: 5px;
-    color: var(--accent);
-    margin-bottom: 6px;
+    font-size: 1.1rem; letter-spacing: 5px;
+    color: var(--accent); margin-bottom: 6px;
   }
   .wakeup-logo span { color: white; }
-
   .wakeup-sub {
-    font-size: 0.58rem;
-    letter-spacing: 3px;
-    color: var(--text-dim);
-    margin-bottom: 48px;
+    font-size: 0.58rem; letter-spacing: 3px;
+    color: var(--text-dim); margin-bottom: 40px;
+    font-family: 'Share Tech Mono', monospace;
   }
-
-  .wakeup-bars {
-    display: flex;
-    gap: 5px;
-    margin-bottom: 40px;
-  }
-
+  .wakeup-bars { display: flex; gap: 5px; margin-bottom: 36px; }
   .wakeup-bar {
-    width: 3px;
-    height: 32px;
-    background: var(--border);
+    width: 3px; height: 32px; background: var(--border);
     animation: barPulse 1.2s ease-in-out infinite;
   }
-  .wakeup-bar:nth-child(1) { animation-delay: 0s; }
-  .wakeup-bar:nth-child(2) { animation-delay: 0.1s; }
-  .wakeup-bar:nth-child(3) { animation-delay: 0.2s; }
-  .wakeup-bar:nth-child(4) { animation-delay: 0.3s; }
-  .wakeup-bar:nth-child(5) { animation-delay: 0.4s; }
-  .wakeup-bar:nth-child(6) { animation-delay: 0.5s; }
-  .wakeup-bar:nth-child(7) { animation-delay: 0.6s; }
-  .wakeup-bar:nth-child(8) { animation-delay: 0.7s; }
-
+  .wakeup-bar:nth-child(1){animation-delay:0s}
+  .wakeup-bar:nth-child(2){animation-delay:0.1s}
+  .wakeup-bar:nth-child(3){animation-delay:0.2s}
+  .wakeup-bar:nth-child(4){animation-delay:0.3s}
+  .wakeup-bar:nth-child(5){animation-delay:0.4s}
+  .wakeup-bar:nth-child(6){animation-delay:0.5s}
+  .wakeup-bar:nth-child(7){animation-delay:0.6s}
+  .wakeup-bar:nth-child(8){animation-delay:0.7s}
   @keyframes barPulse {
-    0%, 100% { background: var(--border); transform: scaleY(1); }
-    50% { background: var(--accent); transform: scaleY(1.8); }
+    0%,100% { background:var(--border); transform:scaleY(1); }
+    50%      { background:var(--accent); transform:scaleY(1.8); }
   }
-
   .wakeup-status {
     font-family: 'Share Tech Mono', monospace;
-    font-size: 0.72rem;
-    color: var(--accent);
-    letter-spacing: 2px;
-    text-align: center;
-    min-height: 20px;
-    margin-bottom: 12px;
+    font-size: 0.72rem; color: var(--accent);
+    letter-spacing: 2px; text-align: center;
+    min-height: 20px; margin-bottom: 12px;
   }
-
   .wakeup-log {
     font-family: 'Share Tech Mono', monospace;
-    font-size: 0.58rem;
-    color: var(--text-dim);
-    letter-spacing: 1px;
-    width: 100%;
-    max-width: 340px;
-    min-height: 80px;
-    border: 1px solid var(--border);
-    padding: 12px;
-    background: var(--bg2);
-    line-height: 2;
+    font-size: 0.58rem; color: var(--text-dim);
+    letter-spacing: 1px; width: 100%; max-width: 340px;
+    min-height: 80px; border: 1px solid var(--border);
+    padding: 12px; background: var(--bg2); line-height: 2;
   }
-
   .wakeup-log .log-line { display: block; animation: wFadeIn 0.3s ease; }
   .wakeup-log .log-ok   { color: var(--accent); }
   .wakeup-log .log-wait { color: var(--accent2); }
   .wakeup-log .log-warn { color: #ffaa00; }
-
   @keyframes wFadeIn {
-    from { opacity: 0; transform: translateX(-6px); }
-    to   { opacity: 1; transform: translateX(0); }
+    from { opacity:0; transform:translateX(-6px); }
+    to   { opacity:1; transform:none; }
   }
-
   .wakeup-timer {
     font-family: 'Share Tech Mono', monospace;
-    font-size: 0.58rem;
-    color: #1a3a3a;
-    letter-spacing: 2px;
-    margin-top: 16px;
+    font-size: 0.58rem; color: #1a3a3a; letter-spacing: 2px; margin-top: 16px;
   }
 </style>
 </head>
@@ -422,8 +399,9 @@
 <div class="scanner"></div>
 
 <div class="container">
+
   <div class="logo">
-    <a href="index.html"><span>GENESIS</span><span>VAULT</span></a>
+    <div class="logo-text"><span class="g">GENESIS</span><span class="v">VAULT</span></div>
     <p>// Secure Access Terminal</p>
   </div>
 
@@ -434,12 +412,12 @@
     <div class="tabs">
       <div class="tab active" onclick="switchTab('login')">Login</div>
       <div class="tab" onclick="switchTab('register')">Register</div>
+      <div class="tab" onclick="switchTab('forgot')">Reset</div>
     </div>
 
-    <div id="error-msg" class="error"></div>
-    <div id="success-msg" class="success"></div>
+    <div id="msg-box" class="msg-box"></div>
 
-    <!-- LOGIN FORM -->
+    <!-- ── LOGIN ── -->
     <div id="panel-login" class="form-panel active">
       <div class="form-group">
         <label>Email</label>
@@ -449,17 +427,35 @@
         <label>Password</label>
         <div class="input-wrapper">
           <input type="password" id="login-password" placeholder="••••••••" autocomplete="current-password">
-          <button class="toggle-pw" type="button" onclick="togglePw('login-password', this)">SHOW</button>
+          <button class="toggle-pw" onclick="togglePw('login-password',this)">SHOW</button>
         </div>
       </div>
-      <button class="btn" onclick="handleLogin()" id="login-btn">[ ACCESS VAULT ]</button>
+      <div class="forgot-link"><a href="#" onclick="switchTab('forgot');return false;">Forgot password?</a></div>
+      <button class="btn" id="login-btn" onclick="handleLogin()">[ ACCESS VAULT ]</button>
     </div>
 
-    <!-- REGISTER FORM -->
+    <!-- ── REGISTER ── -->
     <div id="panel-register" class="form-panel">
+
+      <!-- VC starter info -->
+      <div class="starter-info">
+        <div class="starter-box">
+          <span class="starter-val">50</span>
+          <span class="starter-label">VC ON SIGNUP</span>
+        </div>
+        <div class="starter-box">
+          <span class="starter-val">+25</span>
+          <span class="starter-label">VC WITH REFERRAL</span>
+        </div>
+        <div class="starter-box">
+          <span class="starter-val">+25</span>
+          <span class="starter-label">VC TO REFERRER</span>
+        </div>
+      </div>
+
       <div class="form-group">
         <label>Username</label>
-        <input type="text" id="reg-username" placeholder="your_handle" autocomplete="username">
+        <input type="text" id="reg-username" placeholder="your_handle" autocomplete="username" maxlength="24">
       </div>
       <div class="form-group">
         <label>Email</label>
@@ -470,20 +466,34 @@
         <div class="input-wrapper">
           <input type="password" id="reg-password" placeholder="min 8 characters"
             autocomplete="new-password" oninput="checkStrength(this.value)">
-          <button class="toggle-pw" type="button" onclick="togglePw('reg-password', this)">SHOW</button>
+          <button class="toggle-pw" onclick="togglePw('reg-password',this)">SHOW</button>
         </div>
         <div class="strength-bar"><div class="strength-fill" id="strength-fill"></div></div>
         <div class="strength-label" id="strength-label"></div>
       </div>
       <div class="form-group">
-        <label>Invite Code</label>
-        <input type="text" id="reg-referral" placeholder="XXXXXXXX"
-          oninput="this.value = this.value.toUpperCase()"
-          maxlength="8" autocomplete="off">
+        <label>Referral Code <span class="optional">(optional — earn bonus VC)</span></label>
+        <div class="referral-wrap">
+          <input type="text" id="reg-referral" placeholder="XXXXXXXX"
+            oninput="onReferralInput(this)" maxlength="8" autocomplete="off">
+          <span class="referral-badge" id="referral-badge">✓ VALID</span>
+        </div>
+        <div class="vc-hint" id="vc-hint">// +25 VC bonus will be applied on signup</div>
       </div>
-      <button class="btn" onclick="handleRegister()" id="reg-btn">[ JOIN THE VAULT ]</button>
-      <p class="referral-note">// Invite only. Request access to receive a code.</p>
+      <button class="btn" id="reg-btn" onclick="handleRegister()">[ JOIN THE VAULT ]</button>
     </div>
+
+    <!-- ── FORGOT PASSWORD ── -->
+    <div id="panel-forgot" class="form-panel">
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" id="forgot-email" placeholder="hunter@email.com" autocomplete="email">
+      </div>
+      <button class="btn" id="forgot-btn" onclick="handleForgot()">[ SEND RESET LINK ]</button>
+      <div class="divider">or</div>
+      <button class="btn btn-secondary" onclick="switchTab('login')">← Back to Login</button>
+    </div>
+
   </div>
 
   <div class="back-link">
@@ -491,345 +501,389 @@
   </div>
 </div>
 
-<!-- ── WAKE-UP OVERLAY ── -->
+<!-- WAKE-UP OVERLAY -->
 <div id="wakeup-overlay">
   <div class="wakeup-logo">GENESIS<span>VAULT</span></div>
   <div class="wakeup-sub">// CONNECTING TO SECURE NODE</div>
   <div class="wakeup-bars">
-    <div class="wakeup-bar"></div>
-    <div class="wakeup-bar"></div>
-    <div class="wakeup-bar"></div>
-    <div class="wakeup-bar"></div>
-    <div class="wakeup-bar"></div>
-    <div class="wakeup-bar"></div>
-    <div class="wakeup-bar"></div>
-    <div class="wakeup-bar"></div>
+    <div class="wakeup-bar"></div><div class="wakeup-bar"></div>
+    <div class="wakeup-bar"></div><div class="wakeup-bar"></div>
+    <div class="wakeup-bar"></div><div class="wakeup-bar"></div>
+    <div class="wakeup-bar"></div><div class="wakeup-bar"></div>
   </div>
   <div class="wakeup-status" id="wakeup-status">Initializing...</div>
   <div class="wakeup-log" id="wakeup-log"></div>
   <div class="wakeup-timer" id="wakeup-timer"></div>
 </div>
 
+<!-- Supabase CDN -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
 <script>
-  const API = 'https://genesis-vault-backend.onrender.com/api';
+// ── SUPABASE INIT ──────────────────────────────────────────────────────
+const SUPABASE_URL = 'https://pesrhpgixkronvzeouek.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_LPyioDvbIyZ3oy1PhccOMg_EcwWJjnr';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-  let backendReady = false;
-  let wakeTimerInterval = null;
-  let wakeStartTime = null;
+const VC_SIGNUP_BONUS    = 50;
+const VC_REFERRAL_BONUS  = 25; // new user gets this
+const VC_REFERRER_BONUS  = 25; // person whose code was used
 
-  // ── WAKE-UP MESSAGES ────────────────────────────────────────────────
-  const WAKE_MESSAGES = [
-    'Connecting to vault node...',
-    'Initializing secure tunnel...',
-    'Syncing authentication layer...',
-    'Verifying node integrity...',
-    'Loading access protocols...',
-    'Establishing session...',
-    'Almost ready...',
-    'Finalizing connection...'
+// ── REDIRECT IF ALREADY LOGGED IN ────────────────────────────────────
+(async () => {
+  const { data: { session } } = await sb.auth.getSession();
+  if (session) window.location.replace('dashboard.html');
+})();
+
+// ── TAB SWITCHING ─────────────────────────────────────────────────────
+function switchTab(tab) {
+  document.querySelectorAll('.tab').forEach((t, i) => {
+    t.classList.toggle('active', ['login','register','forgot'][i] === tab);
+  });
+  document.querySelectorAll('.form-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById(`panel-${tab}`).classList.add('active');
+  clearMsg();
+}
+
+// ── MESSAGES ──────────────────────────────────────────────────────────
+function showMsg(text, type = 'error') {
+  const el = document.getElementById('msg-box');
+  el.className = `msg-box ${type}`;
+  el.textContent = (type === 'error' ? '// ERROR: ' : '// ') + text;
+  el.style.display = 'block';
+}
+function clearMsg() {
+  const el = document.getElementById('msg-box');
+  el.style.display = 'none';
+  el.textContent = '';
+}
+
+// ── PASSWORD TOGGLE ───────────────────────────────────────────────────
+function togglePw(id, btn) {
+  const inp = document.getElementById(id);
+  const show = inp.type === 'password';
+  inp.type = show ? 'text' : 'password';
+  btn.textContent = show ? 'HIDE' : 'SHOW';
+  btn.style.color = show ? 'var(--accent)' : 'var(--text-dim)';
+}
+
+// ── PASSWORD STRENGTH ─────────────────────────────────────────────────
+function checkStrength(val) {
+  const fill  = document.getElementById('strength-fill');
+  const label = document.getElementById('strength-label');
+  let s = 0;
+  if (val.length >= 8)  s++;
+  if (val.length >= 12) s++;
+  if (/[A-Z]/.test(val)) s++;
+  if (/[0-9]/.test(val)) s++;
+  if (/[^A-Za-z0-9]/.test(val)) s++;
+  const levels = [
+    { pct:'0%',   color:'transparent', text:'' },
+    { pct:'25%',  color:'#ff003c',     text:'// WEAK' },
+    { pct:'50%',  color:'#ff9500',     text:'// FAIR' },
+    { pct:'75%',  color:'#00a8ff',     text:'// GOOD' },
+    { pct:'100%', color:'#00f5c4',     text:'// STRONG' },
+    { pct:'100%', color:'#00f5c4',     text:'// STRONG' },
   ];
+  const lvl = levels[s] || levels[0];
+  fill.style.width      = lvl.pct;
+  fill.style.background = lvl.color;
+  label.textContent     = lvl.text;
+  label.style.color     = lvl.color;
+}
 
-  // ── WAKE-UP OVERLAY HELPERS ─────────────────────────────────────────
-  function showWakeup() {
-    document.getElementById('wakeup-overlay').classList.add('active');
-    wakeStartTime = Date.now();
-    wakeTimerInterval = setInterval(() => {
-      const secs = Math.floor((Date.now() - wakeStartTime) / 1000);
-      document.getElementById('wakeup-timer').textContent = `ELAPSED: ${secs}s`;
-    }, 1000);
-  }
+// ── REFERRAL INPUT ────────────────────────────────────────────────────
+function onReferralInput(inp) {
+  inp.value = inp.value.toUpperCase();
+  const badge = document.getElementById('referral-badge');
+  const hint  = document.getElementById('vc-hint');
+  const hasCode = inp.value.length >= 6;
+  badge.style.display = hasCode ? 'block' : 'none';
+  hint.style.display  = hasCode ? 'block' : 'none';
+}
 
-  function hideWakeup() {
-    document.getElementById('wakeup-overlay').classList.remove('active');
-    clearInterval(wakeTimerInterval);
-  }
+// ── WAKE-UP OVERLAY ───────────────────────────────────────────────────
+let wakeTimerInterval = null;
+const WAKE_MESSAGES = [
+  'Connecting to vault node...',
+  'Initializing secure tunnel...',
+  'Syncing authentication layer...',
+  'Verifying node integrity...',
+  'Establishing session...',
+  'Almost ready...',
+];
 
-  function setWakeupStatus(msg) {
-    document.getElementById('wakeup-status').textContent = msg;
-  }
+function showWakeup() {
+  document.getElementById('wakeup-overlay').classList.add('active');
+  const start = Date.now();
+  wakeTimerInterval = setInterval(() => {
+    const s = Math.floor((Date.now() - start) / 1000);
+    document.getElementById('wakeup-timer').textContent = `ELAPSED: ${s}s`;
+  }, 1000);
+}
+function hideWakeup() {
+  document.getElementById('wakeup-overlay').classList.remove('active');
+  clearInterval(wakeTimerInterval);
+}
+function setWakeStatus(msg) {
+  document.getElementById('wakeup-status').textContent = msg;
+}
+function addLog(msg, type = 'log-wait') {
+  const log = document.getElementById('wakeup-log');
+  const line = document.createElement('span');
+  line.className = `log-line ${type}`;
+  line.textContent = `> ${msg}`;
+  log.appendChild(line);
+  log.scrollTop = log.scrollHeight;
+  const lines = log.querySelectorAll('.log-line');
+  if (lines.length > 5) lines[0].remove();
+}
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
-  function addLog(msg, type = 'log-wait') {
-    const log = document.getElementById('wakeup-log');
-    const line = document.createElement('span');
-    line.className = `log-line ${type}`;
-    line.textContent = `> ${msg}`;
-    log.appendChild(line);
-    log.scrollTop = log.scrollHeight;
-    const lines = log.querySelectorAll('.log-line');
-    if (lines.length > 5) lines[0].remove();
-  }
+// ── LOGIN ─────────────────────────────────────────────────────────────
+async function handleLogin() {
+  const email    = document.getElementById('login-email').value.trim();
+  const password = document.getElementById('login-password').value;
+  const btn      = document.getElementById('login-btn');
 
-  // ── BACKGROUND PING — warms server silently on page load ────────────
-  async function warmBackend() {
-    try {
-      await fetch(`https://genesis-vault-backend.onrender.com/ping`, { method: 'GET', signal: AbortSignal.timeout(60000) });
-      backendReady = true;
-    } catch(e) {
-      backendReady = false;
+  if (!email || !password) return showMsg('All fields required.');
+
+  btn.disabled = true;
+  btn.textContent = '[ AUTHENTICATING... ]';
+  clearMsg();
+  showWakeup();
+
+  let msgIdx = 0;
+  const wakeInterval = setInterval(() => {
+    if (msgIdx < WAKE_MESSAGES.length) {
+      setWakeStatus(WAKE_MESSAGES[msgIdx]);
+      addLog(WAKE_MESSAGES[msgIdx], 'log-wait');
+      msgIdx++;
     }
-  }
+  }, 800);
 
-  // ── WAIT FOR BACKEND WITH VISUAL FEEDBACK ───────────────────────────
-  async function waitForBackend() {
-    if (backendReady) return true;
-    showWakeup();
-    let msgIndex = 0;
+  try {
+    const { data, error } = await sb.auth.signInWithPassword({ email, password });
 
-    for (let attempt = 0; attempt < 12; attempt++) {
-      const msg = WAKE_MESSAGES[Math.min(msgIndex, WAKE_MESSAGES.length - 1)];
-      setWakeupStatus(msg);
-      addLog(msg, 'log-wait');
-      msgIndex++;
+    clearInterval(wakeInterval);
 
-      try {
-        const res = await fetch(`https://genesis-vault-backend.onrender.com/ping`, {
-          method: 'GET',
-          signal: AbortSignal.timeout(8000)
-        });
-        if (res.ok || res.status < 500) {
-          addLog('Vault online!', 'log-ok');
-          setWakeupStatus('Connection established. Proceeding...');
-          await sleep(800);
-          hideWakeup();
-          backendReady = true;
-          return true;
-        }
-      } catch(e) {
-        addLog(`Retry ${attempt + 1}/12...`, 'log-warn');
-      }
-      await sleep(5000);
-    }
-
-    hideWakeup();
-    return false;
-  }
-
-  function sleep(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
-  }
-
-  // ── TAB SWITCHING ────────────────────────────────────────────────────
-  function switchTab(tab) {
-    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-    document.querySelectorAll('.form-panel').forEach(p => p.classList.remove('active'));
-    document.querySelector(`.tab:${tab === 'login' ? 'first-child' : 'last-child'}`).classList.add('active');
-    document.getElementById(`panel-${tab}`).classList.add('active');
-    hideMessages();
-  }
-
-  // ── MESSAGES ─────────────────────────────────────────────────────────
-  function showError(msg) {
-    const el = document.getElementById('error-msg');
-    el.textContent = '// ERROR: ' + msg;
-    el.style.display = 'block';
-    document.getElementById('success-msg').style.display = 'none';
-  }
-
-  function showSuccess(msg) {
-    const el = document.getElementById('success-msg');
-    el.textContent = '// ' + msg;
-    el.style.display = 'block';
-    document.getElementById('error-msg').style.display = 'none';
-  }
-
-  function hideMessages() {
-    document.getElementById('error-msg').style.display = 'none';
-    document.getElementById('success-msg').style.display = 'none';
-  }
-
-  // ── SHOW/HIDE PASSWORD ────────────────────────────────────────────────
-  function togglePw(inputId, btn) {
-    const input = document.getElementById(inputId);
-    if (input.type === 'password') {
-      input.type = 'text';
-      btn.textContent = 'HIDE';
-      btn.style.color = 'var(--accent)';
-    } else {
-      input.type = 'password';
-      btn.textContent = 'SHOW';
-      btn.style.color = 'var(--text-dim)';
-    }
-  }
-
-  // ── PASSWORD STRENGTH ─────────────────────────────────────────────────
-  function checkStrength(val) {
-    const fill = document.getElementById('strength-fill');
-    const label = document.getElementById('strength-label');
-    let strength = 0;
-    if (val.length >= 8) strength++;
-    if (val.length >= 12) strength++;
-    if (/[A-Z]/.test(val)) strength++;
-    if (/[0-9]/.test(val)) strength++;
-    if (/[^A-Za-z0-9]/.test(val)) strength++;
-
-    const levels = [
-      { pct: '0%',   color: 'transparent', text: '' },
-      { pct: '25%',  color: '#ff003c',     text: '// WEAK' },
-      { pct: '50%',  color: '#ff9500',     text: '// FAIR' },
-      { pct: '75%',  color: '#00a8ff',     text: '// GOOD' },
-      { pct: '90%',  color: '#00f5c4',     text: '// STRONG' },
-      { pct: '100%', color: '#00f5c4',     text: '// STRONG' },
-    ];
-
-    const lvl = levels[strength] || levels[0];
-    fill.style.width = lvl.pct;
-    fill.style.background = lvl.color;
-    label.textContent = lvl.text;
-    label.style.color = lvl.color;
-  }
-
-  // ── FRIENDLY ERROR MESSAGES ───────────────────────────────────────────
-  function friendlyError(code) {
-    const map = {
-      'AUTH_FAILED': 'Invalid email or password.',
-      'ACCOUNT_BANNED': 'This account has been suspended.',
-      'INVALID_INVITE_CODE': 'Invalid invite code. Contact the Architect for a valid code.',
-      'INVITE_CODE_REQUIRED': 'An invite code is required to register.',
-      'ALREADY_REQUESTED': 'This email has already requested access.',
-      'ALREADY_APPROVED': 'This email is already approved. Check your invite code.',
-      'EMAIL_REQUIRED': 'Email is required.',
-      'INVALID_EMAIL': 'Please enter a valid email address.',
-      'PASSWORD_TOO_SHORT': 'Password must be at least 8 characters.',
-    };
-    return map[code] || code;
-  }
-
-  // ── LOGIN ─────────────────────────────────────────────────────────────
-  async function handleLogin() {
-    const email = document.getElementById('login-email').value.trim();
-    const password = document.getElementById('login-password').value;
-    const btn = document.getElementById('login-btn');
-
-    if (!email || !password) return showError('All fields required.');
-
-    btn.disabled = true;
-    btn.textContent = '[ AUTHENTICATING... ]';
-    hideMessages();
-
-    // Show wake-up screen if backend isn't warm yet
-    if (!backendReady) {
-      const ready = await waitForBackend();
-      if (!ready) {
-        showError('Server unreachable. Please try again in a moment.');
-        btn.disabled = false;
-        btn.textContent = '[ ACCESS VAULT ]';
-        return;
-      }
-    }
-
-    try {
-      const res = await fetch(`${API}/auth/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password })
-      });
-      const data = await res.json();
-
-      if (!res.ok) {
-        showError(friendlyError(data.message || 'Login failed.'));
-        btn.disabled = false;
-        btn.textContent = '[ ACCESS VAULT ]';
-      } else {
-        localStorage.setItem('gv_token', data.token);
-        localStorage.setItem('gv_rank', data.rank);
-        localStorage.setItem('gv_email', data.email);
-        showSuccess('Access granted. Redirecting...');
-        setTimeout(() => window.location.href = 'dashboard.html', 1000);
-      }
-    } catch (e) {
-      // Auto-retry once on network error
-      try {
-        await sleep(4000);
-        const retry = await fetch(`${API}/auth/login`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email, password })
-        });
-        const data = await retry.json();
-        if (retry.ok) {
-          localStorage.setItem('gv_token', data.token);
-          localStorage.setItem('gv_rank', data.rank);
-          localStorage.setItem('gv_email', data.email);
-          showSuccess('Access granted. Redirecting...');
-          setTimeout(() => window.location.href = 'dashboard.html', 1000);
-          return;
-        }
-      } catch(e2) {}
-      showError('Connection failed. Server may be starting up — please try again.');
+    if (error) {
+      hideWakeup();
+      const msg = error.message.includes('Invalid') ? 'Invalid email or password.' : error.message;
+      showMsg(msg);
       btn.disabled = false;
       btn.textContent = '[ ACCESS VAULT ]';
+      return;
     }
+
+    addLog('Authentication successful!', 'log-ok');
+    setWakeStatus('Access granted. Redirecting...');
+    await sleep(800);
+    hideWakeup();
+    showMsg('Access granted. Welcome back.', 'success');
+    setTimeout(() => window.location.replace('dashboard.html'), 800);
+
+  } catch(e) {
+    clearInterval(wakeInterval);
+    hideWakeup();
+    showMsg('Connection failed. Please try again.');
+    btn.disabled = false;
+    btn.textContent = '[ ACCESS VAULT ]';
   }
+}
 
-  // ── REGISTER ──────────────────────────────────────────────────────────
-  async function handleRegister() {
-    const username = document.getElementById('reg-username').value.trim();
-    const email = document.getElementById('reg-email').value.trim();
-    const password = document.getElementById('reg-password').value;
-    const referral_code = document.getElementById('reg-referral').value.trim().toUpperCase();
-    const btn = document.getElementById('reg-btn');
+// ── REGISTER ──────────────────────────────────────────────────────────
+async function handleRegister() {
+  const username      = document.getElementById('reg-username').value.trim();
+  const email         = document.getElementById('reg-email').value.trim();
+  const password      = document.getElementById('reg-password').value;
+  const referral_code = document.getElementById('reg-referral').value.trim().toUpperCase();
+  const btn           = document.getElementById('reg-btn');
 
-    if (!username || !email || !password) return showError('All fields required.');
-    if (password.length < 8) return showError('Password must be at least 8 characters.');
-    if (!referral_code) return showError('An invite code is required to register.');
+  if (!username || !email || !password) return showMsg('All fields required.');
+  if (username.length < 3) return showMsg('Username must be at least 3 characters.');
+  if (password.length < 8) return showMsg('Password must be at least 8 characters.');
 
-    btn.disabled = true;
-    btn.textContent = '[ PROCESSING... ]';
-    hideMessages();
+  btn.disabled = true;
+  btn.textContent = '[ PROCESSING... ]';
+  clearMsg();
+  showWakeup();
 
-    // Show wake-up screen if backend isn't warm yet
-    if (!backendReady) {
-      const ready = await waitForBackend();
-      if (!ready) {
-        showError('Server unreachable. Please try again in a moment.');
-        btn.disabled = false;
-        btn.textContent = '[ JOIN THE VAULT ]';
-        return;
-      }
+  let msgIdx = 0;
+  const wakeInterval = setInterval(() => {
+    if (msgIdx < WAKE_MESSAGES.length) {
+      setWakeStatus(WAKE_MESSAGES[msgIdx]);
+      addLog(WAKE_MESSAGES[msgIdx], 'log-wait');
+      msgIdx++;
+    }
+  }, 700);
+
+  try {
+    // ── 1. Check username is unique ──
+    const { data: existing } = await sb
+      .from('users')
+      .select('id')
+      .eq('username', username)
+      .maybeSingle();
+
+    if (existing) {
+      clearInterval(wakeInterval); hideWakeup();
+      showMsg('Username already taken. Choose another.');
+      btn.disabled = false; btn.textContent = '[ JOIN THE VAULT ]';
+      return;
     }
 
-    try {
-      const res = await fetch(`${API}/auth/register`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password, username, referral_code })
-      });
-      const data = await res.json();
+    // ── 2. Validate referral code if provided ──
+    let referrerId = null;
+    if (referral_code) {
+      const { data: referrer } = await sb
+        .from('users')
+        .select('id')
+        .eq('referral_code', referral_code)
+        .maybeSingle();
 
-      if (!res.ok) {
-        showError(friendlyError(data.message || 'Registration failed.'));
-        btn.disabled = false;
-        btn.textContent = '[ JOIN THE VAULT ]';
+      if (referrer) {
+        referrerId = referrer.id;
+        addLog('Referral code validated!', 'log-ok');
       } else {
-        localStorage.setItem('gv_token', data.token);
-        localStorage.setItem('gv_rank', data.rank || 'Ghost');
-        localStorage.setItem('gv_email', data.email);
-        showSuccess('Account created! Welcome to the Vault.');
-        setTimeout(() => window.location.href = 'dashboard.html', 1500);
+        addLog('Referral code not found — skipping bonus.', 'log-warn');
       }
-    } catch (e) {
-      showError('Connection failed. Server may be starting up — please try again.');
-      btn.disabled = false;
-      btn.textContent = '[ JOIN THE VAULT ]';
     }
-  }
 
-  // ── REDIRECT IF ALREADY LOGGED IN ────────────────────────────────────
-  if (localStorage.getItem('gv_token')) {
-    window.location.href = 'dashboard.html';
-  }
+    // ── 3. Sign up with Supabase Auth ──
+    const { data: authData, error: authError } = await sb.auth.signUp({
+      email,
+      password,
+      options: {
+        data: { username } // stored in auth.users raw_user_meta_data
+      }
+    });
 
-  // ── WARM BACKEND SILENTLY ON PAGE LOAD ───────────────────────────────
-  warmBackend();
-
-  // ── ENTER KEY SUPPORT ─────────────────────────────────────────────────
-  document.addEventListener('keydown', e => {
-    if (e.key === 'Enter') {
-      const activePanel = document.querySelector('.form-panel.active');
-      if (activePanel && activePanel.id === 'panel-login') handleLogin();
-      else if (activePanel && activePanel.id === 'panel-register') handleRegister();
+    if (authError) {
+      clearInterval(wakeInterval); hideWakeup();
+      showMsg(authError.message);
+      btn.disabled = false; btn.textContent = '[ JOIN THE VAULT ]';
+      return;
     }
+
+    const userId = authData.user.id;
+
+    // ── 4. Generate unique referral code for this new user ──
+    const newReferralCode = generateCode(username);
+
+    // ── 5. Calculate starting VC ──
+    const startVC = VC_SIGNUP_BONUS + (referrerId ? VC_REFERRAL_BONUS : 0);
+
+    // ── 6. Insert into users table ──
+    await sb.from('users').insert({
+      id:            userId,
+      username:      username,
+      email:         email,
+      credits:       startVC,
+      referral_code: newReferralCode,
+      referred_by:   referrerId,
+      tier:          'Ghost',
+      created_at:    new Date().toISOString(),
+    });
+
+    // ── 7. Log signup VC transaction ──
+    await sb.from('credit_transactions').insert({
+      user_id:     userId,
+      amount:      VC_SIGNUP_BONUS,
+      type:        'signup_bonus',
+      description: 'Welcome bonus',
+      created_at:  new Date().toISOString(),
+    });
+
+    // ── 8. If referral valid — log bonus for new user + reward referrer ──
+    if (referrerId) {
+      await sb.from('credit_transactions').insert([
+        {
+          user_id:     userId,
+          amount:      VC_REFERRAL_BONUS,
+          type:        'referral_bonus',
+          description: `Referral bonus — used code ${referral_code}`,
+          created_at:  new Date().toISOString(),
+        },
+        {
+          user_id:     referrerId,
+          amount:      VC_REFERRER_BONUS,
+          type:        'referral_reward',
+          description: `Referred ${username}`,
+          created_at:  new Date().toISOString(),
+        }
+      ]);
+
+      // Add VC to referrer
+      const { data: referrerUser } = await sb
+        .from('users')
+        .select('credits')
+        .eq('id', referrerId)
+        .single();
+
+      if (referrerUser) {
+        await sb.from('users')
+          .update({ credits: referrerUser.credits + VC_REFERRER_BONUS })
+          .eq('id', referrerId);
+      }
+    }
+
+    clearInterval(wakeInterval);
+    addLog('Account created!', 'log-ok');
+    setWakeStatus(`+${startVC} VC credited. Welcome to the Vault.`);
+    await sleep(1200);
+    hideWakeup();
+    showMsg(`Account created! ${startVC} VC credited. Welcome to Genesis Vault.`, 'success');
+    setTimeout(() => window.location.replace('dashboard.html'), 1500);
+
+  } catch(e) {
+    clearInterval(wakeInterval); hideWakeup();
+    showMsg('Something went wrong. Please try again.');
+    btn.disabled = false; btn.textContent = '[ JOIN THE VAULT ]';
+  }
+}
+
+// ── FORGOT PASSWORD ───────────────────────────────────────────────────
+async function handleForgot() {
+  const email = document.getElementById('forgot-email').value.trim();
+  const btn   = document.getElementById('forgot-btn');
+
+  if (!email) return showMsg('Enter your email address.');
+
+  btn.disabled = true;
+  btn.textContent = '[ SENDING... ]';
+  clearMsg();
+
+  const { error } = await sb.auth.resetPasswordForEmail(email, {
+    redirectTo: window.location.origin + '/login.html'
   });
+
+  btn.disabled = false;
+  btn.textContent = '[ SEND RESET LINK ]';
+
+  if (error) {
+    showMsg(error.message);
+  } else {
+    showMsg('Reset link sent. Check your inbox.', 'info');
+  }
+}
+
+// ── GENERATE REFERRAL CODE ────────────────────────────────────────────
+function generateCode(username) {
+  const base = username.replace(/[^a-z0-9]/gi, '').toUpperCase().slice(0, 4);
+  const rand = Math.random().toString(36).substring(2, 6).toUpperCase();
+  return (base + rand).slice(0, 8).padEnd(8, '0');
+}
+
+// ── ENTER KEY SUPPORT ─────────────────────────────────────────────────
+document.addEventListener('keydown', e => {
+  if (e.key !== 'Enter') return;
+  const active = document.querySelector('.form-panel.active');
+  if (!active) return;
+  if (active.id === 'panel-login')    handleLogin();
+  if (active.id === 'panel-register') handleRegister();
+  if (active.id === 'panel-forgot')   handleForgot();
+});
 </script>
 </body>
 </html>
