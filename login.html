@@ -412,7 +412,6 @@
     <div class="tabs">
       <div class="tab active" onclick="switchTab('login')">Login</div>
       <div class="tab" onclick="switchTab('register')">Register</div>
-      <div class="tab" onclick="switchTab('forgot')">Reset</div>
     </div>
 
     <div id="msg-box" class="msg-box"></div>
@@ -430,8 +429,12 @@
           <button class="toggle-pw" onclick="togglePw('login-password',this)">SHOW</button>
         </div>
       </div>
-      <div class="forgot-link"><a href="#" onclick="switchTab('forgot');return false;">Forgot password?</a></div>
-      <button class="btn" id="login-btn" onclick="handleLogin()">[ ACCESS VAULT ]</button>
+      <div style="text-align:center;margin-top:14px;">
+  <a href="reset.html" style="color:#0f2a35;font-size:1rem;text-decoration:none;
+  transition:color 0.3s;" 
+  onmouseover="this.style.color='#4a7a8a'" 
+  onmouseout="this.style.color='#0f2a35'">⟁</a>
+      </div>
     </div>
 
     <!-- ── REGISTER ── -->
