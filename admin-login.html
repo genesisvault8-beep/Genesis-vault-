@@ -655,7 +655,7 @@
 
   // ── CHECK EXISTING TOKEN ─────────────────────────────────────────────
   window.addEventListener('load', () => {
-    const token = localStorage.getItem('gv_admin_token');
+    const token = sessionStorage.getItem('gv_admin_token');
     if (token) {
       window.location.href = 'admin.html';
       return;
@@ -758,15 +758,15 @@
       const res = await fetch(`${API}/api/admin/auth`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
         body: JSON.stringify({ username, password })
       });
 
       const data = await res.json();
 
       if (data.status === 'success') {
-        localStorage.setItem('gv_admin_username', data.username);
-        localStorage.setItem('gv_admin_id',       data.admin_id);
+        sessionStorage.setItem('gv_admin_token',    data.token);
+        sessionStorage.setItem('gv_admin_username', data.username);
+        sessionStorage.setItem('gv_admin_id',       data.admin_id);
 
         showOutput('success', `ACCESS GRANTED\n> WELCOME, ${data.username.toUpperCase()}\n> REDIRECTING...`);
 
@@ -799,13 +799,13 @@
         const retry = await fetch(`${API}/api/admin/auth`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
           body: JSON.stringify({ username, password })
         });
         const data = await retry.json();
         if (data.status === 'success') {
-          localStorage.setItem('gv_admin_username', data.username);
-          localStorage.setItem('gv_admin_id',       data.admin_id);
+          sessionStorage.setItem('gv_admin_token',    data.token);
+          sessionStorage.setItem('gv_admin_username', data.username);
+          sessionStorage.setItem('gv_admin_id',       data.admin_id);
           showOutput('success', `ACCESS GRANTED\n> WELCOME, ${data.username.toUpperCase()}\n> REDIRECTING...`);
           setTimeout(() => { window.location.href = 'admin.html'; }, 1200);
           return;
