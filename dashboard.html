@@ -791,16 +791,47 @@
     <div id="feed-container"><div class="loading"><span class="spinner"></span>Loading feed...</div></div>
   </div>
 
-  <!-- MARKETPLACE -->
+  <!-- MARKETPLACE PREVIEW -->
   <div class="page" id="page-marketplace">
-    <p class="section-title">// Tool Marketplace</p>
-    <div class="market-filter">
-      <button class="filter-btn active" onclick="filterMarket('',this)">ALL</button>
-      <button class="filter-btn" onclick="filterMarket('script',this)">SCRIPTS</button>
-      <button class="filter-btn" onclick="filterMarket('template',this)">TEMPLATES</button>
-      <button class="filter-btn" onclick="filterMarket('guide',this)">GUIDES</button>
+    <p class="section-title">// Marketplace</p>
+
+    <!-- Hero banner -->
+    <div style="background:var(--bg2);border:1px solid var(--border);border-left:3px solid var(--accent);padding:18px 20px;margin-bottom:16px;position:relative;overflow:hidden;">
+      <div style="position:absolute;top:0;right:0;width:80px;height:100%;background:linear-gradient(90deg,transparent,rgba(0,245,196,0.04));pointer-events:none;"></div>
+      <div style="font-family:'Share Tech Mono',monospace;font-size:0.65rem;color:var(--text-dim);letter-spacing:2px;margin-bottom:6px;">// GENESIS VAULT STORE</div>
+      <div style="font-size:1.2rem;font-weight:700;color:white;letter-spacing:2px;margin-bottom:4px;">Scripts. Apps. Kits. <span style="color:var(--accent);">Automation.</span></div>
+      <div style="font-size:0.82rem;color:var(--text-dim);line-height:1.5;margin-bottom:14px;">Tools built for hackers and non-hackers alike. Buy once, run inside the Vault.</div>
+      <button onclick="location.href='market.html'" style="background:var(--accent);color:var(--bg);border:none;padding:10px 24px;font-family:'Rajdhani',sans-serif;font-weight:700;font-size:0.9rem;letter-spacing:3px;cursor:pointer;transition:all 0.2s;clip-path:polygon(6px 0%,100% 0%,calc(100% - 6px) 100%,0% 100%);" onmouseover="this.style.background='white'" onmouseout="this.style.background='var(--accent)'">[ OPEN MARKETPLACE ]</button>
     </div>
-    <div id="marketplace-container"><div class="loading"><span class="spinner"></span>Loading tools...</div></div>
+
+    <!-- Categories preview -->
+    <p class="section-title">// Categories</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px;">
+      <div onclick="location.href='market.html?cat=automation'" style="background:var(--bg2);border:1px solid var(--border);padding:14px;cursor:pointer;transition:border-color 0.2s;" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
+        <div style="font-size:1.2rem;margin-bottom:6px;">⚙</div>
+        <div style="font-weight:700;letter-spacing:1px;color:white;font-size:0.9rem;">Automation</div>
+        <div style="font-family:'Share Tech Mono',monospace;font-size:0.62rem;color:var(--text-dim);margin-top:3px;">Workflows & bots</div>
+      </div>
+      <div onclick="location.href='market.html?cat=apps'" style="background:var(--bg2);border:1px solid var(--border);padding:14px;cursor:pointer;transition:border-color 0.2s;" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
+        <div style="font-size:1.2rem;margin-bottom:6px;">◈</div>
+        <div style="font-weight:700;letter-spacing:1px;color:white;font-size:0.9rem;">Apps</div>
+        <div style="font-family:'Share Tech Mono',monospace;font-size:0.62rem;color:var(--text-dim);margin-top:3px;">Run in Vault Labs</div>
+      </div>
+      <div onclick="location.href='market.html?cat=scripts'" style="background:var(--bg2);border:1px solid var(--border);padding:14px;cursor:pointer;transition:border-color 0.2s;" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
+        <div style="font-size:1.2rem;margin-bottom:6px;">⌨</div>
+        <div style="font-weight:700;letter-spacing:1px;color:white;font-size:0.9rem;">Scripts</div>
+        <div style="font-family:'Share Tech Mono',monospace;font-size:0.62rem;color:var(--text-dim);margin-top:3px;">Download & run</div>
+      </div>
+      <div onclick="location.href='market.html?cat=kits'" style="background:var(--bg2);border:1px solid var(--border);padding:14px;cursor:pointer;transition:border-color 0.2s;" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
+        <div style="font-size:1.2rem;margin-bottom:6px;">📦</div>
+        <div style="font-weight:700;letter-spacing:1px;color:white;font-size:0.9rem;">Starter Kits</div>
+        <div style="font-family:'Share Tech Mono',monospace;font-size:0.62rem;color:var(--text-dim);margin-top:3px;">Bundles for beginners</div>
+      </div>
+    </div>
+
+    <!-- Owned tools preview -->
+    <p class="section-title">// Your Tools</p>
+    <div id="owned-preview"><div class="loading"><span class="spinner"></span>Loading...</div></div>
   </div>
 
   <!-- MESSAGES -->
@@ -1249,43 +1280,34 @@ async function flagPost(postId) {
   } catch(e) {}
 }
 
-/* ── MARKETPLACE ───────────────────────────────────────────────────── */
-async function loadMarketplace(type) {
-  if (type !== undefined) currentFilter = type;
-  const c = document.getElementById('marketplace-container');
-  c.innerHTML = '<div class="loading"><span class="spinner"></span>Loading tools...</div>';
+/* ── MARKETPLACE PREVIEW ───────────────────────────────────────────── */
+async function loadMarketplace() {
+  const c = document.getElementById('owned-preview');
+  if (!c) return;
+  c.innerHTML = '<div class="loading"><span class="spinner"></span>Loading...</div>';
   try {
-    const url  = currentFilter ? `${API}/marketplace?type=${currentFilter}` : `${API}/marketplace`;
-    const res  = await fetch(url, { headers:h() });
+    const res  = await fetch(`${API}/marketplace?owned=true`, { headers:h() });
     const data = await res.json();
-    if (!data.tools?.length) {
-      c.innerHTML = '<div class="empty">// No tools listed yet. Check back soon.</div>'; return;
+    const owned = (data.tools||[]).filter(t => t.owned);
+    if (!owned.length) {
+      c.innerHTML = `<div class="empty" style="padding:20px 0;">// No tools yet. <span style="color:var(--accent);cursor:pointer;" onclick="location.href='market.html'">Browse the store →</span></div>`;
+      return;
     }
-    c.innerHTML = data.tools.map(t => `
+    c.innerHTML = owned.map(t => `
       <div class="market-card">
-        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px;">
           <h3>${esc(t.title)}</h3>
           <span class="market-type">${esc((t.type||'tool').toUpperCase())}</span>
         </div>
-        <p>${esc((t.description||'').substring(0,120))}${(t.description||'').length>120?'...':''}</p>
+        <p>${esc((t.description||'').substring(0,100))}${(t.description||'').length>100?'...':''}</p>
         <div class="market-footer">
-          <span class="market-price">${t.price>0?'$'+t.price+' USDT':'FREE'}</span>
-          ${t.owned
-            ? '<span class="buy-btn owned">✓ OWNED</span>'
-            : `<button class="buy-btn" onclick="openBuy(${JSON.stringify(t.id)},'${escAttr(t.title)}',${t.price})">[ BUY ]</button>`
-          }
+          <span style="font-family:'Share Tech Mono',monospace;font-size:0.7rem;color:var(--accent);">✓ OWNED</span>
+          <button class="buy-btn" onclick="location.href='market.html?access=${t.id}'">[ ACCESS ]</button>
         </div>
-        ${t.creator?`<div style="margin-top:8px;font-family:'Share Tech Mono',monospace;font-size:0.65rem;color:var(--text-dim);">by ${esc(t.creator)}</div>`:''}
       </div>`).join('');
   } catch(e) {
-    c.innerHTML = '<div class="empty">// Failed to load marketplace.</div>';
+    c.innerHTML = '<div class="empty" style="padding:20px 0;">// Could not load your tools.</div>';
   }
-}
-
-function filterMarket(type, el) {
-  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-  el.classList.add('active');
-  loadMarketplace(type);
 }
 
 function openBuy(id, title, price) {
