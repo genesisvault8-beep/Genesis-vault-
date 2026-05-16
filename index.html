@@ -3,113 +3,1046 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Genesis Vault</title>
-
-<!-- DEFENSE: No indexing, no caching, no referrer leakage -->
-<meta name="robots" content="noindex, nofollow, noarchive, nosnippet">
-<meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate">
-<meta http-equiv="Pragma" content="no-cache">
-<meta name="referrer" content="no-referrer">
-
-<!-- DEFENSE: No favicon request leak -->
-<link rel="icon" href="data:,">
-
+<title>Genesis Vault | Cybersecurity Platform</title>
+<meta name="description" content="Genesis Vault — a cybersecurity platform for hackers, builders, and learners. Tools, courses, AI terminal, Vault Labs, and more.">
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
-  /* Show nothing — black screen only */
+  :root {
+    --bg:      #020608;
+    --bg2:     #060d10;
+    --bg3:     #081218;
+    --accent:  #00f5c4;
+    --accent2: #00a8ff;
+    --accent3: #ff003c;
+    --text:    #c8e6f0;
+    --text-dim:#4a7a8a;
+    --border:  #0f2a35;
+    --glow:    0 0 20px rgba(0,245,196,0.3);
+    --glow2:   0 0 20px rgba(0,168,255,0.3);
+  }
+
   * { margin:0; padding:0; box-sizing:border-box; }
-  html, body {
-    background:#020608;
-    width:100%; height:100%;
-    overflow:hidden;
-    cursor:none; /* nothing to see here */
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Rajdhani', sans-serif;
+    overflow-x: hidden;
+  }
+
+  /* Grid overlay */
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image:
+      linear-gradient(rgba(0,245,196,0.025) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,245,196,0.025) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none; z-index: 0;
+  }
+
+  /* Scanlines */
+  body::after {
+    content: '';
+    position: fixed; inset: 0;
+    background: repeating-linear-gradient(
+      0deg, transparent, transparent 2px,
+      rgba(0,0,0,0.06) 2px, rgba(0,0,0,0.06) 4px
+    );
+    pointer-events: none; z-index: 1;
+  }
+
+  /* Scanner line */
+  .scanner {
+    position: fixed; top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--accent), transparent);
+    animation: scan 4s linear infinite;
+    z-index: 100;
+  }
+  @keyframes scan {
+    0%   { top: 0; opacity: 1; }
+    100% { top: 100vh; opacity: 0; }
+  }
+
+  /* ── NAV ── */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0;
+    z-index: 50;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 16px 32px;
+    background: rgba(2,6,8,0.92);
+    border-bottom: 1px solid var(--border);
+    backdrop-filter: blur(8px);
+  }
+
+  .nav-logo {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 1.1rem; letter-spacing: 4px;
+    text-decoration: none;
+  }
+  .nav-logo .g { color: var(--accent); }
+  .nav-logo .v { color: white; }
+
+  .nav-links {
+    display: flex; gap: 28px; align-items: center;
+  }
+  .nav-links a {
+    color: var(--text-dim);
+    text-decoration: none;
+    font-size: 0.78rem; letter-spacing: 2px;
+    text-transform: uppercase;
+    font-family: 'Share Tech Mono', monospace;
+    transition: color 0.2s;
+  }
+  .nav-links a:hover { color: var(--accent); }
+
+  .nav-cta {
+    padding: 8px 20px;
+    background: var(--accent); color: var(--bg) !important;
+    font-family: 'Rajdhani', sans-serif !important;
+    font-weight: 700 !important; font-size: 0.8rem !important;
+    letter-spacing: 2px; text-transform: uppercase;
+    clip-path: polygon(6px 0%, 100% 0%, calc(100% - 6px) 100%, 0% 100%);
+    transition: background 0.2s, box-shadow 0.2s !important;
+  }
+  .nav-cta:hover { background: white !important; box-shadow: var(--glow) !important; color: var(--bg) !important; }
+
+  /* ── HERO ── */
+  .hero {
+    position: relative; z-index: 2;
+    min-height: 100vh;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    text-align: center;
+    padding: 120px 20px 80px;
+  }
+
+  .hero-eyebrow {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.65rem; letter-spacing: 4px;
+    color: var(--accent); text-transform: uppercase;
+    margin-bottom: 20px;
+    animation: fadeDown 0.6s ease;
+  }
+  .hero-eyebrow span { color: var(--text-dim); }
+
+  .hero-title {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: clamp(2.2rem, 8vw, 5rem);
+    line-height: 1.1; letter-spacing: 6px;
+    margin-bottom: 12px;
+    animation: fadeDown 0.7s ease;
+  }
+  .hero-title .g { color: var(--accent); }
+  .hero-title .v { color: white; }
+
+  .hero-sub-title {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: clamp(0.6rem, 2vw, 0.85rem);
+    letter-spacing: 5px; color: var(--text-dim);
+    text-transform: uppercase;
+    margin-bottom: 32px;
+    animation: fadeDown 0.8s ease;
+  }
+
+  .hero-desc {
+    max-width: 560px;
+    font-size: 1.05rem; line-height: 1.7;
+    color: var(--text); letter-spacing: 0.5px;
+    margin-bottom: 40px;
+    animation: fadeUp 0.8s ease;
+  }
+  .hero-desc .hi { color: var(--accent); }
+  .hero-desc .hi2 { color: var(--accent2); }
+
+  .hero-btns {
+    display: flex; gap: 14px; flex-wrap: wrap; justify-content: center;
+    animation: fadeUp 0.9s ease;
+  }
+
+  .btn-primary {
+    padding: 14px 32px;
+    background: var(--accent); color: var(--bg);
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 700; font-size: 0.95rem;
+    letter-spacing: 3px; text-transform: uppercase;
+    text-decoration: none;
+    clip-path: polygon(10px 0%, 100% 0%, calc(100% - 10px) 100%, 0% 100%);
+    transition: background 0.2s, box-shadow 0.2s;
+    border: none; cursor: pointer; display: inline-block;
+  }
+  .btn-primary:hover { background: white; box-shadow: var(--glow); }
+
+  .btn-ghost {
+    padding: 13px 32px;
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 600; font-size: 0.9rem;
+    letter-spacing: 3px; text-transform: uppercase;
+    text-decoration: none;
+    transition: border-color 0.2s, color 0.2s;
+    display: inline-block;
+  }
+  .btn-ghost:hover { border-color: var(--accent2); color: var(--accent2); }
+
+  /* terminal blinking cursor on hero */
+  .hero-cursor {
+    display: inline-block;
+    width: 10px; height: 1.1em;
+    background: var(--accent);
+    margin-left: 4px;
+    vertical-align: middle;
+    animation: blink 1s step-end infinite;
+  }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+
+  /* scroll indicator */
+  .scroll-hint {
+    position: absolute; bottom: 32px; left: 50%;
+    transform: translateX(-50%);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.55rem; letter-spacing: 3px; color: var(--text-dim);
+    display: flex; flex-direction: column; align-items: center; gap: 8px;
+    animation: fadeUp 1.2s ease;
+  }
+  .scroll-arrow {
+    width: 1px; height: 32px;
+    background: linear-gradient(to bottom, var(--accent), transparent);
+    animation: scrollPulse 1.8s ease-in-out infinite;
+  }
+  @keyframes scrollPulse {
+    0%,100%{opacity:1; transform:scaleY(1);}
+    50%{opacity:0.3; transform:scaleY(0.6);}
+  }
+
+  /* ── STATS BAR ── */
+  .stats-bar {
+    position: relative; z-index: 2;
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    background: var(--bg2);
+    display: flex; justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .stat-item {
+    flex: 1; min-width: 150px;
+    padding: 24px 20px;
+    text-align: center;
+    border-right: 1px solid var(--border);
+  }
+  .stat-item:last-child { border-right: none; }
+
+  .stat-val {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 1.6rem; color: var(--accent);
+    display: block; line-height: 1; margin-bottom: 6px;
+  }
+  .stat-label {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.55rem; letter-spacing: 2px;
+    color: var(--text-dim); text-transform: uppercase;
+  }
+
+  /* ── SECTIONS ── */
+  section {
+    position: relative; z-index: 2;
+    padding: 90px 20px;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+
+  .section-tag {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.6rem; letter-spacing: 4px;
+    color: var(--accent); text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+
+  .section-title {
+    font-size: clamp(1.5rem, 4vw, 2.4rem);
+    font-weight: 700; letter-spacing: 3px;
+    text-transform: uppercase; color: white;
+    margin-bottom: 14px;
+  }
+
+  .section-desc {
+    color: var(--text-dim);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.78rem; letter-spacing: 1px;
+    line-height: 1.8; max-width: 600px;
+    margin-bottom: 50px;
+  }
+
+  /* ── FEATURES GRID ── */
+  .features-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+  }
+
+  .feature-card {
+    background: var(--bg2);
+    padding: 32px 28px;
+    position: relative;
+    transition: background 0.2s;
+    overflow: hidden;
+  }
+  .feature-card:hover { background: var(--bg3); }
+  .feature-card:hover .fc-glow { opacity: 1; }
+
+  .fc-glow {
+    position: absolute; top: 0; left: 0; right: 0; height: 2px;
+    opacity: 0; transition: opacity 0.3s;
+  }
+  .fc-glow.green { background: var(--accent); }
+  .fc-glow.blue  { background: var(--accent2); }
+  .fc-glow.red   { background: var(--accent3); }
+
+  .fc-icon {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 1.2rem; margin-bottom: 16px;
+    display: block;
+  }
+  .fc-icon.green { color: var(--accent); }
+  .fc-icon.blue  { color: var(--accent2); }
+  .fc-icon.red   { color: var(--accent3); }
+
+  .fc-tag {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.52rem; letter-spacing: 3px;
+    color: var(--text-dim); text-transform: uppercase;
+    margin-bottom: 8px; display: block;
+  }
+
+  .fc-title {
+    font-size: 1.1rem; font-weight: 700;
+    letter-spacing: 2px; text-transform: uppercase;
+    color: white; margin-bottom: 10px;
+  }
+
+  .fc-desc {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.72rem; color: var(--text-dim);
+    line-height: 1.8; letter-spacing: 0.5px;
+  }
+
+  .fc-badge {
+    margin-top: 16px;
+    display: inline-block;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.58rem; letter-spacing: 2px;
+    padding: 4px 10px;
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+  }
+  .fc-badge.green { border-color: rgba(0,245,196,0.3); color: var(--accent); }
+  .fc-badge.blue  { border-color: rgba(0,168,255,0.3); color: var(--accent2); }
+
+  /* ── HOW IT WORKS ── */
+  .how-wrap {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 32px;
+  }
+
+  .how-step {
+    position: relative;
+    padding: 28px 24px;
+    border: 1px solid var(--border);
+    background: var(--bg2);
+  }
+
+  .how-num {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 2.5rem; color: var(--border);
+    line-height: 1; margin-bottom: 14px;
+    display: block;
+  }
+
+  .how-title {
+    font-size: 1rem; font-weight: 700;
+    letter-spacing: 2px; text-transform: uppercase;
+    color: white; margin-bottom: 8px;
+  }
+
+  .how-desc {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.68rem; color: var(--text-dim);
+    line-height: 1.8;
+  }
+
+  /* ── VC SECTION ── */
+  .vc-section {
+    border: 1px solid var(--border);
+    border-top: 2px solid var(--accent);
+    background: var(--bg2);
+    padding: 48px 40px;
+    position: relative;
+    overflow: hidden;
+  }
+  .vc-section::before {
+    content: '// VAULT CREDITS';
+    position: absolute; top: 0; right: 20px;
+    transform: translateY(-50%);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.5rem; color: var(--accent);
+    letter-spacing: 2px; background: var(--bg2); padding: 0 8px;
+  }
+
+  .vc-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 40px;
+    align-items: center;
+  }
+
+  .vc-title {
+    font-size: 1.8rem; font-weight: 700;
+    letter-spacing: 3px; text-transform: uppercase;
+    color: white; margin-bottom: 14px;
+  }
+  .vc-title span { color: var(--accent); }
+
+  .vc-desc {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.72rem; color: var(--text-dim);
+    line-height: 1.9; letter-spacing: 0.5px;
+    margin-bottom: 24px;
+  }
+
+  .vc-ways {
+    display: flex; flex-direction: column; gap: 10px;
+  }
+
+  .vc-way {
+    display: flex; align-items: center; gap: 14px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.7rem; color: var(--text);
+    letter-spacing: 1px;
+  }
+  .vc-way::before {
+    content: '▸';
+    color: var(--accent); font-size: 0.8rem; flex-shrink: 0;
+  }
+
+  .vc-amounts {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 1px; background: var(--border);
+  }
+
+  .vc-box {
+    background: var(--bg);
+    padding: 24px; text-align: center;
+  }
+
+  .vc-amount {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 2rem; color: var(--accent);
+    display: block; margin-bottom: 6px; line-height: 1;
+  }
+  .vc-amount-label {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.55rem; letter-spacing: 2px;
+    color: var(--text-dim); text-transform: uppercase;
+  }
+
+  /* ── TERMINAL PREVIEW ── */
+  .terminal {
+    background: #000;
+    border: 1px solid var(--border);
+    border-top: 2px solid var(--accent2);
+    font-family: 'Share Tech Mono', monospace;
+    padding: 0;
+    overflow: hidden;
+  }
+
+  .term-bar {
+    background: var(--bg2);
+    border-bottom: 1px solid var(--border);
+    padding: 10px 16px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .term-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+  }
+  .term-dot.r { background: var(--accent3); }
+  .term-dot.y { background: #ffaa00; }
+  .term-dot.g { background: var(--accent); }
+  .term-title {
+    font-size: 0.6rem; letter-spacing: 2px;
+    color: var(--text-dim); margin-left: 6px;
+  }
+
+  .term-body {
+    padding: 20px 18px;
+    font-size: 0.72rem; line-height: 2.2;
+  }
+
+  .term-line { display: block; }
+  .term-prompt { color: var(--accent); }
+  .term-cmd    { color: white; }
+  .term-out    { color: var(--text-dim); }
+  .term-ok     { color: var(--accent); }
+  .term-info   { color: var(--accent2); }
+  .term-warn   { color: #ffaa00; }
+
+  /* type animation */
+  .type-anim {
+    overflow: hidden;
+    white-space: nowrap;
+    border-right: 1px solid var(--accent);
+    animation: typing 2s steps(40, end) 1s both, blinkCursor 0.8s step-end infinite;
+    max-width: fit-content;
+  }
+  @keyframes typing {
+    from { width: 0; }
+    to   { width: 100%; }
+  }
+  @keyframes blinkCursor {
+    0%,100%{border-color:var(--accent);}
+    50%{border-color:transparent;}
+  }
+
+  /* ── RANKS ── */
+  .ranks-grid {
+    display: flex; gap: 0;
+    border: 1px solid var(--border);
+    overflow: hidden;
+    flex-wrap: wrap;
+  }
+
+  .rank-item {
+    flex: 1; min-width: 120px;
+    padding: 24px 16px;
+    text-align: center;
+    border-right: 1px solid var(--border);
+    background: var(--bg2);
+    position: relative;
+    transition: background 0.2s;
+  }
+  .rank-item:last-child { border-right: none; }
+  .rank-item:hover { background: var(--bg3); }
+  .rank-item.active-rank { background: rgba(0,245,196,0.04); }
+  .rank-item.active-rank::after {
+    content: '// CURRENT';
+    position: absolute; top: 8px; left: 50%;
+    transform: translateX(-50%);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.45rem; letter-spacing: 2px;
+    color: var(--accent);
+  }
+
+  .rank-symbol {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 1.5rem; display: block;
+    margin-bottom: 8px;
+  }
+  .rank-name {
+    font-size: 0.85rem; font-weight: 700;
+    letter-spacing: 2px; text-transform: uppercase;
+    color: white; display: block; margin-bottom: 4px;
+  }
+  .rank-desc {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.55rem; letter-spacing: 1px;
+    color: var(--text-dim);
+  }
+
+  /* ── CTA ── */
+  .cta-block {
+    border: 1px solid var(--border);
+    border-top: 2px solid var(--accent);
+    background: var(--bg2);
+    padding: 64px 40px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .cta-block::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse at 50% 0%, rgba(0,245,196,0.05), transparent 70%);
+    pointer-events: none;
+  }
+
+  .cta-title {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: clamp(1.2rem, 4vw, 2rem);
+    letter-spacing: 4px; color: white;
+    margin-bottom: 12px;
+  }
+  .cta-title span { color: var(--accent); }
+
+  .cta-sub {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.72rem; letter-spacing: 2px;
+    color: var(--text-dim); margin-bottom: 36px;
+    line-height: 1.8;
+  }
+
+  .cta-btns {
+    display: flex; gap: 16px; justify-content: center; flex-wrap: wrap;
+  }
+
+  /* ── FOOTER ── */
+  footer {
+    position: relative; z-index: 2;
+    border-top: 1px solid var(--border);
+    padding: 32px 32px;
+    display: flex; align-items: center; justify-content: space-between;
+    flex-wrap: wrap; gap: 16px;
+  }
+
+  .footer-logo {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.85rem; letter-spacing: 4px;
+  }
+  .footer-logo .g { color: var(--accent); }
+  .footer-logo .v { color: white; }
+
+  .footer-links {
+    display: flex; gap: 20px;
+  }
+  .footer-links a {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.6rem; letter-spacing: 2px;
+    color: var(--text-dim); text-decoration: none;
+    text-transform: uppercase; transition: color 0.2s;
+  }
+  .footer-links a:hover { color: var(--accent); }
+
+  .footer-copy {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.55rem; letter-spacing: 2px;
+    color: var(--border);
+    width: 100%;
+    text-align: center;
+    margin-top: 16px;
+    border-top: 1px solid var(--border);
+    padding-top: 16px;
+  }
+
+  /* ── DIVIDER ── */
+  .section-divider {
+    position: relative; z-index: 2;
+    height: 1px; background: var(--border);
+    max-width: 100%; margin: 0;
+  }
+
+  /* ── ANIMATIONS ── */
+  @keyframes fadeDown {
+    from { opacity:0; transform:translateY(-16px); }
+    to   { opacity:1; transform:none; }
+  }
+  @keyframes fadeUp {
+    from { opacity:0; transform:translateY(16px); }
+    to   { opacity:1; transform:none; }
+  }
+
+  .fade-in {
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.6s ease, transform 0.6s ease;
+  }
+  .fade-in.visible {
+    opacity: 1;
+    transform: none;
+  }
+
+  /* ── MOBILE ── */
+  @media (max-width: 640px) {
+    nav { padding: 14px 16px; }
+    .nav-links a:not(.nav-cta) { display: none; }
+    .vc-grid { grid-template-columns: 1fr; }
+    .cta-block { padding: 40px 20px; }
+    footer { flex-direction: column; align-items: flex-start; }
+    .vc-section { padding: 32px 20px; }
+    .rank-item { min-width: 90px; padding: 18px 10px; }
   }
 </style>
 </head>
 <body>
+
+<div class="scanner"></div>
+
+<!-- ── NAV ── -->
+<nav>
+  <a class="nav-logo" href="index.html">
+    <span class="g">GENESIS</span><span class="v">VAULT</span>
+  </a>
+  <div class="nav-links">
+    <a href="#features">Features</a>
+    <a href="#vault-labs">Labs</a>
+    <a href="#vc">VC</a>
+    <a href="login.html" class="nav-cta">[ ACCESS ]</a>
+  </div>
+</nav>
+
+<!-- ── HERO ── -->
+<div class="hero">
+  <div class="hero-eyebrow">// <span>PLATFORM ONLINE</span> — genesis-vault.io</div>
+
+  <div class="hero-title">
+    <span class="g">GENESIS</span><span class="v">VAULT</span><span class="hero-cursor"></span>
+  </div>
+
+  <div class="hero-sub-title">// Cybersecurity Platform &amp; Automation Hub</div>
+
+  <p class="hero-desc">
+    A secure platform for <span class="hi">hackers</span>, builders, and learners.
+    Run real tools through our <span class="hi">AI terminal</span>, learn offensive security in
+    <span class="hi2">Vault Labs</span>, buy tools, take courses, and earn
+    <span class="hi">VC</span> — all in one place.
+  </p>
+
+  <div class="hero-btns">
+    <a href="login.html" class="btn-primary">[ JOIN THE VAULT ]</a>
+    <a href="#features" class="btn-ghost">Explore Features</a>
+  </div>
+
+  <div class="scroll-hint">
+    SCROLL<div class="scroll-arrow"></div>
+  </div>
+</div>
+
+<!-- ── STATS ── -->
+<div class="stats-bar">
+  <div class="stat-item">
+    <span class="stat-val">50</span>
+    <span class="stat-label">VC on signup</span>
+  </div>
+  <div class="stat-item">
+    <span class="stat-val">5+</span>
+    <span class="stat-label">Tool categories</span>
+  </div>
+  <div class="stat-item">
+    <span class="stat-val">AI</span>
+    <span class="stat-label">Terminal active</span>
+  </div>
+  <div class="stat-item">
+    <span class="stat-val">5</span>
+    <span class="stat-label">Member ranks</span>
+  </div>
+  <div class="stat-item">
+    <span class="stat-val">24/7</span>
+    <span class="stat-label">Labs access</span>
+  </div>
+</div>
+
+<div class="section-divider"></div>
+
+<!-- ── FEATURES ── -->
+<section id="features" class="fade-in">
+  <div class="section-tag">// 01 — Platform Features</div>
+  <div class="section-title">Everything in One Vault</div>
+  <div class="section-desc">From professional pentesting tools to automation scripts — Genesis Vault serves hackers and non-hackers alike.</div>
+
+  <div class="features-grid">
+
+    <div class="feature-card">
+      <div class="fc-glow green"></div>
+      <span class="fc-icon green">⬡</span>
+      <span class="fc-tag">// module_01</span>
+      <div class="fc-title">Tool Store</div>
+      <div class="fc-desc">Browse and purchase cybersecurity tools and automation scripts. From recon utilities to productivity bots — built for real-world use. Unlock tools with VC or direct purchase.</div>
+      <span class="fc-badge green">LIVE</span>
+    </div>
+
+    <div class="feature-card">
+      <div class="fc-glow blue"></div>
+      <span class="fc-icon blue">◈</span>
+      <span class="fc-tag">// module_02</span>
+      <div class="fc-title">Courses</div>
+      <div class="fc-desc">Structured courses on offensive security, bug bounty hunting, automation, and more. Free and paid tiers. Some content is rank-gated — climb to unlock deeper knowledge.</div>
+      <span class="fc-badge blue">FREE + PAID</span>
+    </div>
+
+    <div class="feature-card">
+      <div class="fc-glow green"></div>
+      <span class="fc-icon green">▣</span>
+      <span class="fc-tag">// module_03</span>
+      <div class="fc-title">Learner Hub</div>
+      <div class="fc-desc">Read articles, field notes, and intel posts. Community-sourced knowledge base on hacking techniques, OSINT, bug bounty tips, and automation guides.</div>
+      <span class="fc-badge">OPEN ACCESS</span>
+    </div>
+
+    <div class="feature-card">
+      <div class="fc-glow blue"></div>
+      <span class="fc-icon blue">▶</span>
+      <span class="fc-tag">// module_04</span>
+      <div class="fc-title">AI Terminal</div>
+      <div class="fc-desc">An AI-powered terminal linked directly to a live Termux environment via bridge. Type commands, get AI assistance, and execute real tools — nmap, sqlmap, ffuf — from your browser.</div>
+      <span class="fc-badge blue">LIVE EXECUTION</span>
+    </div>
+
+    <div class="feature-card">
+      <div class="fc-glow red"></div>
+      <span class="fc-icon red">⬡</span>
+      <span class="fc-tag">// module_05</span>
+      <div class="fc-title">Vault Labs</div>
+      <div class="fc-desc">Hands-on hacking labs. Learn real offensive techniques in a safe, guided environment. XSS, SQLi, recon, IDOR, and more — practical training for bug bounty and CTF.</div>
+      <span class="fc-badge">RANK GATED</span>
+    </div>
+
+    <div class="feature-card">
+      <div class="fc-glow green"></div>
+      <span class="fc-icon green">◉</span>
+      <span class="fc-tag">// module_06</span>
+      <div class="fc-title">Automation Tools</div>
+      <div class="fc-desc">Not a hacker? No problem. Genesis Vault also offers automation scripts for everyday tasks — web scraping, scheduling, data processing, and workflow bots.</div>
+      <span class="fc-badge green">FOR EVERYONE</span>
+    </div>
+
+  </div>
+</section>
+
+<div class="section-divider"></div>
+
+<!-- ── AI TERMINAL ── -->
+<section id="terminal" class="fade-in">
+  <div class="section-tag">// 02 — AI Terminal</div>
+  <div class="section-title">Run Real Tools. From Your Browser.</div>
+  <div class="section-desc">The Vault AI Terminal bridges your session to a live Termux environment. Ask the AI to run a scan, extract endpoints, or enumerate subdomains — it executes, you see results.</div>
+
+  <div class="terminal">
+    <div class="term-bar">
+      <div class="term-dot r"></div>
+      <div class="term-dot y"></div>
+      <div class="term-dot g"></div>
+      <span class="term-title">VAULT-AI — SECURE TERMINAL v1.0</span>
+    </div>
+    <div class="term-body">
+      <span class="term-line"><span class="term-ok">// Connected to bridge node. Termux ready.</span></span>
+      <span class="term-line">&nbsp;</span>
+      <span class="term-line"><span class="term-prompt">vault@ai:~$ </span><span class="term-cmd">scan target.com --mode recon</span></span>
+      <span class="term-line"><span class="term-info">> AI: Running subdomain enumeration on target.com...</span></span>
+      <span class="term-line"><span class="term-out">> [subfinder] Found: admin.target.com</span></span>
+      <span class="term-line"><span class="term-out">> [subfinder] Found: api.target.com</span></span>
+      <span class="term-line"><span class="term-out">> [subfinder] Found: staging.target.com</span></span>
+      <span class="term-line"><span class="term-ok">> Scan complete. 3 subdomains discovered.</span></span>
+      <span class="term-line">&nbsp;</span>
+      <span class="term-line"><span class="term-prompt">vault@ai:~$ </span><span class="term-cmd">nmap -sV api.target.com</span></span>
+      <span class="term-line"><span class="term-info">> AI: Launching nmap service scan via Termux bridge...</span></span>
+      <span class="term-line"><span class="term-warn">> PORT 8080/tcp   open   http-proxy</span></span>
+      <span class="term-line"><span class="term-warn">> PORT 443/tcp    open   https</span></span>
+      <span class="term-line"><span class="term-ok">> Done. Results logged to session.</span></span>
+      <span class="term-line">&nbsp;</span>
+      <span class="term-line type-anim"><span class="term-prompt">vault@ai:~$ </span><span class="term-cmd">_</span></span>
+    </div>
+  </div>
+</section>
+
+<div class="section-divider"></div>
+
+<!-- ── VAULT LABS ── -->
+<section id="vault-labs" class="fade-in">
+  <div class="section-tag">// 03 — Vault Labs</div>
+  <div class="section-title">Learn to Hack. For Real.</div>
+  <div class="section-desc">Vault Labs is Genesis Vault's hands-on hacking training ground. Guided labs with real vulnerable environments. No VMs needed — just your account and a target.</div>
+
+  <div class="how-wrap">
+    <div class="how-step">
+      <span class="how-num">01</span>
+      <div class="how-title">Pick a Lab</div>
+      <div class="how-desc">Browse labs by category — XSS, SQLi, recon, IDOR, auth bypass, SSRF. Each lab has a difficulty rating and estimated time.</div>
+    </div>
+    <div class="how-step">
+      <span class="how-num">02</span>
+      <div class="how-title">Read the Brief</div>
+      <div class="how-desc">Every lab comes with a mission briefing. Your goal is defined. No hand-holding beyond that — figure it out like a real hunter.</div>
+    </div>
+    <div class="how-step">
+      <span class="how-num">03</span>
+      <div class="how-title">Exploit the Target</div>
+      <div class="how-desc">Use the AI terminal, your own tools, or manual techniques. The lab environment is live and responds like a real application.</div>
+    </div>
+    <div class="how-step">
+      <span class="how-num">04</span>
+      <div class="how-title">Earn VC</div>
+      <div class="how-desc">Complete labs to earn Vault Credits. Harder labs pay more. VC can be spent on tools, premium courses, and more.</div>
+    </div>
+  </div>
+</section>
+
+<div class="section-divider"></div>
+
+<!-- ── VC ── -->
+<section id="vc" style="padding-bottom:0;" class="fade-in">
+  <div class="vc-section">
+    <div class="vc-grid">
+      <div>
+        <div class="section-tag">// 04 — Vault Credits</div>
+        <div class="vc-title">The Vault <span>Economy</span></div>
+        <div class="vc-desc">
+          Vault Credits (VC) are the internal currency of Genesis Vault.
+          Earn them by completing labs, inviting members, and contributing content.
+          Spend them on tools, paid courses, and premium features.
+        </div>
+        <div class="vc-ways">
+          <div class="vc-way">Complete Vault Labs challenges</div>
+          <div class="vc-way">Refer new members to the platform</div>
+          <div class="vc-way">Sign up — get 50 VC instantly</div>
+          <div class="vc-way">Submit bug bounty write-ups</div>
+          <div class="vc-way">Spend VC on tools and courses</div>
+        </div>
+      </div>
+      <div class="vc-amounts">
+        <div class="vc-box">
+          <span class="vc-amount">50</span>
+          <span class="vc-amount-label">VC on signup</span>
+        </div>
+        <div class="vc-box">
+          <span class="vc-amount">+25</span>
+          <span class="vc-amount-label">VC with referral</span>
+        </div>
+        <div class="vc-box">
+          <span class="vc-amount">+25</span>
+          <span class="vc-amount-label">VC to referrer</span>
+        </div>
+        <div class="vc-box">
+          <span class="vc-amount">∞</span>
+          <span class="vc-amount-label">Earn via labs</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="section-divider" style="margin-top:0;"></div>
+
+<!-- ── RANKS ── -->
+<section id="ranks" class="fade-in">
+  <div class="section-tag">// 05 — Member Ranks</div>
+  <div class="section-title">Climb the Ranks</div>
+  <div class="section-desc">Every member starts as a Ghost. Complete labs, earn VC, and unlock higher ranks — each granting access to deeper tools and restricted content.</div>
+
+  <div class="ranks-grid">
+    <div class="rank-item active-rank">
+      <span class="rank-symbol" style="color:var(--text-dim)">◌</span>
+      <span class="rank-name">Ghost</span>
+      <span class="rank-desc">Entry level</span>
+    </div>
+    <div class="rank-item">
+      <span class="rank-symbol" style="color:var(--accent2)">◈</span>
+      <span class="rank-name">Recon</span>
+      <span class="rank-desc">Prove yourself</span>
+    </div>
+    <div class="rank-item">
+      <span class="rank-symbol" style="color:#00f5c4">⬡</span>
+      <span class="rank-name">Operator</span>
+      <span class="rank-desc">Mid-tier access</span>
+    </div>
+    <div class="rank-item">
+      <span class="rank-symbol" style="color:#ff9500">▣</span>
+      <span class="rank-name">Shadow</span>
+      <span class="rank-desc">Advanced tools</span>
+    </div>
+    <div class="rank-item">
+      <span class="rank-symbol" style="color:var(--accent3)">◉</span>
+      <span class="rank-name">Spectre</span>
+      <span class="rank-desc">Full access</span>
+    </div>
+  </div>
+</section>
+
+<div class="section-divider"></div>
+
+<!-- ── CTA ── -->
+<section style="padding: 0 20px 90px;" class="fade-in">
+  <div class="cta-block">
+    <div class="cta-title">Ready to Enter the <span>Vault?</span></div>
+    <div class="cta-sub">
+      Join Genesis Vault. Get 50 VC instantly.<br>
+      Start with free courses and work your way to the top.
+    </div>
+    <div class="cta-btns">
+      <a href="login.html" class="btn-primary">[ CREATE ACCOUNT ]</a>
+      <a href="login.html" class="btn-ghost">Already a member? Login</a>
+    </div>
+  </div>
+</section>
+
+<!-- ── FOOTER ── -->
+<footer>
+  <div class="footer-logo">
+    <span class="g">GENESIS</span><span class="v">VAULT</span>
+  </div>
+  <div class="footer-links">
+    <a href="login.html">Login</a>
+    <a href="login.html">Register</a>
+    <a href="#features">Features</a>
+    <a href="#vault-labs">Labs</a>
+  </div>
+  <div class="footer-copy">
+    // GENESIS VAULT — CYBERSECURITY PLATFORM — ALL RIGHTS RESERVED — USE RESPONSIBLY
+  </div>
+</footer>
+
 <script>
-(function() {
+  // Scroll fade-in
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        e.target.classList.add('visible');
+        observer.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.1 });
 
-  // ── DEFENSE 1: Detect devtools open (basic) ──
-  const devtools = { open: false };
-  const threshold = 160;
-  setInterval(function() {
-    if (
-      window.outerWidth - window.innerWidth > threshold ||
-      window.outerHeight - window.innerHeight > threshold
-    ) {
-      devtools.open = true;
+  document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+
+  // Smooth nav hide/show on scroll
+  let lastY = 0;
+  const navEl = document.querySelector('nav');
+  window.addEventListener('scroll', () => {
+    const y = window.scrollY;
+    if (y > lastY && y > 80) {
+      navEl.style.transform = 'translateY(-100%)';
+      navEl.style.transition = 'transform 0.3s ease';
+    } else {
+      navEl.style.transform = 'translateY(0)';
     }
-  }, 500);
-
-  // ── DEFENSE 2: Disable right-click ──
-  document.addEventListener('contextmenu', function(e) {
-    e.preventDefault();
+    lastY = y;
   });
 
-  // ── DEFENSE 3: Disable common inspect shortcuts ──
-  document.addEventListener('keydown', function(e) {
-    if (
-      e.key === 'F12' ||
-      (e.ctrlKey && e.shiftKey && ['I','J','C','U'].includes(e.key)) ||
-      (e.ctrlKey && e.key === 'U')
-    ) {
-      e.preventDefault();
-    }
-  });
-
-  // ── DEFENSE 4: Log suspicious visits (bot/scraper detection) ──
-  const suspicious =
-    !navigator.cookieEnabled ||
-    !window.localStorage ||
-    navigator.webdriver === true || // Selenium/Puppeteer flag
-    /bot|crawl|spider|scrape|headless/i.test(navigator.userAgent);
-
-  if (suspicious) {
-    // Dead end — show nothing, go nowhere
-    document.body.style.background = '#000';
-    return;
+  // Animated stat counters
+  function animateCount(el, target, suffix = '') {
+    let current = 0;
+    const step = target / 40;
+    const timer = setInterval(() => {
+      current += step;
+      if (current >= target) {
+        el.textContent = target + suffix;
+        clearInterval(timer);
+      } else {
+        el.textContent = Math.floor(current) + suffix;
+      }
+    }, 30);
   }
 
-  // ── DEFENSE 5: Honeypot timing — random micro-delay ──
-  // Makes scraper timing analysis harder
-  const delay = Math.floor(Math.random() * 300) + 100;
-
-  setTimeout(function() {
-
-    // ── ROUTER LOGIC ──
-    try {
-      // Check Supabase session in localStorage
-      // Key format: sb-<project-ref>-auth-token
-      const sessionKey = Object.keys(localStorage).find(k =>
-        k.startsWith('sb-') && k.endsWith('-auth-token')
-      );
-
-      if (sessionKey) {
-        const raw = localStorage.getItem(sessionKey);
-        if (raw) {
-          const session = JSON.parse(raw);
-          const expiresAt = session?.expires_at;
-          const now = Math.floor(Date.now() / 1000);
-
-          if (expiresAt && expiresAt > now) {
-            // Valid session → dashboard
-            window.location.replace('dashboard.html');
-            return;
-          }
-        }
+  const statsObserver = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        const vals = e.target.querySelectorAll('.stat-val');
+        vals.forEach(v => {
+          const txt = v.textContent;
+          const num = parseInt(txt);
+          if (!isNaN(num)) animateCount(v, num, txt.replace(/[0-9]/g,''));
+        });
+        statsObserver.unobserve(e.target);
       }
+    });
+  }, { threshold: 0.5 });
 
-      // No valid session → login
-      window.location.replace('login.html');
-
-    } catch(e) {
-      // Any error → login (fail safe)
-      window.location.replace('login.html');
-    }
-
-  }, delay);
-
-})();
+  document.querySelector('.stats-bar') && statsObserver.observe(document.querySelector('.stats-bar'));
 </script>
 </body>
 </html>
