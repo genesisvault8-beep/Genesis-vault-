@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Genesis Vault | Marketplace</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:       #020608;
+    --bg2:      #060d10;
+    --bg3:      #0a1520;
+    --accent:   #00f5c4;
+    --accent2:  #00a8ff;
+    --accent3:  #ff003c;
+    --text:     #c8e6f0;
+    --text-dim: #4a7a8a;
+    --border:   #0f2a35;
+    --glow:     0 0 20px rgba(0,245,196,0.2);
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:var(--bg); color:var(--text); font-family:'Rajdhani',sans-serif; min-height:100vh; }
+  body::before {
+    content:''; position:fixed; inset:0;
+    background-image:
+      linear-gradient(rgba(0,245,196,0.02) 1px,transparent 1px),
+      linear-gradient(90deg,rgba(0,245,196,0.02) 1px,transparent 1px);
+    background-size:40px 40px; pointer-events:none; z-index:0;
+  }
+
+  /* NAV */
+  nav {
+    position:fixed; top:0; left:0; right:0;
+    background:rgba(2,6,8,0.95); border-bottom:1px solid var(--border);
+    padding:0 20px; height:56px; display:flex; align-items:center;
+    justify-content:space-between; z-index:100; backdrop-filter:blur(10px);
+  }
+  .nav-logo { font-family:'Share Tech Mono',monospace; font-size:1rem; letter-spacing:3px; position:relative; cursor:default; user-select:none; }
+  .nav-logo .g { color:var(--accent); }
+  .nav-logo .v { color:white; }
+  .nav-logo::before,.nav-logo::after { content:attr(data-text); position:absolute; top:0; left:0; width:100%; height:100%; font-family:'Share Tech Mono',monospace; font-size:1rem; letter-spacing:3px; pointer-events:none; }
+  .nav-logo::before { color:var(--accent3); clip-path:polygon(0 20%,100% 20%,100% 40%,0 40%); animation:glitch1 4s infinite; left:2px; }
+  .nav-logo::after  { color:var(--accent2); clip-path:polygon(0 60%,100% 60%,100% 80%,0 80%); animation:glitch2 4s infinite; left:-2px; }
+  @keyframes glitch1 { 0%,90%,100%{opacity:0;transform:translateX(0)} 91%{opacity:1;transform:translateX(-3px)} 93%{opacity:1;transform:translateX(3px)} 95%{opacity:1;transform:translateX(-2px)} 97%{opacity:0} }
+  @keyframes glitch2 { 0%,90%,100%{opacity:0;transform:translateX(0)} 92%{opacity:1;transform:translateX(3px)} 94%{opacity:1;transform:translateX(-3px)} 96%{opacity:1;transform:translateX(2px)} 98%{opacity:0} }
+  .back-btn { background:none; border:1px solid var(--border); color:var(--text-dim); padding:6px 14px; font-family:'Share Tech Mono',monospace; font-size:0.7rem; cursor:pointer; letter-spacing:1px; transition:all 0.2s; }
+  .back-btn:hover { border-color:var(--accent); color:var(--accent); }
+
+  /* LAYOUT */
+  main { padding-top:76px; padding-bottom:40px; min-height:100vh; position:relative; z-index:1; }
+  .container { padding:20px; max-width:700px; margin:0 auto; }
+
+  /* PAGE HEADER */
+  .page-header { margin-bottom:20px; animation:fadeIn 0.4s ease; }
+  .page-header .breadcrumb { font-family:'Share Tech Mono',monospace; font-size:0.65rem; color:var(--text-dim); letter-spacing:2px; margin-bottom:8px; }
+  .page-header h1 { font-size:1.6rem; font-weight:700; color:white; letter-spacing:3px; }
+  .page-header h1 span { color:var(--accent); }
+  .page-header .sub { font-family:'Share Tech Mono',monospace; font-size:0.7rem; color:var(--text-dim); letter-spacing:1px; margin-top:5px; }
+
+  /* FILTER TABS */
+  .cat-tabs { display:flex; gap:0; border-bottom:1px solid var(--border); margin-bottom:20px; overflow-x:auto; }
+  .cat-tab { padding:8px 16px; font-family:'Share Tech Mono',monospace; font-size:0.65rem; letter-spacing:2px; color:var(--text-dim); cursor:pointer; border-bottom:2px solid transparent; white-space:nowrap; transition:all 0.2s; }
+  .cat-tab.active { color:var(--accent); border-bottom-color:var(--accent); }
+  .cat-tab:hover  { color:var(--text); }
+
+  /* SORT + SEARCH ROW */
+  .toolbar { display:flex; gap:10px; margin-bottom:16px; align-items:center; }
+  .search-input { flex:1; background:var(--bg2); border:1px solid var(--border); color:var(--text); padding:9px 14px; font-family:'Share Tech Mono',monospace; font-size:0.8rem; outline:none; transition:border-color 0.2s; }
+  .search-input:focus { border-color:var(--accent); }
+  .search-input::placeholder { color:var(--text-dim); }
+  .sort-select { background:var(--bg2); border:1px solid var(--border); color:var(--text-dim); padding:9px 12px; font-family:'Share Tech Mono',monospace; font-size:0.7rem; outline:none; cursor:pointer; }
+  .sort-select:focus { border-color:var(--accent); }
+
+  /* OWNED SECTION */
+  .owned-banner { background:var(--bg2); border:1px solid var(--accent2); border-left:3px solid var(--accent2); padding:14px 18px; margin-bottom:20px; cursor:pointer; transition:border-color 0.2s; display:flex; align-items:center; justify-content:space-between; }
+  .owned-banner:hover { border-color:var(--accent); }
+  .owned-banner-left .lbl { font-family:'Share Tech Mono',monospace; font-size:0.65rem; color:var(--accent2); letter-spacing:2px; margin-bottom:3px; }
+  .owned-banner-left .val { font-size:1rem; font-weight:700; color:white; letter-spacing:1px; }
+  .owned-banner-right { font-family:'Share Tech Mono',monospace; font-size:0.7rem; color:var(--text-dim); }
+
+  /* SECTION TITLE */
+  .section-title { font-family:'Share Tech Mono',monospace; font-size:0.75rem; color:var(--accent); letter-spacing:3px; text-transform:uppercase; margin-bottom:12px; border-bottom:1px solid var(--border); padding-bottom:8px; }
+
+  /* TOOL CARD */
+  .tool-card { background:var(--bg2); border:1px solid var(--border); padding:18px; margin-bottom:12px; animation:fadeIn 0.4s ease; transition:border-color 0.2s; position:relative; overflow:hidden; }
+  .tool-card::after { content:''; position:absolute; bottom:0; left:0; right:0; height:1px; background:linear-gradient(90deg,var(--accent),transparent); transform:scaleX(0); transform-origin:left; transition:transform 0.3s; }
+  .tool-card:hover { border-color:rgba(0,245,196,0.3); }
+  .tool-card:hover::after { transform:scaleX(1); }
+
+  .tool-card-top { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px; gap:10px; }
+  .tool-card-top h3 { font-size:1rem; font-weight:700; letter-spacing:2px; color:white; flex:1; }
+  .tool-badges { display:flex; gap:6px; flex-wrap:wrap; flex-shrink:0; }
+  .badge { font-family:'Share Tech Mono',monospace; font-size:0.6rem; padding:2px 8px; letter-spacing:1px; border:1px solid; }
+  .badge-cat  { color:var(--accent2); border-color:var(--accent2); }
+  .badge-free { color:var(--accent);  border-color:var(--accent); }
+  .badge-new  { color:var(--accent3); border-color:var(--accent3); }
+  .badge-kit  { color:#ffaa00; border-color:#ffaa00; }
+
+  .tool-desc { font-size:0.82rem; color:var(--text-dim); line-height:1.6; margin-bottom:12px; }
+
+  .tool-meta { display:flex; gap:12px; margin-bottom:12px; flex-wrap:wrap; }
+  .tool-meta-item { font-family:'Share Tech Mono',monospace; font-size:0.65rem; color:var(--text-dim); }
+  .tool-meta-item span { color:var(--accent2); }
+
+  .tool-footer { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; }
+  .tool-price { font-family:'Share Tech Mono',monospace; font-size:1rem; color:var(--accent); letter-spacing:1px; font-weight:700; }
+  .tool-price.free { color:var(--accent); }
+
+  .btn-buy { background:var(--accent); color:var(--bg); border:none; padding:10px 22px; font-family:'Rajdhani',sans-serif; font-weight:700; font-size:0.9rem; letter-spacing:2px; cursor:pointer; transition:all 0.2s; clip-path:polygon(6px 0%,100% 0%,calc(100% - 6px) 100%,0% 100%); }
+  .btn-buy:hover { background:white; }
+  .btn-owned { background:none; border:1px solid var(--accent); color:var(--accent); padding:10px 22px; font-family:'Share Tech Mono',monospace; font-size:0.75rem; letter-spacing:2px; cursor:pointer; transition:all 0.2s; }
+  .btn-owned:hover { background:rgba(0,245,196,0.08); }
+  .btn-free { background:rgba(0,245,196,0.1); color:var(--accent); border:1px solid var(--accent); padding:10px 22px; font-family:'Rajdhani',sans-serif; font-weight:700; font-size:0.9rem; letter-spacing:2px; cursor:pointer; transition:all 0.2s; }
+  .btn-free:hover { background:var(--accent); color:var(--bg); }
+
+  /* KIT CARD */
+  .kit-card { background:var(--bg2); border:1px solid #ffaa00; border-left:3px solid #ffaa00; padding:18px; margin-bottom:12px; animation:fadeIn 0.4s ease; position:relative; overflow:hidden; }
+  .kit-card::before { content:'// BUNDLE'; position:absolute; top:10px; right:14px; font-family:'Share Tech Mono',monospace; font-size:0.6rem; color:#ffaa00; letter-spacing:2px; }
+  .kit-contents { margin:10px 0; }
+  .kit-item { font-family:'Share Tech Mono',monospace; font-size:0.72rem; color:var(--text-dim); padding:3px 0; }
+  .kit-item::before { content:'+ '; color:var(--accent); }
+
+  /* PROMO CODE */
+  .promo-row { display:flex; gap:8px; margin-bottom:20px; }
+  .promo-input { flex:1; background:var(--bg2); border:1px solid var(--border); color:var(--text); padding:10px 14px; font-family:'Share Tech Mono',monospace; font-size:0.8rem; outline:none; transition:border-color 0.2s; letter-spacing:2px; text-transform:uppercase; }
+  .promo-input:focus { border-color:var(--accent); }
+  .promo-input::placeholder { color:var(--text-dim); text-transform:none; letter-spacing:0; }
+  .promo-btn { background:none; border:1px solid var(--accent); color:var(--accent); padding:10px 16px; font-family:'Share Tech Mono',monospace; font-size:0.7rem; letter-spacing:2px; cursor:pointer; transition:all 0.2s; white-space:nowrap; }
+  .promo-btn:hover { background:rgba(0,245,196,0.08); }
+  .promo-status { font-family:'Share Tech Mono',monospace; font-size:0.72rem; margin-bottom:12px; padding:8px 12px; display:none; }
+  .promo-status.ok  { border:1px solid var(--accent); color:var(--accent); background:rgba(0,245,196,0.05); }
+  .promo-status.err { border:1px solid var(--accent3); color:var(--accent3); background:rgba(255,0,60,0.05); }
+
+  /* OWNED TOOLS SECTION */
+  .owned-section { display:none; }
+  .owned-section.open { display:block; }
+  .owned-tool-row { display:flex; align-items:center; justify-content:space-between; padding:12px 16px; background:var(--bg2); border:1px solid var(--border); margin-bottom:8px; gap:10px; transition:border-color 0.2s; }
+  .owned-tool-row:hover { border-color:var(--accent); }
+  .owned-tool-name { font-weight:700; letter-spacing:1px; color:white; font-size:0.9rem; }
+  .owned-tool-type { font-family:'Share Tech Mono',monospace; font-size:0.62rem; color:var(--text-dim); margin-top:2px; }
+  .btn-access { background:var(--accent); color:var(--bg); border:none; padding:7px 16px; font-family:'Share Tech Mono',monospace; font-size:0.7rem; letter-spacing:1px; cursor:pointer; font-weight:700; white-space:nowrap; transition:all 0.2s; }
+  .btn-access:hover { background:white; }
+
+  /* MODAL */
+  .modal { display:none; position:fixed; inset:0; background:rgba(2,6,8,0.97); z-index:200; padding:20px; overflow-y:auto; flex-direction:column; }
+  .modal.active { display:flex; }
+  .modal-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:20px; padding-bottom:12px; border-bottom:1px solid var(--border); }
+  .modal-header h3 { font-size:1rem; letter-spacing:3px; color:var(--accent); font-family:'Share Tech Mono',monospace; }
+  .close-btn { background:none; border:1px solid var(--border); color:var(--text-dim); width:32px; height:32px; cursor:pointer; font-size:1rem; transition:all 0.2s; }
+  .close-btn:hover { border-color:var(--accent3); color:var(--accent3); }
+
+  .modal label { display:block; font-size:0.68rem; letter-spacing:2px; color:var(--text-dim); margin-bottom:6px; font-family:'Share Tech Mono',monospace; }
+  .modal input, .modal textarea { width:100%; background:var(--bg); border:1px solid var(--border); color:var(--text); padding:11px 14px; font-family:'Share Tech Mono',monospace; font-size:0.85rem; outline:none; transition:border-color 0.2s; margin-bottom:14px; }
+  .modal input:focus, .modal textarea:focus { border-color:var(--accent); }
+  .modal input::placeholder, .modal textarea::placeholder { color:var(--text-dim); }
+
+  .info-box { background:var(--bg3); border:1px solid var(--border); border-left:3px solid var(--accent2); padding:14px 16px; margin-bottom:16px; font-family:'Share Tech Mono',monospace; font-size:0.72rem; line-height:1.9; color:var(--text-dim); }
+  .info-box span { color:var(--accent); }
+
+  .tool-preview-box { background:var(--bg2); border:1px solid var(--border); padding:16px; margin-bottom:16px; }
+  .tool-preview-name  { font-weight:700; font-size:1rem; letter-spacing:2px; color:white; margin-bottom:4px; }
+  .tool-preview-price { font-family:'Share Tech Mono',monospace; font-size:0.9rem; color:var(--accent); }
+  .tool-preview-orig  { font-family:'Share Tech Mono',monospace; font-size:0.75rem; color:var(--text-dim); text-decoration:line-through; margin-left:8px; }
+  .tool-preview-disc  { font-family:'Share Tech Mono',monospace; font-size:0.7rem; color:var(--accent3); margin-top:3px; }
+
+  .btn-submit { width:100%; padding:14px; background:var(--accent); color:var(--bg); border:none; font-family:'Rajdhani',sans-serif; font-weight:700; font-size:1rem; letter-spacing:3px; cursor:pointer; transition:all 0.2s; clip-path:polygon(8px 0%,100% 0%,calc(100% - 8px) 100%,0% 100%); }
+  .btn-submit:hover { background:white; }
+  .btn-submit:disabled { opacity:0.5; cursor:not-allowed; }
+
+  .status-msg { padding:10px 14px; font-family:'Share Tech Mono',monospace; font-size:0.75rem; letter-spacing:1px; margin-bottom:12px; display:none; }
+  .status-msg.ok  { border:1px solid var(--accent);  color:var(--accent);  background:rgba(0,245,196,0.05); }
+  .status-msg.err { border:1px solid var(--accent3); color:var(--accent3); background:rgba(255,0,60,0.05); }
+
+  .loading { text-align:center; padding:40px; color:var(--text-dim); font-family:'Share Tech Mono',monospace; font-size:0.8rem; letter-spacing:2px; }
+  .empty   { text-align:center; padding:40px; color:var(--text-dim); font-family:'Share Tech Mono',monospace; font-size:0.8rem; }
+  .spinner { display:inline-block; width:16px; height:16px; border:2px solid var(--border); border-top-color:var(--accent); border-radius:50%; animation:spin 0.8s linear infinite; vertical-align:middle; margin-right:8px; }
+
+  @keyframes spin   { to { transform:rotate(360deg); } }
+  @keyframes fadeIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-logo" data-text="GENESISVAULT"><span class="g">GENESIS</span><span class="v">VAULT</span></div>
+  <button class="back-btn" onclick="location.href='dashboard.html'">← DASHBOARD</button>
+</nav>
+
+<main>
+<div class="container">
+
+  <!-- HEADER -->
+  <div class="page-header">
+    <p class="breadcrumb">// DASHBOARD / MARKETPLACE</p>
+    <h1>VAULT <span>STORE</span></h1>
+    <p class="sub">Scripts. Apps. Automation. Kits. — All run inside Genesis Vault.</p>
+  </div>
+
+  <!-- OWNED BANNER -->
+  <div class="owned-banner" onclick="toggleOwned()" id="owned-banner">
+    <div class="owned-banner-left">
+      <div class="lbl">// YOUR TOOLS</div>
+      <div class="val" id="owned-count-label">Loading...</div>
+    </div>
+    <div class="owned-banner-right" id="owned-toggle-label">[ VIEW → ]</div>
+  </div>
+
+  <!-- OWNED TOOLS SECTION -->
+  <div class="owned-section" id="owned-section">
+    <div id="owned-list"><div class="loading"><span class="spinner"></span>Loading your tools...</div></div>
+    <div style="height:16px;"></div>
+  </div>
+
+  <!-- PROMO CODE -->
+  <div class="promo-row">
+    <input class="promo-input" type="text" id="promo-input" placeholder="Promo / discount code" maxlength="32">
+    <button class="promo-btn" onclick="applyPromo()">[ APPLY ]</button>
+  </div>
+  <div class="promo-status" id="promo-status"></div>
+
+  <!-- CATEGORY TABS -->
+  <div class="cat-tabs">
+    <div class="cat-tab active" onclick="setCategory('',this)">ALL</div>
+    <div class="cat-tab" onclick="setCategory('automation',this)">AUTOMATION</div>
+    <div class="cat-tab" onclick="setCategory('ai',this)">AI TOOLS</div>
+    <div class="cat-tab" onclick="setCategory('apps',this)">APPS</div>
+    <div class="cat-tab" onclick="setCategory('scripts',this)">SCRIPTS</div>
+    <div class="cat-tab" onclick="setCategory('templates',this)">TEMPLATES</div>
+    <div class="cat-tab" onclick="setCategory('kits',this)">KITS</div>
+  </div>
+
+  <!-- TOOLBAR -->
+  <div class="toolbar">
+    <input class="search-input" type="text" id="search-input" placeholder="// search tools..." oninput="renderTools()">
+    <select class="sort-select" id="sort-select" onchange="renderTools()">
+      <option value="newest">NEWEST</option>
+      <option value="price-asc">PRICE ↑</option>
+      <option value="price-desc">PRICE ↓</option>
+      <option value="free">FREE FIRST</option>
+    </select>
+  </div>
+
+  <!-- TOOLS LIST -->
+  <div id="tools-container"><div class="loading"><span class="spinner"></span>Loading store...</div></div>
+
+</div>
+</main>
+
+<!-- PURCHASE MODAL -->
+<div class="modal" id="modal-buy">
+  <div class="modal-header">
+    <h3>// Purchase Tool</h3>
+    <button class="close-btn" onclick="closeModal('modal-buy')">✕</button>
+  </div>
+
+  <div class="tool-preview-box">
+    <div class="tool-preview-name"  id="buy-name">—</div>
+    <div>
+      <span class="tool-preview-price" id="buy-price-display">—</span>
+      <span class="tool-preview-orig"  id="buy-price-orig" style="display:none;"></span>
+    </div>
+    <div class="tool-preview-disc" id="buy-discount-label" style="display:none;"></div>
+  </div>
+
+  <div class="info-box">
+    // Send exact USDT <span>(BEP-20 / Binance Smart Chain)</span> to the Vault wallet<br>
+    // Paste your Binance TX ID below after sending<br>
+    // Admin reviews within <span>24 hours</span> — tool unlocks automatically<br>
+    // Questions? Message admin from the dashboard
+  </div>
+
+  <label>Binance TX ID</label>
+  <input type="text" id="buy-tx" placeholder="Transaction hash..." id="buy-tx-input">
+
+  <div class="status-msg" id="buy-status"></div>
+  <button class="btn-submit" id="btn-buy-submit" onclick="submitPayment()">[ SUBMIT PAYMENT ]</button>
+</div>
+
+<!-- FREE UNLOCK MODAL -->
+<div class="modal" id="modal-free">
+  <div class="modal-header">
+    <h3>// Unlock Free Tool</h3>
+    <button class="close-btn" onclick="closeModal('modal-free')">✕</button>
+  </div>
+  <div class="tool-preview-box">
+    <div class="tool-preview-name" id="free-name">—</div>
+    <div class="tool-preview-price" style="color:var(--accent);">FREE</div>
+  </div>
+  <div class="info-box">// This tool is free. Tap below to add it to your library instantly.</div>
+  <div class="status-msg" id="free-status"></div>
+  <button class="btn-submit" id="btn-free-submit" onclick="submitFree()">[ UNLOCK NOW ]</button>
+</div>
+
+<!-- ACCESS MODAL -->
+<div class="modal" id="modal-access">
+  <div class="modal-header">
+    <h3>// Access Tool</h3>
+    <button class="close-btn" onclick="closeModal('modal-access')">✕</button>
+  </div>
+  <div class="tool-preview-box">
+    <div class="tool-preview-name" id="access-name">—</div>
+    <div style="font-family:'Share Tech Mono',monospace;font-size:0.7rem;color:var(--accent2);margin-top:4px;" id="access-type">—</div>
+  </div>
+  <div class="info-box" id="access-info">// Loading access info...</div>
+  <button class="btn-submit" id="btn-access-go" onclick="launchTool()">[ LAUNCH IN VAULT LABS ]</button>
+</div>
+
+<script>
+const API   = 'https://genesis-vault-backend.onrender.com/api';
+const token = localStorage.getItem('gv_token');
+if (!token) location.href = 'login.html';
+
+let allTools      = [];
+let activeCategory = '';
+let activeTool    = null;
+let promoDiscount = 0;
+let promoCode     = '';
+let ownedOpen     = false;
+
+function h() { return { 'Content-Type':'application/json', 'Authorization':`Bearer ${token}` }; }
+
+/* ── BOOT ── */
+async function boot() {
+  // Check URL params for auto-open
+  const params = new URLSearchParams(location.search);
+  if (params.get('cat')) {
+    const tab = document.querySelector(`.cat-tab[onclick*="${params.get('cat')}"]`);
+    if (tab) setCategory(params.get('cat'), tab);
+  }
+  await Promise.all([loadTools(), loadOwned()]);
+  if (params.get('access')) openAccessById(params.get('access'));
+}
+
+/* ── TOOLS ── */
+async function loadTools() {
+  try {
+    const res  = await fetch(`${API}/marketplace`, { headers:h() });
+    const data = await res.json();
+    allTools   = data.tools || [];
+    renderTools();
+  } catch(e) {
+    document.getElementById('tools-container').innerHTML = '<div class="empty">// Failed to load store.</div>';
+  }
+}
+
+function setCategory(cat, el) {
+  activeCategory = cat;
+  document.querySelectorAll('.cat-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  renderTools();
+}
+
+function renderTools() {
+  const search = document.getElementById('search-input').value.toLowerCase();
+  const sort   = document.getElementById('sort-select').value;
+  const c      = document.getElementById('tools-container');
+
+  let filtered = allTools.filter(t => {
+    const matchCat  = !activeCategory || (t.type||'').toLowerCase() === activeCategory;
+    const matchSearch = !search || t.title.toLowerCase().includes(search) || (t.description||'').toLowerCase().includes(search);
+    return matchCat && matchSearch;
+  });
+
+  // Sort
+  if (sort === 'price-asc')  filtered.sort((a,b) => a.price - b.price);
+  if (sort === 'price-desc') filtered.sort((a,b) => b.price - a.price);
+  if (sort === 'free')       filtered.sort((a,b) => a.price - b.price);
+  if (sort === 'newest')     filtered.sort((a,b) => new Date(b.created_at) - new Date(a.created_at));
+
+  if (!filtered.length) {
+    c.innerHTML = '<div class="empty">// No tools found in this category yet.</div>'; return;
+  }
+
+  c.innerHTML = filtered.map(t => {
+    const isKit  = (t.type||'').toLowerCase() === 'kits' || t.is_kit;
+    const isFree = t.price === 0;
+    return isKit ? renderKit(t) : renderTool(t);
+  }).join('');
+}
+
+function renderTool(t) {
+  const isFree  = t.price === 0;
+  const isNew   = t.created_at && (Date.now() - new Date(t.created_at)) < 7*86400000;
+
+  const badges = [
+    `<span class="badge badge-cat">${esc((t.type||'TOOL').toUpperCase())}</span>`,
+    isFree ? `<span class="badge badge-free">FREE</span>` : '',
+    isNew  ? `<span class="badge badge-new">NEW</span>`  : '',
+  ].join('');
+
+  const meta = [
+    t.delivery ? `<span class="tool-meta-item">DELIVERY: <span>${esc(t.delivery.toUpperCase())}</span></span>` : '',
+    t.file_type ? `<span class="tool-meta-item">FORMAT: <span>${esc(t.file_type.toUpperCase())}</span></span>` : '',
+  ].filter(Boolean).join('');
+
+  const footerBtn = t.owned
+    ? `<button class="btn-owned" onclick="openAccess(${JSON.stringify(t)})">[ ACCESS TOOL ]</button>`
+    : isFree
+      ? `<button class="btn-free" onclick="openFree(${JSON.stringify(t)})">[ GET FREE ]</button>`
+      : `<button class="btn-buy"  onclick="openBuy(${JSON.stringify(t)})">[ BUY NOW ]</button>`;
+
+  return `
+  <div class="tool-card">
+    <div class="tool-card-top">
+      <h3>${esc(t.title)}</h3>
+      <div class="tool-badges">${badges}</div>
+    </div>
+    <p class="tool-desc">${esc(t.description||'')}</p>
+    ${meta ? `<div class="tool-meta">${meta}</div>` : ''}
+    <div class="tool-footer">
+      <span class="tool-price ${isFree?'free':''}">${isFree ? 'FREE' : '$'+t.price+' USDT'}</span>
+      ${footerBtn}
+    </div>
+  </div>`;
+}
+
+function renderKit(t) {
+  const items = (t.kit_items||[]).map(i => `<div class="kit-item">${esc(i)}</div>`).join('');
+  const footerBtn = t.owned
+    ? `<button class="btn-owned" onclick="openAccess(${JSON.stringify(t)})">[ ACCESS KIT ]</button>`
+    : `<button class="btn-buy" onclick="openBuy(${JSON.stringify(t)})">[ GET KIT ]</button>`;
+
+  return `
+  <div class="kit-card">
+    <div class="tool-card-top" style="margin-bottom:8px;">
+      <h3 style="color:#ffaa00;">${esc(t.title)}</h3>
+      <span class="badge badge-kit">KIT</span>
+    </div>
+    <p class="tool-desc">${esc(t.description||'')}</p>
+    ${items ? `<div class="kit-contents">${items}</div>` : ''}
+    <div class="tool-footer">
+      <span class="tool-price">${t.price > 0 ? '$'+t.price+' USDT' : 'FREE'}</span>
+      ${footerBtn}
+    </div>
+  </div>`;
+}
+
+/* ── OWNED TOOLS ── */
+async function loadOwned() {
+  const label = document.getElementById('owned-count-label');
+  const list  = document.getElementById('owned-list');
+  try {
+    const res  = await fetch(`${API}/marketplace?owned=true`, { headers:h() });
+    const data = await res.json();
+    const owned = (data.tools||[]).filter(t => t.owned);
+
+    // Update allTools owned state
+    owned.forEach(o => {
+      const t = allTools.find(x => x.id === o.id);
+      if (t) t.owned = true;
+    });
+
+    label.textContent = owned.length > 0 ? `${owned.length} tool${owned.length>1?'s':''} in your library` : 'No tools yet';
+
+    if (!owned.length) {
+      list.innerHTML = '<div class="empty" style="padding:16px 0;">// Purchase tools to see them here.</div>';
+      return;
+    }
+    list.innerHTML = owned.map(t => `
+      <div class="owned-tool-row">
+        <div>
+          <div class="owned-tool-name">${esc(t.title)}</div>
+          <div class="owned-tool-type">${esc((t.type||'tool').toUpperCase())} · ${t.price>0?'$'+t.price+' USDT':'FREE'}</div>
+        </div>
+        <button class="btn-access" onclick="openAccess(${JSON.stringify(t)})">[ ACCESS ]</button>
+      </div>`).join('');
+  } catch(e) {
+    label.textContent = 'Could not load';
+  }
+}
+
+function toggleOwned() {
+  ownedOpen = !ownedOpen;
+  document.getElementById('owned-section').classList.toggle('open', ownedOpen);
+  document.getElementById('owned-toggle-label').textContent = ownedOpen ? '[ HIDE ↑ ]' : '[ VIEW → ]';
+}
+
+/* ── PROMO CODE ── */
+async function applyPromo() {
+  const code = document.getElementById('promo-input').value.trim().toUpperCase();
+  const msg  = document.getElementById('promo-status');
+  if (!code) { showStatus(msg,'Enter a promo code.',true); return; }
+  try {
+    const res  = await fetch(`${API}/marketplace/promo`, {
+      method:'POST', headers:h(), body: JSON.stringify({ code })
+    });
+    const data = await res.json();
+    if (data.status === 'success') {
+      promoDiscount = data.discount || 0;
+      promoCode     = code;
+      showStatus(msg, `✓ Code applied: ${promoDiscount}% off your next purchase.`, false);
+    } else {
+      promoDiscount = 0; promoCode = '';
+      showStatus(msg, data.message || '// Invalid code.', true);
+    }
+  } catch(e) {
+    showStatus(msg, '// Network error.', true);
+  }
+}
+
+/* ── BUY FLOW ── */
+function openBuy(t) {
+  activeTool = t;
+  document.getElementById('buy-name').textContent = t.title;
+  document.getElementById('buy-tx').value         = '';
+  document.getElementById('buy-status').style.display = 'none';
+  document.getElementById('btn-buy-submit').disabled  = false;
+  document.getElementById('btn-buy-submit').textContent = '[ SUBMIT PAYMENT ]';
+
+  const base     = t.price;
+  const disc     = promoDiscount > 0 ? Math.round(base * promoDiscount / 100) : 0;
+  const final    = base - disc;
+  const priceEl  = document.getElementById('buy-price-display');
+  const origEl   = document.getElementById('buy-price-orig');
+  const discEl   = document.getElementById('buy-discount-label');
+
+  priceEl.textContent = `$${final} USDT`;
+  if (disc > 0) {
+    origEl.textContent   = `$${base} USDT`;
+    origEl.style.display = 'inline';
+    discEl.textContent   = `// ${promoCode} applied — ${promoDiscount}% off`;
+    discEl.style.display = 'block';
+  } else {
+    origEl.style.display = 'none';
+    discEl.style.display = 'none';
+  }
+  openModal('modal-buy');
+}
+
+async function submitPayment() {
+  const tx  = document.getElementById('buy-tx').value.trim();
+  const btn = document.getElementById('btn-buy-submit');
+  const msg = document.getElementById('buy-status');
+  if (!tx) { showStatus(msg,'// TX ID required.',true); return; }
+  btn.disabled = true; btn.textContent = '[ SUBMITTING... ]';
+  try {
+    const res  = await fetch(`${API}/payments/submit`, {
+      method:'POST', headers:h(),
+      body: JSON.stringify({ tool_id: activeTool.id, binance_tx_id: tx, promo_code: promoCode || null })
+    });
+    const data = await res.json();
+    if (data.status === 'success') {
+      showStatus(msg,'✓ Submitted! Admin reviews within 24h. Tool unlocks automatically.',false);
+      btn.textContent = '[ SUBMITTED ]';
+      promoDiscount = 0; promoCode = '';
+      document.getElementById('promo-input').value  = '';
+      document.getElementById('promo-status').style.display = 'none';
+    } else {
+      showStatus(msg, data.message||'// Submission failed.', true);
+      btn.disabled = false; btn.textContent = '[ SUBMIT PAYMENT ]';
+    }
+  } catch(e) {
+    showStatus(msg,'// Network error.',true);
+    btn.disabled = false; btn.textContent = '[ SUBMIT PAYMENT ]';
+  }
+}
+
+/* ── FREE FLOW ── */
+function openFree(t) {
+  activeTool = t;
+  document.getElementById('free-name').textContent = t.title;
+  document.getElementById('free-status').style.display = 'none';
+  document.getElementById('btn-free-submit').disabled  = false;
+  document.getElementById('btn-free-submit').textContent = '[ UNLOCK NOW ]';
+  openModal('modal-free');
+}
+
+async function submitFree() {
+  const btn = document.getElementById('btn-free-submit');
+  const msg = document.getElementById('free-status');
+  btn.disabled = true; btn.textContent = '[ UNLOCKING... ]';
+  try {
+    const res  = await fetch(`${API}/payments/submit`, {
+      method:'POST', headers:h(),
+      body: JSON.stringify({ tool_id: activeTool.id, binance_tx_id: 'FREE' })
+    });
+    const data = await res.json();
+    if (data.status === 'success') {
+      showStatus(msg,'✓ Unlocked! Find it in Your Tools.',false);
+      btn.textContent = '[ UNLOCKED ]';
+      activeTool.owned = true;
+      const t = allTools.find(x => x.id === activeTool.id);
+      if (t) t.owned = true;
+      renderTools();
+      loadOwned();
+    } else {
+      showStatus(msg, data.message||'// Failed.',true);
+      btn.disabled = false; btn.textContent = '[ UNLOCK NOW ]';
+    }
+  } catch(e) {
+    showStatus(msg,'// Network error.',true);
+    btn.disabled = false; btn.textContent = '[ UNLOCK NOW ]';
+  }
+}
+
+/* ── ACCESS FLOW ── */
+function openAccess(t) {
+  activeTool = typeof t === 'string' ? JSON.parse(t) : t;
+  document.getElementById('access-name').textContent = activeTool.title;
+  document.getElementById('access-type').textContent = `// ${(activeTool.type||'tool').toUpperCase()} · OWNED`;
+
+  const type = (activeTool.type||'').toLowerCase();
+  const deliveryMap = {
+    apps:       '// This app runs directly inside Vault Labs.\n// Tap launch to open it in a sandboxed environment.',
+    automation: '// This automation runs in Vault Labs.\n// Configure inputs and execute from the lab interface.',
+    scripts:    '// This script is available for download.\n// Run locally or execute inside Vault Labs terminal.',
+    templates:  '// This template is available for download.\n// Click to download your file.',
+    kits:       '// Your starter kit is ready.\n// Access all included items below.',
+    ai:         '// This AI tool runs in the AI Terminal.\n// Launching will open the terminal with this tool pre-loaded.',
+  };
+  document.getElementById('access-info').innerHTML = (deliveryMap[type] || '// Access your tool below.').replace(/\n/g,'<br>');
+
+  const launchLabel = (type === 'scripts' || type === 'templates') ? '[ DOWNLOAD ]' : type === 'ai' ? '[ OPEN IN TERMINAL ]' : '[ LAUNCH IN VAULT LABS ]';
+  document.getElementById('btn-access-go').textContent = launchLabel;
+
+  openModal('modal-access');
+}
+
+function openAccessById(id) {
+  const t = allTools.find(x => String(x.id) === String(id) && x.owned);
+  if (t) openAccess(t);
+}
+
+function launchTool() {
+  if (!activeTool) return;
+  const type = (activeTool.type||'').toLowerCase();
+  if (type === 'ai') {
+    location.href = `vault-ai.html?tool=${activeTool.id}`;
+  } else if (type === 'scripts' || type === 'templates') {
+    if (activeTool.download_url) window.open(activeTool.download_url, '_blank');
+    else toast('// Download link will be available soon.');
+  } else {
+    location.href = `vault-labs.html?tool=${activeTool.id}`;
+  }
+}
+
+/* ── UTILS ── */
+function esc(s) { if(!s)return''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function openModal(id)  { document.getElementById(id).classList.add('active'); }
+function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+function showStatus(el, msg, err) { el.textContent=msg; el.className='status-msg '+(err?'err':'ok'); el.style.display='block'; }
+function toast(msg) {
+  const t = document.createElement('div');
+  t.textContent = msg;
+  Object.assign(t.style,{position:'fixed',bottom:'30px',left:'50%',transform:'translateX(-50%)',background:'var(--bg2)',border:'1px solid var(--accent)',color:'var(--accent)',padding:'8px 20px',fontFamily:'Share Tech Mono,monospace',fontSize:'0.75rem',letterSpacing:'1px',zIndex:'999',pointerEvents:'none'});
+  document.body.appendChild(t); setTimeout(()=>t.remove(),2500);
+}
+
+boot();
+</script>
+</body>
+</html>
