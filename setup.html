@@ -544,6 +544,13 @@
         body: JSON.stringify({ setup_secret: key, username: '__probe__', password: '__probe__' })
       }, 10000);
 
+      if (res.status === 429) {
+        showOutput('lock-output', 'error', 'RATE LIMITED — WAIT 1 HOUR AND RETRY');
+        btn.textContent = '[ UNLOCK SETUP ]';
+        btn.disabled    = false;
+        return;
+      }
+
       const data = await res.json();
 
       if (data.message === 'INVALID_SETUP_SECRET') {
@@ -551,13 +558,6 @@
         const remaining = MAX_UNLOCK_ATTEMPTS - unlockAttempts;
         showOutput('lock-output', 'error',
           `ACCESS DENIED — INVALID SECRET KEY\n> ${remaining} attempt(s) remaining`);
-        btn.textContent = '[ UNLOCK SETUP ]';
-        btn.disabled    = false;
-        return;
-      }
-
-      if (res.status === 429) {
-        showOutput('lock-output', 'error', 'RATE LIMITED — WAIT 1 HOUR AND RETRY');
         btn.textContent = '[ UNLOCK SETUP ]';
         btn.disabled    = false;
         return;
