@@ -429,10 +429,6 @@
         <label class="field-label" for="input-bio">BIO</label>
         <textarea class="field-input" id="input-bio" maxlength="160">Rogue systems analyst. Tools collector. Operates in the deep vault layers.</textarea>
       </div>
-      <div class="field-group">
-        <label class="field-label" for="input-tier">TIER TAG</label>
-        <input class="field-input" id="input-tier" type="text" value="Ω3" maxlength="8" />
-      </div>
       <button class="save-btn" onclick="saveProfile()">SAVE CHANGES</button>
       <div class="save-flash" id="save-flash"></div>
     </div>
@@ -446,7 +442,39 @@
 </main>
 
 <script>
-  /* ── AVATAR COLOR from username hash ── */
+  const API   = 'https://genesis-vault-backend.onrender.com/api';
+  const token = localStorage.getItem('gv_token');
+  if (!token) location.href = 'login.html';
+
+  // ── AUTH-AWARE FETCH ──
+  async function fetchWithAuth(url, options = {}) {
+    options.headers = { 'Authorization': `Bearer ${token}`, ...(options.headers || {}) };
+    const res = await fetch(url, options);
+    if (res.status === 401) {
+      localStorage.removeItem('gv_token');
+      location.href = 'login.html';
+      throw new Error('Session expired');
+    }
+    return res;
+  }
+
+  // ── UTILS ──
+  function esc(s) {
+    if (!s) return '';
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  function ago(d) {
+    if (!d) return '—';
+    const m = Math.floor((Date.now() - new Date(d)) / 60000);
+    if (m < 1)  return 'just now';
+    if (m < 60) return m + 'm ago';
+    const hr = Math.floor(m / 60);
+    if (hr < 24) return hr + 'h ago';
+    return Math.floor(hr / 24) + 'd ago';
+  }
+
+  // ── AVATAR ──
   const PALETTE = ['#00f5c4','#00a8ff','#ff003c','#7b2fff','#ff8c00','#00e5ff'];
   const SYMBOLS = ['◈','⬡','◭','⟁','⬖','◉'];
 
@@ -469,13 +497,12 @@
     const av = document.getElementById('avatar');
     av.style.background = color;
     document.getElementById('av-initials').textContent = initials(username);
-    // subtle symbol overlay
     let sym = av.querySelector('.av-symbol');
-    if (!sym) { sym = document.createElement('span'); sym.className='av-symbol'; av.appendChild(sym); }
+    if (!sym) { sym = document.createElement('span'); sym.className = 'av-symbol'; av.appendChild(sym); }
     sym.textContent = symbol;
   }
 
-  /* ── EDIT TOGGLE ── */
+  // ── EDIT TOGGLE ──
   function toggleEdit() {
     const body = document.getElementById('edit-body');
     const icon = document.getElementById('edit-icon');
@@ -484,62 +511,93 @@
     icon.textContent = open ? '×' : '+';
   }
 
-  /* ── SAVE ── */
-  function saveProfile() {
+  // ── SAVE PROFILE ──
+  async function saveProfile() {
     const name = document.getElementById('input-name').value.trim() || 'AGENT';
     const bio  = document.getElementById('input-bio').value.trim();
-    const tier = document.getElementById('input-tier').value.trim();
+    const btn  = document.querySelector('.save-btn');
+    const fl   = document.getElementById('save-flash');
 
-    document.getElementById('display-username').textContent = name;
-    document.getElementById('display-bio').textContent = bio || '—';
-    document.getElementById('display-tier').textContent = 'TIER · ' + (tier || '—');
-    applyAvatar(name);
+    btn.disabled = true;
+    btn.textContent = 'SAVING...';
 
-    // flash
-    const fl = document.getElementById('save-flash');
-    fl.textContent = '> PROFILE UPDATED ✓';
-    fl.style.opacity = '1';
-    setTimeout(() => { fl.style.opacity = '0'; fl.textContent=''; }, 2500);
-
-    // close panel
-    setTimeout(() => {
-      document.getElementById('edit-body').classList.remove('open');
-      document.getElementById('edit-icon').classList.remove('open');
-      document.getElementById('edit-icon').textContent = '+';
-    }, 800);
+    try {
+      const res  = await fetchWithAuth(`${API}/profile/update`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: name, bio })
+      });
+      const data = await res.json();
+      if (data.status === 'success' || res.ok) {
+        document.getElementById('display-username').textContent = name;
+        document.getElementById('display-bio').textContent = bio || '—';
+        document.getElementById('input-name').value = name;
+        applyAvatar(name);
+        fl.textContent = '> PROFILE UPDATED ✓';
+        fl.style.color  = 'var(--accent)';
+        fl.style.opacity = '1';
+        setTimeout(() => { fl.style.opacity = '0'; fl.textContent = ''; }, 2500);
+        setTimeout(() => {
+          document.getElementById('edit-body').classList.remove('open');
+          document.getElementById('edit-icon').classList.remove('open');
+          document.getElementById('edit-icon').textContent = '+';
+        }, 800);
+      } else {
+        fl.textContent  = '> ERROR: ' + (data.message || 'Save failed.');
+        fl.style.color  = 'var(--accent3)';
+        fl.style.opacity = '1';
+      }
+    } catch(e) {
+      if (e.message !== 'Session expired') {
+        fl.textContent  = '> CONNECTION ERROR.';
+        fl.style.color  = 'var(--accent3)';
+        fl.style.opacity = '1';
+      }
+    }
+    btn.disabled = false;
+    btn.textContent = 'SAVE CHANGES';
   }
 
-  /* ── ACTIVITY ── */
-  const ACTIVITIES = [
-    { type:'tool',  name:'NEURAL_DECRYPTOR v2',    detail:'tool unlocked',    time:'2m ago' },
-    { type:'ai',    name:'AI SYNTHESIS RUN',        detail:'35 tokens used',   time:'17m ago' },
-    { type:'lab',   name:'LAB SESSION #138',        detail:'runtime: 4m 22s',  time:'1h ago' },
-    { type:'tool',  name:'SIGIL_FORGE',             detail:'tool accessed',    time:'3h ago' },
-    { type:'ai',    name:'PATTERN ANALYSIS',        detail:'12 tokens used',   time:'5h ago' },
-    { type:'lab',   name:'LAB SESSION #137',        detail:'runtime: 2m 09s',  time:'1d ago' },
-  ];
+  // ── ACTIVITY ──
+  const TYPE_CLASS = { tool:'act-type-tool', lab:'act-type-lab', ai:'act-type-ai', post:'act-type-tool' };
 
-  const TYPE_CLASS = { tool:'act-type-tool', lab:'act-type-lab', ai:'act-type-ai' };
-
-  function renderActivity() {
+  function renderActivity(items) {
     const list = document.getElementById('activity-list');
-    ACTIVITIES.forEach((a, i) => {
+    if (!items || !items.length) {
+      list.innerHTML = '<div style="color:var(--text-dim);font-family:'Share Tech Mono',monospace;font-size:0.75rem;padding:12px 0;">// No activity yet.</div>';
+      return;
+    }
+    list.innerHTML = '';
+    items.forEach((a, i) => {
       const el = document.createElement('div');
       el.className = 'activity-item';
       el.style.animationDelay = (0.2 + i * 0.07) + 's';
       el.innerHTML = `
-        <div class="act-dot ${TYPE_CLASS[a.type]}"></div>
+        <div class="act-dot ${TYPE_CLASS[a.type] || 'act-type-tool'}"></div>
         <div class="act-info">
-          <span class="act-name">${a.name}</span>
-          <span class="act-detail">${a.detail}</span>
+          <span class="act-name">${esc(a.name)}</span>
+          <span class="act-detail">${esc(a.detail)}</span>
         </div>
-        <span class="act-time">${a.time}</span>
+        <span class="act-time">${esc(a.time || ago(a.created_at))}</span>
       `;
       list.appendChild(el);
     });
   }
 
-  /* ── PARTICLES ── */
+  async function loadActivity() {
+    try {
+      const res  = await fetchWithAuth(`${API}/activity`);
+      const data = await res.json();
+      renderActivity(data.activity || data.items || []);
+    } catch(e) {
+      if (e.message !== 'Session expired') {
+        // endpoint may not exist yet — show empty state
+        renderActivity([]);
+      }
+    }
+  }
+
+  // ── PARTICLES ──
   function buildParticles() {
     const c = document.getElementById('particles');
     const colors = ['var(--accent3)', 'var(--accent2)', 'var(--accent)'];
@@ -557,10 +615,49 @@
     }
   }
 
-  /* ── INIT ── */
-  applyAvatar('VAULTX_77');
-  renderActivity();
-  buildParticles();
+  // ── BOOT ──
+  async function boot() {
+    buildParticles();
+    try {
+      const res  = await fetchWithAuth(`${API}/profile`);
+      const data = await res.json();
+
+      const u   = data.username || data.email?.split('@')[0] || 'OPERATIVE';
+      const bio = data.bio || '';
+      const rank = data.rank || 'Ghost';
+      const joinDate = data.created_at
+        ? new Date(data.created_at).toISOString().slice(0,10).replace(/-/g,'.')
+        : '—';
+
+      // Identity card
+      document.getElementById('display-username').textContent = u.toUpperCase();
+      document.getElementById('display-bio').textContent      = bio || '—';
+      document.getElementById('display-tier').textContent     = 'RANK · ' + rank.toUpperCase();
+      document.getElementById('join-date').textContent        = joinDate;
+
+      // Stats
+      document.getElementById('stat-tools').textContent = data.tool_count        || 0;
+      document.getElementById('stat-lab').textContent   = data.missions_completed || 0;
+      document.getElementById('stat-ai').textContent    = data.ai_queries         || 0;
+
+      // Edit form pre-fill
+      document.getElementById('input-name').value = u;
+      document.getElementById('input-bio').value  = bio;
+
+      applyAvatar(u);
+    } catch(e) {
+      if (e.message !== 'Session expired') {
+        // fallback — show cached username if available
+        const u = localStorage.getItem('gv_username') || 'OPERATIVE';
+        document.getElementById('display-username').textContent = u.toUpperCase();
+        document.getElementById('input-name').value = u;
+        applyAvatar(u);
+      }
+    }
+    loadActivity();
+  }
+
+  boot();
 </script>
 </body>
 </html>
