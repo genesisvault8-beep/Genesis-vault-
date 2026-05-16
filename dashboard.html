@@ -1021,7 +1021,7 @@ function calcVaultAge(createdAt) {
 /* ── BOOT ──────────────────────────────────────────────────────────── */
 async function boot() {
   try {
-    const res  = await fetchWithAuth(`${API}/profile`, { headers: h() });
+    const res  = await fetchWithAuth(`${API}/profile`);
     const data = await res.json();
     if (data.status !== 'success') { logout(); return; }
 
@@ -1091,7 +1091,7 @@ function closeSlideMenu() {
 async function loadSlideNotifs() {
   const list = document.getElementById('slide-notif-list');
   try {
-    const res  = await fetchWithAuth(`${API}/notifications`, { headers: h() });
+    const res  = await fetchWithAuth(`${API}/notifications`);
     const data = await res.json();
     if (!data.notifications?.length) {
       list.innerHTML = `<div style="padding:20px;text-align:center;color:var(--text-dim);font-family:'Share Tech Mono',monospace;font-size:0.8rem;">// No notifications yet.</div>`;
@@ -1152,7 +1152,7 @@ async function loadFeed() {
   c.innerHTML = '<div class="loading"><span class="spinner"></span>Loading feed...</div>';
   try {
     const url  = feedFilter ? `${API}/posts?category=${encodeURIComponent(feedFilter)}` : `${API}/posts`;
-    const res  = await fetch(url, { headers: h() });
+    const res  = await fetchWithAuth(url);
     const data = await res.json();
     if (!data.posts?.length) {
       c.innerHTML = '<div class="empty">// No posts yet. Be the first.</div>'; return;
@@ -1208,7 +1208,7 @@ async function createPost() {
   if (!content) return;
   try {
     const res  = await fetchWithAuth(`${API}/posts`, {
-      method:'POST', headers:h(),
+      method:'POST',
       body: JSON.stringify({ content, category: postCategory, code_content: code || null })
     });
     const data = await res.json();
@@ -1218,13 +1218,15 @@ async function createPost() {
       if (codeInputOpen) toggleCodeInput();
       loadFeed();
     }
-  } catch(e) {}
+  } catch(e) {
+    toast('// Failed to post. Try again.');
+  }
 }
 
 async function reactPost(postId, emoji, btn) {
   try {
     const res  = await fetchWithAuth(`${API}/posts/${postId}/react`, {
-      method:'POST', headers:h(), body: JSON.stringify({ emoji })
+      method:'POST', body: JSON.stringify({ emoji })
     });
     const data = await res.json();
     if (data.status !== 'success') return;
@@ -1247,7 +1249,7 @@ async function loadReplies(postId) {
   const list = document.getElementById(`rlist-${postId}`);
   list.innerHTML = '<div class="loading"><span class="spinner"></span>Loading...</div>';
   try {
-    const res  = await fetchWithAuth(`${API}/posts/${postId}/replies`, { headers:h() });
+    const res  = await fetchWithAuth(`${API}/posts/${postId}/replies`);
     const data = await res.json();
     if (!data.replies?.length) {
       list.innerHTML = `<div style="color:var(--text-dim);font-family:'Share Tech Mono',monospace;font-size:0.75rem;padding:8px 0;">// No replies yet.</div>`;
@@ -1270,7 +1272,7 @@ async function sendReply(postId) {
   if (!content) return;
   try {
     const res  = await fetchWithAuth(`${API}/posts/${postId}/reply`, {
-      method:'POST', headers:h(), body: JSON.stringify({ content })
+      method:'POST', body: JSON.stringify({ content })
     });
     const data = await res.json();
     if (data.status === 'success') {
@@ -1287,7 +1289,7 @@ async function sendReply(postId) {
 
 async function flagPost(postId) {
   try {
-    await fetchWithAuth(`${API}/posts/${postId}/flag`, { method:'POST', headers:h() });
+    await fetchWithAuth(`${API}/posts/${postId}/flag`, { method:'POST'});
     toast('Post flagged for review.');
   } catch(e) {}
 }
@@ -1298,7 +1300,7 @@ async function loadMarketplace() {
   if (!c) return;
   c.innerHTML = '<div class="loading"><span class="spinner"></span>Loading...</div>';
   try {
-    const res  = await fetchWithAuth(`${API}/marketplace?owned=true`, { headers:h() });
+    const res  = await fetchWithAuth(`${API}/marketplace?owned=true`);
     const data = await res.json();
     const owned = (data.tools||[]).filter(t => t.owned);
     if (!owned.length) {
@@ -1341,7 +1343,7 @@ async function submitPayment() {
   btn.disabled = true; btn.textContent = '[ SUBMITTING... ]'; msg.style.display = 'none';
   try {
     const res  = await fetchWithAuth(`${API}/payments/submit`, {
-      method:'POST', headers:h(),
+      method:'POST',
       body: JSON.stringify({ tool_id: buyTarget.id, binance_tx_id: tx || 'FREE' })
     });
     const data = await res.json();
@@ -1368,7 +1370,7 @@ async function loadMessages() {
 
   try {
     // Load broadcasts
-    const br = await fetchWithAuth(`${API}/messages/broadcasts`, { headers:h() });
+    const br = await fetchWithAuth(`${API}/messages/broadcasts`);
     const bd = await br.json();
     if (bd.broadcasts?.length) {
       bc.innerHTML = `<p class="section-title">// Admin Broadcasts</p>` +
@@ -1383,7 +1385,7 @@ async function loadMessages() {
 
   try {
     // Load DM threads
-    const res  = await fetchWithAuth(`${API}/messages/threads`, { headers:h() });
+    const res  = await fetchWithAuth(`${API}/messages/threads`);
     const data = await res.json();
     if (!data.threads?.length) {
       tc.innerHTML = `<div class="empty">// No messages yet.<br><br>Tap [ + MESSAGE ADMIN ] to start.</div>`;
@@ -1417,7 +1419,7 @@ async function submitNewMessage() {
   btn.disabled = true; btn.textContent = '[ SENDING... ]';
   try {
     const res  = await fetchWithAuth(`${API}/messages/send`, {
-      method:'POST', headers:h(),
+      method:'POST',
       body: JSON.stringify({ subject: subject || 'General', message: body })
     });
     const data = await res.json();
@@ -1448,7 +1450,7 @@ async function openConversation(threadId, subject) {
   bubbles.innerHTML = '<div class="loading"><span class="spinner"></span>Loading...</div>';
 
   try {
-    const res  = await fetchWithAuth(`${API}/messages/threads/${threadId}`, { headers:h() });
+    const res  = await fetchWithAuth(`${API}/messages/threads/${threadId}`);
     const data = await res.json();
     if (!data.messages?.length) {
       bubbles.innerHTML = `<div class="empty">// No messages in this thread.</div>`; return;
@@ -1472,7 +1474,7 @@ async function sendMessage() {
   input.value = '';
   try {
     const res  = await fetchWithAuth(`${API}/messages/threads/${activeThreadId}/reply`, {
-      method:'POST', headers:h(), body: JSON.stringify({ message })
+      method:'POST', body: JSON.stringify({ message })
     });
     const data = await res.json();
     if (data.status === 'success') {
@@ -1496,7 +1498,7 @@ function closeConversation() {
 /* ── PROFILE ───────────────────────────────────────────────────────── */
 async function loadProfile() {
   try {
-    const res  = await fetchWithAuth(`${API}/profile`, { headers:h() });
+    const res  = await fetchWithAuth(`${API}/profile`);
     const data = await res.json();
     const u    = data.username || data.email?.split('@')[0] || 'Operative';
     const age  = calcVaultAge(data.created_at);
@@ -1527,7 +1529,7 @@ async function loadProfile() {
 async function loadNotifications() {
   const nc = document.getElementById('notif-container');
   try {
-    const res  = await fetchWithAuth(`${API}/notifications`, { headers:h() });
+    const res  = await fetchWithAuth(`${API}/notifications`);
     const data = await res.json();
     if (!data.notifications?.length) {
       nc.innerHTML = '<div class="empty">// No notifications yet.</div>'; return;
@@ -1544,7 +1546,7 @@ async function loadNotifications() {
 
 async function markAllRead() {
   try {
-    await fetchWithAuth(`${API}/notifications/read-all`, { method:'POST', headers:h() });
+    await fetchWithAuth(`${API}/notifications/read-all`, { method:'POST'});
     document.getElementById('notif-count-badge').style.display = 'none';
     toast('All notifications marked read.');
     loadNotifications();
@@ -1560,7 +1562,7 @@ async function callAI(prompt, btnId, outId, cpyId, label) {
   out.style.display = 'none'; cpy.style.display = 'none';
   try {
     const res  = await fetchWithAuth(`${API}/vault-ai`, {
-      method:'POST', headers:h(),
+      method:'POST',
       body: JSON.stringify({ message:prompt })
     });
     const data = await res.json();
