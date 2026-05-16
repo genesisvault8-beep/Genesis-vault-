@@ -721,17 +721,16 @@
 
 <script>
   const API = 'https://genesis-vault-backend.onrender.com/api';
-  let token = localStorage.getItem('gv_admin_token');
   let adminId = localStorage.getItem('gv_admin_id');
   let promoteUserId = null;
   let revokeTargetId = null;
   let revokeTargetName = '';
 
   // ── Auth guard ──────────────────────────────────────────────────────
-  if (!token) window.location.href = 'admin-login.html';
+  if (!adminId) window.location.href = 'admin-login.html';
 
   function authHeaders() {
-    return { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` };
+    return { 'Content-Type': 'application/json' };
   }
 
   // ── Wake-up overlay helpers ──────────────────────────────────────────
@@ -794,6 +793,7 @@
         const res = await fetch(url, {
           ...options,
           headers: authHeaders(),
+          credentials: 'include',
           signal: AbortSignal.timeout(15000)
         });
 
@@ -807,7 +807,6 @@
           }
           // All retries exhausted — real 401, logout
           hideAdminWakeup();
-          localStorage.removeItem('gv_admin_token');
           localStorage.removeItem('gv_admin_id');
           window.location.href = 'admin-login.html';
           return null;
@@ -835,8 +834,8 @@
     return null;
   }
 
-  function logout() {
-    localStorage.removeItem('gv_admin_token');
+  async function logout() {
+    await fetch(`${API}/admin/logout`, { method: 'POST', credentials: 'include' });
     localStorage.removeItem('gv_admin_id');
     window.location.href = 'admin-login.html';
   }
@@ -1474,7 +1473,7 @@
     document.getElementById('modal-course-view').style.display = 'block';
     try {
       const res = await fetch(`${API}/courses/${id}`, {
-        headers: { 'Authorization': `Bearer ${localStorage.getItem('gv_admin_token')}` }
+        credentials: 'include'
       });
       const d = await res.json();
       const raw = d.content || d.course?.content || 'No content available.';
@@ -1570,6 +1569,7 @@
     try {
       const res = await fetch(`${API}/admin/dashboard`, {
         headers: authHeaders(),
+        credentials: 'include',
         signal: AbortSignal.timeout(15000)
       });
 
@@ -1579,11 +1579,11 @@
         await new Promise(r => setTimeout(r, 8000));
         const retry = await fetch(`${API}/admin/dashboard`, {
           headers: authHeaders(),
+          credentials: 'include',
           signal: AbortSignal.timeout(15000)
         });
         if (retry.status === 401) {
           hideAdminWakeup();
-          localStorage.removeItem('gv_admin_token');
           localStorage.removeItem('gv_admin_id');
           window.location.href = 'admin-login.html';
           return;
