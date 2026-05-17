@@ -341,23 +341,61 @@
       </div>
     </div>
 
-    <div class="modal-row">
-      <div>
-        <label>DELIVERY TYPE</label>
-        <select id="t-delivery">
-          <option value="download">DOWNLOAD</option>
-          <option value="vault labs">VAULT LABS</option>
-          <option value="terminal">TERMINAL</option>
-        </select>
-      </div>
-      <div>
-        <label>FILE TYPE / FORMAT</label>
-        <input type="text" id="t-filetype" placeholder=".zip, .py, app...">
-      </div>
+    <div class="divider"></div>
+    <!-- ══ RUN TYPE ══ -->
+    <label>RUN TYPE</label>
+    <select id="t-run-type" onchange="onRunTypeChange()">
+      <option value="security">SECURITY (pre-installed binary)</option>
+      <option value="automation">AUTOMATION (Python / Bash script)</option>
+      <option value="download">DOWNLOAD / EXTERNAL LINK</option>
+    </select>
+
+    <!-- Security fields -->
+    <div id="security-fields">
+      <label>COMMAND TEMPLATE</label>
+      <input type="text" id="t-cmd" placeholder="nmap -F {target}  or  whois {domain}">
+      <p style="font-family:'Share Tech Mono',monospace;font-size:0.65rem;color:var(--text-dim);margin-top:-10px;margin-bottom:14px;letter-spacing:1px;">// Use {param_name} placeholders matching your params_schema below</p>
     </div>
 
-    <label>FILE URL or APP ID</label>
-    <input type="text" id="t-fileurl" placeholder="https://... or app-id">
+    <!-- Automation fields -->
+    <div id="automation-fields" style="display:none;">
+      <label>LANGUAGE</label>
+      <select id="t-language">
+        <option value="python">PYTHON</option>
+        <option value="bash">BASH</option>
+      </select>
+      <label>SCRIPT CONTENT</label>
+      <textarea id="t-script" rows="10" placeholder="import sys, json&#10;params = json.loads(sys.argv[1])&#10;target = params.get('target', '')&#10;print(f'Processing: {target}')"></textarea>
+      <p style="font-family:'Share Tech Mono',monospace;font-size:0.65rem;color:var(--text-dim);margin-top:-10px;margin-bottom:14px;letter-spacing:1px;">// Python: read params via json.loads(sys.argv[1]) · Bash: use $PARAM_NAME env vars</p>
+    </div>
+
+    <!-- Download/External fields -->
+    <div id="download-fields" style="display:none;">
+      <div class="modal-row">
+        <div>
+          <label>DELIVERY TYPE</label>
+          <select id="t-delivery">
+            <option value="download">DOWNLOAD</option>
+            <option value="vault labs">VAULT LABS</option>
+            <option value="terminal">TERMINAL</option>
+          </select>
+        </div>
+        <div>
+          <label>FILE TYPE / FORMAT</label>
+          <input type="text" id="t-filetype" placeholder=".zip, .py, app...">
+        </div>
+      </div>
+      <label>FILE URL or APP ID</label>
+      <input type="text" id="t-fileurl" placeholder="https://... or app-id">
+    </div>
+
+    <div class="divider"></div>
+    <!-- ══ PARAMS SCHEMA ══ -->
+    <label>PARAMS SCHEMA (JSON)</label>
+    <textarea id="t-params-schema" rows="4" placeholder='[{"name":"target","type":"text","label":"Target Domain","placeholder":"example.com","hint":"Enter domain or IP"}]'></textarea>
+    <p style="font-family:'Share Tech Mono',monospace;font-size:0.65rem;color:var(--text-dim);margin-top:-10px;margin-bottom:14px;letter-spacing:1px;">// JSON array of input fields. type: text | number | textarea | select. Leave blank for default "target" field.</p>
+
+    <div class="divider"></div>
 
     <div class="toggle-field">
       <div class="toggle-track" id="toggle-kit" onclick="toggleField('kit')"></div>
@@ -680,6 +718,13 @@ function openAddTool() {
   openModal('modal-tool');
 }
 
+function onRunTypeChange() {
+  const v = document.getElementById('t-run-type').value;
+  document.getElementById('security-fields').style.display   = v === 'security'   ? 'block' : 'none';
+  document.getElementById('automation-fields').style.display = v === 'automation' ? 'block' : 'none';
+  document.getElementById('download-fields').style.display   = v === 'download'   ? 'block' : 'none';
+}
+
 function openEditTool(id) {
   const t = allTools.find(x => String(x.id) === String(id));
   if (!t) return;
@@ -690,9 +735,31 @@ function openEditTool(id) {
   document.getElementById('t-desc').value     = t.description || '';
   document.getElementById('t-cat').value      = t.type || 'automation';
   document.getElementById('t-price').value    = t.price || 0;
-  document.getElementById('t-delivery').value = t.delivery || 'download';
-  document.getElementById('t-filetype').value = t.file_type || '';
-  document.getElementById('t-fileurl').value  = t.download_url || t.app_id || '';
+
+  // Run type
+  const runType = t.tool_run_type || (t.download_url ? 'download' : 'security');
+  document.getElementById('t-run-type').value = runType;
+  onRunTypeChange();
+
+  // Security fields
+  document.getElementById('t-cmd').value      = t.command_template || '';
+
+  // Automation fields
+  document.getElementById('t-language').value = t.language || 'python';
+  document.getElementById('t-script').value   = t.script_content || '';
+
+  // Download fields
+  const dl = document.getElementById('t-delivery');
+  if (dl) dl.value = t.delivery || 'download';
+  const ft = document.getElementById('t-filetype');
+  if (ft) ft.value = t.file_type || '';
+  const fu = document.getElementById('t-fileurl');
+  if (fu) fu.value = t.download_url || t.app_id || '';
+
+  // Params schema
+  const ps = document.getElementById('t-params-schema');
+  if (ps) ps.value = t.params_schema ? (typeof t.params_schema === 'string' ? t.params_schema : JSON.stringify(t.params_schema, null, 2)) : '';
+
   setToggle('kit',       !!(t.is_kit));
   setToggle('featured',  !!(t.is_featured));
   setToggle('new-badge', !!(t.is_new));
@@ -737,18 +804,34 @@ async function confirmDelete() {
 async function submitTool() {
   const btn = document.getElementById('btn-tool-submit');
   const msg = document.getElementById('tool-status');
+  const runType = document.getElementById('t-run-type').value;
+  let paramsSchemaVal = null;
+  try {
+    const raw = document.getElementById('t-params-schema').value.trim();
+    if (raw) paramsSchemaVal = JSON.parse(raw);
+  } catch(e) {
+    showStatus(document.getElementById('tool-status'), '// Invalid JSON in params schema.', true);
+    btn.disabled = false; btn.textContent = editingToolId ? '[ UPDATE TOOL ]' : '[ SAVE TOOL ]';
+    return;
+  }
+  const getVal = id => { const el = document.getElementById(id); return el ? el.value.trim() : ''; };
   const payload = {
-    title:        document.getElementById('t-title').value.trim(),
-    description:  document.getElementById('t-desc').value.trim(),
-    type:         document.getElementById('t-cat').value,
-    price:        parseFloat(document.getElementById('t-price').value) || 0,
-    delivery:     document.getElementById('t-delivery').value,
-    file_type:    document.getElementById('t-filetype').value.trim(),
-    download_url: document.getElementById('t-fileurl').value.trim(),
-    is_kit:       toggleStates['kit'],
-    kit_items:    toggleStates['kit'] ? kitFields.filter(Boolean) : [],
-    is_featured:  toggleStates['featured'],
-    is_new:       toggleStates['new-badge'],
+    title:            document.getElementById('t-title').value.trim(),
+    description:      document.getElementById('t-desc').value.trim(),
+    type:             document.getElementById('t-cat').value,
+    price:            parseFloat(document.getElementById('t-price').value) || 0,
+    tool_run_type:    runType,
+    command_template: runType === 'security'   ? getVal('t-cmd') : null,
+    language:         runType === 'automation' ? getVal('t-language') : null,
+    script_content:   runType === 'automation' ? document.getElementById('t-script').value : null,
+    delivery:         runType === 'download'   ? getVal('t-delivery') : null,
+    file_type:        runType === 'download'   ? getVal('t-filetype') : null,
+    download_url:     runType === 'download'   ? getVal('t-fileurl') : null,
+    params_schema:    paramsSchemaVal,
+    is_kit:           toggleStates['kit'],
+    kit_items:        toggleStates['kit'] ? kitFields.filter(Boolean) : [],
+    is_featured:      toggleStates['featured'],
+    is_new:           toggleStates['new-badge'],
   };
   if (!payload.title) { showStatus(msg,'// Title required.',true); return; }
   btn.disabled = true; btn.textContent = '[ SAVING... ]';
@@ -897,7 +980,11 @@ function renderRevenue() {
 
 /* ═══════════════════════════ UTILS ═══════════════════════════ */
 function clearToolForm() {
-  ['t-title','t-desc','t-filetype','t-fileurl'].forEach(id => document.getElementById(id).value = '');
+  ['t-title','t-desc','t-filetype','t-fileurl','t-cmd','t-script','t-params-schema'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.value = '';
+  });
+  const rt = document.getElementById('t-run-type');
+  if (rt) { rt.value = 'security'; onRunTypeChange(); }
   document.getElementById('t-price').value    = 0;
   document.getElementById('t-cat').value      = 'automation';
   document.getElementById('t-delivery').value = 'download';
