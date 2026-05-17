@@ -506,25 +506,25 @@
   </div>
 </main>
 
-<!-- PAYMENT MODAL -->
+<!-- VC UNLOCK MODAL -->
 <div class="modal" id="payment-modal">
   <div class="modal-box">
     <h3>// UNLOCK COURSE</h3>
     <p id="pay-course-title" style="color:white;font-weight:700;letter-spacing:1px;margin-bottom:12px;"></p>
-    <div class="payment-amount" id="pay-amount">$0 USDT</div>
 
-    <div class="step">1. Send exact USDT (TRC20) amount to this address:</div>
-    <div class="wallet-box">TAFucQDbeYCMWu1dWkaAMTbmSjvAGyzoo9</div>
+    <div class="payment-amount" id="pay-amount" style="font-size:1.4rem;color:#f5c400;">⬡ 0 VC</div>
 
-    <div class="step">2. Copy your Transaction Hash (TX ID) from Binance</div>
-    <div class="step">3. Paste it below and submit</div>
+    <div class="step" style="border-left-color:#f5c400;margin-bottom:8px;">
+      Balance: <span id="modal-vc-balance" style="color:#f5c400;font-family:'Share Tech Mono',monospace;">— VC</span>
+    </div>
+    <div class="step" style="border-left-color:var(--accent);">Unlocks <strong>instantly</strong> — no waiting for admin</div>
 
-    <input class="modal-input" id="tx-hash" placeholder="Paste TX hash here...">
-    <button class="btn-pay" onclick="submitPayment()">[ SUBMIT PAYMENT ]</button>
+    <div id="pay-status" style="display:none;padding:10px 14px;font-family:'Share Tech Mono',monospace;font-size:0.75rem;letter-spacing:1px;margin:10px 0;"></div>
+    <button class="btn-pay" id="btn-pay" onclick="submitPayment()">[ UNLOCK WITH VC ]</button>
     <button class="btn-cancel" onclick="closePayment()">Cancel</button>
 
-    <p style="font-family:'Share Tech Mono',monospace;font-size:0.65rem;color:var(--text-dim);margin-top:12px;text-align:center;">
-      // Admin will verify and unlock within 24 hours
+    <p style="font-family:'Share Tech Mono',monospace;font-size:0.62rem;color:var(--text-dim);margin-top:12px;text-align:center;">
+      // Need more VC? <a href="buy-vc.html" style="color:#f5c400;text-decoration:none;">[ BUY VC ]</a>
     </p>
   </div>
 </div>
@@ -535,6 +535,7 @@ let token = localStorage.getItem('gv_token');
 let allCourses = [];
 let currentTab = 'all';
 let selectedCourse = null;
+let vcBalance = 0;
 
 if (!token) window.location.href = 'login.html';
 
@@ -589,12 +590,13 @@ function renderCourses() {
   }
 
   grid.innerHTML = filtered.map(c => {
-    const isFree    = c.is_free || c.price === 0;
+    const isFree      = c.is_free || c.price === 0;
+    const isVCLocked  = c.vc_locked && c.vc_cost > 0;
     const isPurchased = c.is_purchased;
 
     let footerBadge, footerAction, clickAction;
 
-    if (isFree) {
+    if (isFree && !isVCLocked) {
       footerBadge  = '<span class="free-badge">FREE</span>';
       footerAction = '<span style="color:var(--accent);font-size:0.7rem;font-family:Share Tech Mono,monospace;">READ →</span>';
       clickAction  = `openCourse(${c.id})`;
@@ -602,8 +604,12 @@ function renderCourses() {
       footerBadge  = '<span class="free-badge">UNLOCKED</span>';
       footerAction = '<span style="color:var(--accent);font-size:0.7rem;font-family:Share Tech Mono,monospace;">READ →</span>';
       clickAction  = `openCourse(${c.id})`;
+    } else if (isVCLocked) {
+      footerBadge  = `<span class="price-badge" style="border-color:#f5c400;color:#f5c400;">⬡ ${c.vc_cost} VC</span>`;
+      footerAction = '<span style="color:#f5c400;font-size:0.9rem;">🔒</span>';
+      clickAction  = `openPayment(${c.id})`;
     } else {
-      footerBadge  = `<span class="price-badge">🔒 $${c.price} USDT</span>`;
+      footerBadge  = `<span class="price-badge">⬡ ${c.vc_cost || '?'} VC</span>`;
       footerAction = '<span class="lock-icon">🔒</span>';
       clickAction  = `openPayment(${c.id})`;
     }
@@ -635,7 +641,7 @@ async function openCourse(id) {
     const data = await res.json();
     if (data.status === 'error' && data.message === 'NOT_PURCHASED') {
       document.getElementById('reader-content').innerHTML =
-        '<div class="empty">// Access denied. Purchase this course to unlock.</div>';
+        '<div class="empty">// Access denied. Unlock this course to read it.</div>';
       return;
     }
     const raw = data.content || data.course?.content || 'No content available.';
@@ -654,9 +660,25 @@ function openPayment(id) {
   const course = allCourses.find(c => c.id == id);
   if (!course) return;
   selectedCourse = course;
+  const vcCost = course.vc_cost || 0;
   document.getElementById('pay-course-title').textContent = course.title;
-  document.getElementById('pay-amount').textContent = `$${course.price} USDT`;
-  document.getElementById('tx-hash').value = '';
+  document.getElementById('pay-amount').textContent = `⬡ ${vcCost} VC`;
+  document.getElementById('modal-vc-balance').textContent = `⬡ ${vcBalance.toLocaleString()} VC`;
+
+  const payStatus = document.getElementById('pay-status');
+  payStatus.style.display = 'none';
+
+  const btn = document.getElementById('btn-pay');
+  btn.disabled = false;
+  btn.textContent = '[ UNLOCK WITH VC ]';
+
+  // Warn if balance insufficient
+  if (vcBalance < vcCost) {
+    payStatus.style.cssText = 'display:block;border:1px solid var(--accent3);color:var(--accent3);background:rgba(255,0,60,0.05);padding:10px 14px;font-family:Share Tech Mono,monospace;font-size:0.75rem;margin:10px 0;';
+    payStatus.textContent = `// Not enough VC. You have ${vcBalance} VC, need ${vcCost} VC.`;
+    btn.disabled = true;
+  }
+
   document.getElementById('payment-modal').classList.add('active');
 }
 
@@ -666,33 +688,56 @@ function closePayment() {
 }
 
 async function submitPayment() {
-  const txHash = document.getElementById('tx-hash').value.trim();
-  const btn    = document.querySelector('.btn-pay');
-  if (!txHash) { toast('Paste your TX hash first.', 'var(--accent3)'); return; }
   if (!selectedCourse) return;
+  const btn    = document.getElementById('btn-pay');
+  const status = document.getElementById('pay-status');
 
   btn.disabled    = true;
-  btn.textContent = '[ SUBMITTING... ]';
+  btn.textContent = '[ UNLOCKING... ]';
 
   try {
-    const res  = await fetch(`${API}/courses/${selectedCourse.id}/purchase`, {
+    const res  = await fetch(`${API}/courses/${selectedCourse.id}/unlock`, {
       method:  'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-      body:    JSON.stringify({ tx_hash: txHash })
+      body:    JSON.stringify({})
     });
     const data = await res.json();
+
     if (data.status === 'success') {
+      vcBalance = data.new_balance ?? vcBalance;
+      // Mark course as purchased locally
+      const c = allCourses.find(x => x.id == selectedCourse.id);
+      if (c) c.is_purchased = true;
       closePayment();
-      toast('✓ Payment submitted! Admin verifies within 24h.');
-    } else {
-      toast(data.message || 'Failed. Try again.', 'var(--accent3)');
+      renderCourses();
+      toast(`✓ Course unlocked! Balance: ⬡ ${vcBalance} VC`, '#f5c400');
+    } else if (data.message === 'INSUFFICIENT_VC') {
+      status.style.cssText = 'display:block;border:1px solid var(--accent3);color:var(--accent3);background:rgba(255,0,60,0.05);padding:10px 14px;font-family:Share Tech Mono,monospace;font-size:0.75rem;margin:10px 0;';
+      status.textContent = `// Not enough VC. Need ${data.required} VC, have ${data.balance} VC.`;
       btn.disabled    = false;
-      btn.textContent = '[ SUBMIT PAYMENT ]';
+      btn.textContent = '[ UNLOCK WITH VC ]';
+    } else {
+      status.style.cssText = 'display:block;border:1px solid var(--accent3);color:var(--accent3);background:rgba(255,0,60,0.05);padding:10px 14px;font-family:Share Tech Mono,monospace;font-size:0.75rem;margin:10px 0;';
+      status.textContent = data.message || '// Failed. Try again.';
+      btn.disabled    = false;
+      btn.textContent = '[ UNLOCK WITH VC ]';
     }
   } catch(e) {
     toast('Network error. Try again.', 'var(--accent3)');
     btn.disabled    = false;
-    btn.textContent = '[ SUBMIT PAYMENT ]';
+    btn.textContent = '[ UNLOCK WITH VC ]';
+  }
+}
+
+async function loadBalance() {
+  try {
+    const res  = await fetch(`${API}/vc/balance`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    const data = await res.json();
+    vcBalance = data.balance ?? 0;
+  } catch(e) {
+    vcBalance = parseInt(localStorage.getItem('gv_vc') || '0');
   }
 }
 
@@ -714,7 +759,11 @@ async function loadCourses() {
   }
 }
 
-loadCourses();
+async function init() {
+  await Promise.all([loadBalance(), loadCourses()]);
+}
+
+init();
 </script>
 </body>
 </html>
