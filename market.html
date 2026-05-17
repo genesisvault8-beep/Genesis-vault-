@@ -629,7 +629,14 @@ function openAccess(t) {
   };
   document.getElementById('access-info').innerHTML = (deliveryMap[type] || '// Access your tool below.').replace(/\n/g,'<br>');
 
-  const launchLabel = (type === 'scripts' || type === 'templates') ? '[ DOWNLOAD ]' : type === 'ai' ? '[ OPEN IN TERMINAL ]' : '[ LAUNCH IN VAULT LABS ]';
+  const runType2 = (activeTool.tool_run_type||'').toLowerCase();
+  const launchLabel = (type === 'scripts' || type === 'templates' || runType2 === 'download')
+    ? '[ DOWNLOAD ]'
+    : type === 'ai'
+    ? '[ OPEN IN TERMINAL ]'
+    : (runType2 === 'automation' || runType2 === 'security')
+    ? '[ RUN TOOL ]'
+    : '[ LAUNCH IN VAULT LABS ]';
   document.getElementById('btn-access-go').textContent = launchLabel;
 
   openModal('modal-access');
@@ -642,12 +649,28 @@ function openAccessById(id) {
 
 function launchTool() {
   if (!activeTool) return;
-  const type = (activeTool.type||'').toLowerCase();
+  const type    = (activeTool.type||'').toLowerCase();
+  const runType = (activeTool.tool_run_type||'').toLowerCase();
+
+  // Runnable tools (automation or security with script/command) → tool-runner.html
+  if (runType === 'automation' || runType === 'security') {
+    location.href = `tool-runner.html?tool_id=${activeTool.id}`;
+    return;
+  }
+  // AI tools → AI terminal
   if (type === 'ai') {
     location.href = `vault-ai.html?tool=${activeTool.id}`;
-  } else if (type === 'scripts' || type === 'templates') {
+    return;
+  }
+  // Downloadable tools
+  if (type === 'scripts' || type === 'templates' || runType === 'download') {
     if (activeTool.download_url) window.open(activeTool.download_url, '_blank');
     else toast('// Download link will be available soon.');
+    return;
+  }
+  // Default → tool-runner if no download_url, else vault-labs
+  if (activeTool.script_content || activeTool.command_template) {
+    location.href = `tool-runner.html?tool_id=${activeTool.id}`;
   } else {
     location.href = `vault-labs.html?tool=${activeTool.id}`;
   }
