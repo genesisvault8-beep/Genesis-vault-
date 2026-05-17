@@ -1274,7 +1274,7 @@
     c.innerHTML = courses.map(course => `
       <div class="item-card" id="course-${course.id}">
         <div class="item-meta">${course.category} · ${course.is_free ? 'FREE' : '$' + course.price + ' USDT'}
-          ${course.vc_locked ? `· <span style="color:var(--accent4);">🔒 ${course.vc_cost} VC</span>` : ''}
+          ${course.vc_locked ? `· <span style="color:var(--accent4);">🔒 ${course.vc_cost || 0} VC</span>` : ''}
         </div>
         <h4>${course.title}</h4>
         <p>${course.description || ''}</p>
@@ -1312,10 +1312,10 @@
     document.getElementById('c-content').value  = course.content || '';
     document.getElementById('c-category').value = course.category || 'Beginner';
     document.getElementById('c-price').value    = course.price || 0;
-    const vcLocked = course.vc_locked || false;
+    const vcLocked = course.vc_locked ?? false;
     document.getElementById('c-vc-lock').checked = vcLocked;
     document.getElementById('vc-lock-input').style.display = vcLocked ? 'flex' : 'none';
-    if (vcLocked) document.getElementById('c-vc-cost').value = course.vc_cost || '';
+    if (vcLocked) document.getElementById('c-vc-cost').value = course.vc_cost ?? '';
     // Swap publish button to update mode
     const btn = document.querySelector('[onclick="postCourse()"]');
     btn.textContent = '[ UPDATE COURSE ]';
