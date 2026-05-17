@@ -7,657 +7,404 @@
 <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg:      #020608;
-    --bg2:     #060d10;
-    --accent:  #00f5c4;
-    --accent2: #00a8ff;
-    --accent3: #ff003c;
-    --text:    #c8e6f0;
-    --text-dim:#4a7a8a;
-    --border:  #0f2a35;
-
-    /* Avatar palette — hash picks one */
-    --av0: #00f5c4;
-    --av1: #00a8ff;
-    --av2: #ff003c;
-    --av3: #7b2fff;
-    --av4: #ff8c00;
-    --av5: #00e5ff;
+    --bg:       #020608;
+    --bg2:      #060d10;
+    --bg3:      #0a1520;
+    --accent:   #00f5c4;
+    --accent2:  #00a8ff;
+    --accent3:  #ff003c;
+    --text:     #c8e6f0;
+    --text-dim: #4a7a8a;
+    --border:   #0f2a35;
+    --glow:     0 0 20px rgba(0,245,196,0.2);
   }
-
   * { margin:0; padding:0; box-sizing:border-box; }
-
-  html, body {
-    min-height:100%;
-    background:var(--bg);
-    color:var(--text);
-    font-family:'Rajdhani', sans-serif;
+  body {
+    background:var(--bg); color:var(--text);
+    font-family:'Rajdhani',sans-serif; min-height:100vh;
   }
-
-  /* Grid bg */
   body::before {
     content:''; position:fixed; inset:0;
     background-image:
       linear-gradient(rgba(0,245,196,0.02) 1px,transparent 1px),
       linear-gradient(90deg,rgba(0,245,196,0.02) 1px,transparent 1px);
-    background-size:40px 40px;
-    pointer-events:none; z-index:0;
-  }
-
-  /* Scanlines */
-  body::after {
-    content:''; position:fixed; inset:0;
-    background:repeating-linear-gradient(
-      0deg, transparent, transparent 2px,
-      rgba(0,0,0,0.07) 2px, rgba(0,0,0,0.07) 4px
-    );
-    pointer-events:none; z-index:1;
+    background-size:40px 40px; pointer-events:none; z-index:0;
   }
 
   /* NAV */
   nav {
     position:fixed; top:0; left:0; right:0;
-    background:rgba(2,6,8,0.95);
-    border-bottom:1px solid var(--border);
-    padding:0 18px; height:52px;
-    display:flex; align-items:center;
-    justify-content:space-between;
-    z-index:100; backdrop-filter:blur(10px);
+    background:rgba(2,6,8,0.95); border-bottom:1px solid var(--border);
+    padding:0 20px; height:56px; display:flex; align-items:center;
+    justify-content:space-between; z-index:100; backdrop-filter:blur(10px);
   }
   .nav-logo {
-    font-family:'Share Tech Mono', monospace;
-    font-size:0.85rem; letter-spacing:3px;
-    position:relative; user-select:none;
+    font-family:'Share Tech Mono',monospace; font-size:1rem; letter-spacing:3px;
   }
   .nav-logo .g { color:var(--accent); }
   .nav-logo .v { color:white; }
-  .nav-logo::before,.nav-logo::after {
-    content:attr(data-text); position:absolute;
-    top:0; left:0; width:100%; height:100%;
-    font-family:'Share Tech Mono', monospace;
-    font-size:0.85rem; letter-spacing:3px; pointer-events:none;
-  }
-  .nav-logo::before { color:var(--accent3); clip-path:polygon(0 20%,100% 20%,100% 40%,0 40%); animation:glitch1 4s infinite; left:2px; }
-  .nav-logo::after  { color:var(--accent2); clip-path:polygon(0 60%,100% 60%,100% 80%,0 80%); animation:glitch2 4s infinite; left:-2px; }
-  @keyframes glitch1 { 0%,90%,100%{opacity:0} 91%{opacity:1;transform:translateX(-3px)} 93%{opacity:1;transform:translateX(3px)} 95%{opacity:0} }
-  @keyframes glitch2 { 0%,90%,100%{opacity:0} 92%{opacity:1;transform:translateX(3px)} 94%{opacity:1;transform:translateX(-3px)} 96%{opacity:0} }
-
   .nav-back {
-    font-family:'Share Tech Mono', monospace;
-    font-size:0.65rem; letter-spacing:2px;
-    color:var(--text-dim); text-decoration:none;
-    transition:color 0.2s;
+    background:none; border:1px solid var(--border); color:var(--text-dim);
+    font-family:'Share Tech Mono',monospace; font-size:0.7rem;
+    padding:6px 14px; cursor:pointer; letter-spacing:1px; transition:all 0.2s;
   }
-  .nav-back:hover { color:var(--accent); }
+  .nav-back:hover { border-color:var(--accent); color:var(--accent); }
 
   /* MAIN */
-  main {
-    position:relative; z-index:2;
-    padding:72px 18px 40px;
-    max-width:480px; margin:0 auto;
-    display:flex; flex-direction:column; gap:12px;
-  }
+  main { padding-top:76px; padding-bottom:40px; min-height:100vh; position:relative; z-index:1; }
+  .container { padding:20px; max-width:600px; margin:0 auto; }
 
-  /* PAGE LABEL */
-  .page-label {
-    font-family:'Share Tech Mono', monospace;
-    font-size:0.58rem; letter-spacing:3px;
-    color:var(--text-dim);
-    animation:fadeIn 0.4s ease both;
+  /* PROFILE CARD */
+  .profile-card {
+    background:var(--bg2); border:1px solid var(--border);
+    border-top:3px solid var(--accent); padding:28px 24px;
+    text-align:center; margin-bottom:20px; animation:fadeIn 0.5s ease;
   }
-  @keyframes fadeIn { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:none} }
-
-  /* ── IDENTITY CARD ── */
-  .identity-card {
-    background:var(--bg2);
-    border:1px solid var(--border);
-    border-top:2px solid var(--accent);
-    padding:20px 18px 18px;
-    position:relative;
-    animation:fadeIn 0.4s 0.05s ease both;
-  }
-  .identity-card::before {
-    content:'// IDENTITY';
-    position:absolute; top:0; right:14px;
-    transform:translateY(-50%);
-    font-family:'Share Tech Mono', monospace;
-    font-size:0.52rem; color:var(--accent);
-    letter-spacing:2px; background:var(--bg2); padding:0 6px;
-  }
-
-  .id-top {
-    display:flex; align-items:center; gap:16px;
-    margin-bottom:16px;
-  }
-
-  /* AVATAR */
-  .avatar {
-    width:62px; height:62px; flex-shrink:0;
+  .profile-avatar {
+    width:72px; height:72px; background:var(--bg3); border:2px solid var(--accent);
     display:flex; align-items:center; justify-content:center;
-    font-family:'Share Tech Mono', monospace;
-    font-size:1.35rem; font-weight:700;
-    color:var(--bg);
-    clip-path:polygon(12px 0%,100% 0%,calc(100% - 12px) 100%,0% 100%);
-    position:relative;
-    transition:transform 0.2s;
+    margin:0 auto 14px; font-size:1.8rem;
+    font-family:'Share Tech Mono',monospace; color:var(--accent);
   }
-  .avatar:hover { transform:scale(1.04); }
-  .avatar .av-symbol {
-    position:absolute; bottom:4px; right:2px;
-    font-size:0.5rem; opacity:0.7;
+  .profile-username { font-size:1.5rem; font-weight:700; letter-spacing:2px; color:white; }
+  .profile-rank {
+    font-family:'Share Tech Mono',monospace; font-size:0.7rem;
+    color:var(--accent2); letter-spacing:2px; margin-top:6px;
+    border:1px solid var(--accent2); display:inline-block; padding:2px 10px;
   }
+  .profile-vault-age {
+    font-family:'Share Tech Mono',monospace; font-size:0.72rem;
+    color:var(--text-dim); letter-spacing:2px; margin-top:8px;
+  }
+  .profile-stats {
+    display:flex; justify-content:center; gap:24px; margin-top:18px; flex-wrap:wrap;
+  }
+  .profile-stat .val { font-size:1.3rem; font-weight:700; color:var(--accent); }
+  .profile-stat .lbl { font-size:0.62rem; color:var(--text-dim); letter-spacing:1px; text-transform:uppercase; }
 
-  .id-info { flex:1; min-width:0; }
-  .username {
-    font-family:'Share Tech Mono', monospace;
-    font-size:1.05rem; letter-spacing:1px;
-    color:white; margin-bottom:4px;
-    overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
-  }
-  .tier-row {
-    display:flex; align-items:center; gap:8px;
-    margin-bottom:5px;
-  }
-  .tier-badge {
-    font-family:'Share Tech Mono', monospace;
-    font-size:0.55rem; letter-spacing:2px;
-    padding:2px 8px;
-    border:1px solid var(--accent);
-    color:var(--accent);
-    clip-path:polygon(4px 0%,100% 0%,calc(100% - 4px) 100%,0% 100%);
-  }
-  .join-date {
-    font-family:'Share Tech Mono', monospace;
-    font-size:0.58rem; color:var(--text-dim); letter-spacing:1px;
-  }
-
-  /* BIO */
-  .bio-text {
-    font-size:0.85rem; color:var(--text-dim);
-    line-height:1.5; letter-spacing:0.3px;
-    border-left:2px solid var(--border);
-    padding-left:10px;
-    margin-bottom:14px;
-  }
-
-  /* STATS */
-  .stats-row {
-    display:grid; grid-template-columns:repeat(3,1fr);
-    gap:8px;
-  }
-  .stat-box {
-    background:var(--bg); border:1px solid var(--border);
-    padding:10px 8px 8px;
-    text-align:center;
-    position:relative;
-    transition:border-color 0.2s;
-  }
-  .stat-box:hover { border-color:var(--accent); }
-  .stat-val {
-    font-family:'Share Tech Mono', monospace;
-    font-size:1.3rem; color:var(--accent);
-    display:block; line-height:1;
-    margin-bottom:4px;
-  }
-  .stat-label {
-    font-family:'Share Tech Mono', monospace;
-    font-size:0.5rem; letter-spacing:1.5px;
-    color:var(--text-dim); text-transform:uppercase;
-    display:block;
-  }
-
-  /* ── EDIT PROFILE ── */
-  .edit-card {
-    background:var(--bg2);
-    border:1px solid var(--border);
-    border-left:3px solid var(--accent2);
-    position:relative;
-    animation:fadeIn 0.4s 0.1s ease both;
-    overflow:hidden;
-  }
-  .edit-card::before {
-    content:'// EDIT PROFILE';
-    position:absolute; top:0; right:14px;
-    transform:translateY(-50%);
-    font-family:'Share Tech Mono', monospace;
-    font-size:0.52rem; color:var(--accent2);
-    letter-spacing:2px; background:var(--bg2); padding:0 6px;
-  }
-
-  .edit-toggle {
-    width:100%; background:none; border:none;
-    padding:14px 18px;
+  /* VC CARD */
+  .vc-card {
+    background:var(--bg2); border:1px solid var(--border);
+    border-left:3px solid var(--accent); padding:20px;
+    margin-bottom:20px; animation:fadeIn 0.5s ease;
     display:flex; align-items:center; justify-content:space-between;
-    cursor:pointer; color:var(--text);
-    font-family:'Rajdhani', sans-serif;
-    font-weight:700; font-size:0.9rem; letter-spacing:2px;
-    transition:background 0.15s;
+    flex-wrap:wrap; gap:14px;
   }
-  .edit-toggle:hover { background:rgba(0,168,255,0.05); }
-  .edit-toggle-icon {
-    font-family:'Share Tech Mono', monospace;
-    font-size:0.7rem; color:var(--accent2);
-    transition:transform 0.25s;
+  .vc-card-label {
+    font-family:'Share Tech Mono',monospace; font-size:0.65rem;
+    color:var(--text-dim); letter-spacing:3px; text-transform:uppercase; margin-bottom:6px;
   }
-  .edit-toggle-icon.open { transform:rotate(45deg); }
+  .vc-balance {
+    font-family:'Share Tech Mono',monospace; font-size:2.2rem;
+    color:var(--accent); letter-spacing:2px; line-height:1;
+  }
+  .vc-balance span { font-size:0.75rem; color:var(--text-dim); margin-left:4px; }
+  .vc-loading {
+    font-family:'Share Tech Mono',monospace; font-size:0.8rem; color:var(--text-dim);
+  }
+  .vc-packages {
+    display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:4px; font-size:0.65rem;
+    font-family:'Share Tech Mono',monospace; color:var(--text-dim); letter-spacing:1px;
+  }
+  .vc-packages span { color:var(--accent2); }
 
-  .edit-body {
-    max-height:0; overflow:hidden;
-    transition:max-height 0.35s cubic-bezier(0.4,0,0.2,1);
-    padding:0 18px;
-  }
-  .edit-body.open {
-    max-height:400px;
-    padding:0 18px 18px;
-  }
-
-  .field-group { margin-bottom:14px; }
-  .field-label {
-    font-family:'Share Tech Mono', monospace;
-    font-size:0.58rem; letter-spacing:2px;
-    color:var(--text-dim); margin-bottom:5px;
-    display:block;
-  }
-  .field-input {
-    width:100%; background:var(--bg);
-    border:1px solid var(--border);
-    color:var(--text);
-    font-family:'Share Tech Mono', monospace;
-    font-size:0.8rem; padding:10px 12px;
-    outline:none; letter-spacing:0.5px;
-    transition:border-color 0.2s;
-  }
-  .field-input:focus { border-color:var(--accent2); }
-  textarea.field-input {
-    resize:vertical; min-height:70px; line-height:1.6;
+  /* SECTION */
+  .section-title {
+    font-family:'Share Tech Mono',monospace; font-size:0.75rem;
+    color:var(--accent); letter-spacing:3px; text-transform:uppercase;
+    margin-bottom:12px; border-bottom:1px solid var(--border); padding-bottom:8px;
   }
 
-  .save-btn {
-    width:100%;
-    background:var(--accent2); color:var(--bg);
-    border:none; padding:13px;
-    font-family:'Rajdhani', sans-serif;
-    font-weight:700; font-size:0.95rem; letter-spacing:3px;
-    cursor:pointer; transition:all 0.2s;
-    clip-path:polygon(8px 0%,100% 0%,calc(100% - 8px) 100%,0% 100%);
+  /* ACTIONS */
+  .profile-actions { display:grid; gap:10px; margin-bottom:24px; }
+  .profile-action-btn {
+    width:100%; padding:13px 16px; background:none;
+    border:1px solid var(--border); color:var(--text-dim);
+    font-family:'Share Tech Mono',monospace; font-size:0.75rem;
+    letter-spacing:2px; cursor:pointer; transition:all 0.2s; text-align:left;
   }
-  .save-btn:hover { background:white; }
-  .save-btn:active { transform:scale(0.98); }
-  .save-flash {
-    font-family:'Share Tech Mono', monospace;
-    font-size:0.6rem; color:var(--accent);
-    letter-spacing:2px; text-align:center;
-    margin-top:8px; height:14px;
-    transition:opacity 0.3s;
+  .profile-action-btn:hover { border-color:var(--accent); color:var(--accent); }
+  .profile-action-btn.danger { border-color:rgba(255,0,60,0.3); color:var(--accent3); }
+  .profile-action-btn.danger:hover { background:rgba(255,0,60,0.08); }
+  .profile-action-btn.accent-btn {
+    border-color:var(--accent); color:var(--accent);
+    background:rgba(0,245,196,0.04);
   }
+  .profile-action-btn.accent-btn:hover { background:rgba(0,245,196,0.1); }
 
-  /* ── ACTIVITY ── */
-  .activity-card {
-    background:var(--bg2);
-    border:1px solid var(--border);
-    border-left:3px solid var(--accent3);
-    padding:18px;
-    position:relative;
-    animation:fadeIn 0.4s 0.15s ease both;
+  /* REFERRAL */
+  .referral-box {
+    background:var(--bg2); border:1px solid var(--border);
+    border-left:3px solid var(--accent2); padding:16px 20px;
+    margin-bottom:20px; animation:fadeIn 0.5s ease;
   }
-  .activity-card::before {
-    content:'// RECENT ACTIVITY';
-    position:absolute; top:0; right:14px;
-    transform:translateY(-50%);
-    font-family:'Share Tech Mono', monospace;
-    font-size:0.52rem; color:var(--accent3);
-    letter-spacing:2px; background:var(--bg2); padding:0 6px;
+  .referral-code {
+    font-family:'Share Tech Mono',monospace; font-size:1.2rem;
+    color:var(--accent2); letter-spacing:4px; margin-top:8px;
   }
-  .activity-card h2 {
-    font-size:0.9rem; letter-spacing:2px; font-weight:700;
-    margin-bottom:14px; color:var(--text);
+  .referral-copy {
+    background:none; border:1px solid var(--accent2); color:var(--accent2);
+    font-family:'Share Tech Mono',monospace; font-size:0.65rem;
+    padding:5px 14px; cursor:pointer; letter-spacing:1px; margin-top:10px;
+    transition:all 0.2s;
   }
+  .referral-copy:hover { background:var(--accent2); color:var(--bg); }
 
-  .activity-list { display:flex; flex-direction:column; gap:0; }
-  .activity-item {
-    display:flex; align-items:flex-start; gap:12px;
-    padding:10px 0;
-    border-bottom:1px solid var(--border);
-    opacity:0;
-    animation:slideIn 0.3s ease forwards;
+  /* NOTIFICATIONS */
+  .notification-item {
+    background:var(--bg2); border:1px solid var(--border);
+    border-left:3px solid var(--accent2); padding:12px 16px;
+    margin-bottom:8px; font-size:0.85rem; animation:fadeIn 0.4s ease;
   }
-  .activity-item:last-child { border-bottom:none; }
-  @keyframes slideIn { from{opacity:0;transform:translateX(-8px)} to{opacity:1;transform:none} }
+  .notif-type {
+    font-family:'Share Tech Mono',monospace; font-size:0.65rem;
+    color:var(--accent2); letter-spacing:2px; text-transform:uppercase; margin-bottom:4px;
+  }
+  .notif-time {
+    font-family:'Share Tech Mono',monospace; font-size:0.62rem;
+    color:var(--text-dim); margin-top:4px;
+  }
+  .notif-unread { border-left-color:var(--accent3); }
 
-  .act-dot {
-    width:6px; height:6px; border-radius:50%;
-    margin-top:5px; flex-shrink:0;
+  /* UTILS */
+  .loading { text-align:center; padding:40px; color:var(--text-dim); font-family:'Share Tech Mono',monospace; font-size:0.8rem; letter-spacing:2px; }
+  .empty   { text-align:center; padding:40px; color:var(--text-dim); font-family:'Share Tech Mono',monospace; font-size:0.8rem; }
+  .spinner {
+    display:inline-block; width:16px; height:16px;
+    border:2px solid var(--border); border-top-color:var(--accent);
+    border-radius:50%; animation:spin 0.8s linear infinite;
+    vertical-align:middle; margin-right:8px;
   }
-  .act-type-tool   { background:var(--accent); }
-  .act-type-lab    { background:var(--accent2); }
-  .act-type-ai     { background:var(--accent3); }
-
-  .act-info { flex:1; min-width:0; }
-  .act-name {
-    font-size:0.85rem; font-weight:600;
-    color:var(--text); letter-spacing:0.5px;
-    display:block; margin-bottom:2px;
+  .toast-msg {
+    position:fixed; bottom:24px; left:50%; transform:translateX(-50%);
+    background:var(--bg2); border:1px solid var(--accent); color:var(--accent);
+    padding:8px 20px; font-family:'Share Tech Mono',monospace; font-size:0.75rem;
+    letter-spacing:1px; z-index:999; pointer-events:none; animation:fadeIn 0.3s ease;
   }
-  .act-detail {
-    font-family:'Share Tech Mono', monospace;
-    font-size:0.58rem; color:var(--text-dim); letter-spacing:1px;
-  }
-  .act-time {
-    font-family:'Share Tech Mono', monospace;
-    font-size:0.55rem; color:var(--text-dim);
-    letter-spacing:1px; white-space:nowrap;
-    flex-shrink:0;
-  }
-
-  /* PARTICLES */
-  .particles { position:fixed; inset:0; pointer-events:none; z-index:0; overflow:hidden; }
-  .particle {
-    position:absolute; width:1px; opacity:0;
-    animation:fall linear infinite;
-  }
-  @keyframes fall {
-    0%  { opacity:0; transform:translateY(-10px); }
-    10% { opacity:0.5; }
-    90% { opacity:0.15; }
-    100%{ opacity:0; transform:translateY(100vh); }
-  }
-
-  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+  @keyframes spin    { to { transform:rotate(360deg); } }
+  @keyframes fadeIn  { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
 </style>
 </head>
 <body>
 
-<div class="particles" id="particles"></div>
-
+<!-- TOP NAV -->
 <nav>
-  <div class="nav-logo" data-text="GENESISVAULT">
-    <span class="g">GENESIS</span><span class="v">VAULT</span>
-  </div>
-  <a class="nav-back" href="dashboard.html">← DASHBOARD</a>
+  <div class="nav-logo"><span class="g">GENESIS</span><span class="v">VAULT</span></div>
+  <button class="nav-back" onclick="history.back()">← BACK</button>
 </nav>
 
 <main>
-  <div class="page-label">// USER_PROFILE · NODE_ACTIVE</div>
+  <div class="container">
 
-  <!-- IDENTITY CARD -->
-  <div class="identity-card">
-    <div class="id-top">
-      <div class="avatar" id="avatar">
-        <span id="av-initials">VX</span>
-      </div>
-      <div class="id-info">
-        <div class="username" id="display-username">VAULTX_77</div>
-        <div class="tier-row">
-          <div class="tier-badge" id="display-tier">TIER · Ω3</div>
+    <!-- Profile Card -->
+    <div class="profile-card" id="profile-card">
+      <div class="loading"><span class="spinner"></span>Loading profile...</div>
+    </div>
+
+    <!-- VC Balance Card -->
+    <p class="section-title">// Vault Credits</p>
+    <div class="vc-card">
+      <div>
+        <div class="vc-card-label">Your Balance</div>
+        <div class="vc-balance" id="vc-balance-display">
+          <span class="spinner"></span>
         </div>
-        <div class="join-date">JOINED <span id="join-date">2025.01.14</span></div>
+        <div style="font-family:'Share Tech Mono',monospace;font-size:0.62rem;color:var(--text-dim);letter-spacing:1px;margin-top:6px;">
+          Earn VC: signup (+50) · referrals (+25) · purchases
+        </div>
+      </div>
+      <div style="text-align:right;">
+        <button onclick="location.href='buy-vc.html'" style="background:var(--accent);color:var(--bg);border:none;padding:12px 22px;font-family:'Rajdhani',sans-serif;font-weight:700;font-size:0.9rem;letter-spacing:3px;cursor:pointer;transition:all 0.2s;clip-path:polygon(6px 0%,100% 0%,calc(100% - 6px) 100%,0% 100%);" onmouseover="this.style.background='white'" onmouseout="this.style.background='var(--accent)'">[ BUY VC ]</button>
+        <div class="vc-packages">
+          <div>Starter: <span>10 VC / $1</span></div>
+          <div>Standard: <span>40 VC / $4</span></div>
+          <div>Pro: <span>70 VC / $7</span></div>
+          <div>Elite: <span>150 VC / $15</span></div>
+        </div>
       </div>
     </div>
 
-    <div class="bio-text" id="display-bio">
-      Rogue systems analyst. Tools collector. Operates in the deep vault layers.
+    <!-- Referral Code -->
+    <p class="section-title">// Referral Program</p>
+    <div class="referral-box">
+      <div style="font-family:'Share Tech Mono',monospace;font-size:0.65rem;color:var(--text-dim);letter-spacing:2px;">YOUR REFERRAL CODE</div>
+      <div class="referral-code" id="referral-code">——————</div>
+      <div style="font-family:'Share Tech Mono',monospace;font-size:0.65rem;color:var(--text-dim);margin-top:8px;letter-spacing:1px;">
+        Share your code — earn +25 VC for every new member who signs up.
+      </div>
+      <button class="referral-copy" onclick="copyReferral()">[ COPY CODE ]</button>
     </div>
 
-    <div class="stats-row">
-      <div class="stat-box">
-        <span class="stat-val" id="stat-tools">24</span>
-        <span class="stat-label">Tools</span>
-      </div>
-      <div class="stat-box">
-        <span class="stat-val" id="stat-lab">138</span>
-        <span class="stat-label">Lab Runs</span>
-      </div>
-      <div class="stat-box">
-        <span class="stat-val" id="stat-ai">61</span>
-        <span class="stat-label">AI Uses</span>
-      </div>
+    <!-- Quick Actions -->
+    <p class="section-title">// Quick Actions</p>
+    <div class="profile-actions">
+      <button class="profile-action-btn accent-btn" onclick="location.href='buy-vc.html'">[ 💎 BUY VAULT CREDITS ]</button>
+      <button class="profile-action-btn" onclick="location.href='dashboard.html'">[ ⌂ BACK TO DASHBOARD ]</button>
+      <button class="profile-action-btn" onclick="location.href='settings.html'">[ ⚙ SETTINGS ]</button>
+      <button class="profile-action-btn" onclick="markAllRead()">[ ✓ MARK ALL NOTIFS READ ]</button>
+      <button class="profile-action-btn danger" onclick="logout()">[ ⏻ EXIT VAULT ]</button>
     </div>
-  </div>
 
-  <!-- EDIT PROFILE -->
-  <div class="edit-card">
-    <button class="edit-toggle" id="edit-toggle" onclick="toggleEdit()">
-      <span>EDIT PROFILE</span>
-      <span class="edit-toggle-icon" id="edit-icon">+</span>
-    </button>
-    <div class="edit-body" id="edit-body">
-      <div class="field-group">
-        <label class="field-label" for="input-name">DISPLAY NAME</label>
-        <input class="field-input" id="input-name" type="text" value="VAULTX_77" maxlength="24" />
-      </div>
-      <div class="field-group">
-        <label class="field-label" for="input-bio">BIO</label>
-        <textarea class="field-input" id="input-bio" maxlength="160">Rogue systems analyst. Tools collector. Operates in the deep vault layers.</textarea>
-      </div>
-      <button class="save-btn" onclick="saveProfile()">SAVE CHANGES</button>
-      <div class="save-flash" id="save-flash"></div>
-    </div>
-  </div>
+    <!-- Notifications -->
+    <p class="section-title">// Notifications</p>
+    <div id="notif-container"><div class="loading"><span class="spinner"></span>Loading...</div></div>
 
-  <!-- RECENT ACTIVITY -->
-  <div class="activity-card">
-    <h2>RECENT ACTIVITY</h2>
-    <div class="activity-list" id="activity-list"></div>
   </div>
 </main>
 
 <script>
-  const API   = 'https://genesis-vault-backend.onrender.com/api';
-  const token = localStorage.getItem('gv_token');
-  if (!token) location.href = 'login.html';
+const API   = 'https://genesis-vault-backend.onrender.com/api';
+const token = localStorage.getItem('gv_token');
+if (!token) location.href = 'login.html';
 
-  // ── AUTH-AWARE FETCH ──
-  async function fetchWithAuth(url, options = {}) {
-    options.headers = { 'Authorization': `Bearer ${token}`, ...(options.headers || {}) };
-    const res = await fetch(url, options);
-    if (res.status === 401) {
-      localStorage.removeItem('gv_token');
-      location.href = 'login.html';
-      throw new Error('Session expired');
-    }
-    return res;
+function h() {
+  return { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` };
+}
+
+async function fetchWithAuth(url, options = {}) {
+  options.headers = { ...h(), ...(options.headers || {}) };
+  const res = await fetch(url, options);
+  if (res.status === 401) {
+    localStorage.removeItem('gv_token');
+    location.href = 'login.html';
+    throw new Error('Session expired');
   }
+  return res;
+}
 
-  // ── UTILS ──
-  function esc(s) {
-    if (!s) return '';
-    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-  }
+function calcVaultAge(createdAt) {
+  if (!createdAt) return { days: 0, long: '0 days' };
+  const ms   = Date.now() - new Date(createdAt).getTime();
+  const days = Math.floor(ms / 86400000);
+  if (days === 0) return { days, long: 'joined today' };
+  if (days < 30)  return { days, long: `${days} days` };
+  const months = Math.floor(days / 30);
+  if (months < 12) return { days, long: `${months} month${months>1?'s':''}` };
+  const years = Math.floor(months / 12);
+  return { days, long: `${years} year${years>1?'s':''}` };
+}
 
-  function ago(d) {
-    if (!d) return '—';
-    const m = Math.floor((Date.now() - new Date(d)) / 60000);
-    if (m < 1)  return 'just now';
-    if (m < 60) return m + 'm ago';
-    const hr = Math.floor(m / 60);
-    if (hr < 24) return hr + 'h ago';
-    return Math.floor(hr / 24) + 'd ago';
-  }
+function esc(s) {
+  if (!s) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
 
-  // ── AVATAR ──
-  const PALETTE = ['#00f5c4','#00a8ff','#ff003c','#7b2fff','#ff8c00','#00e5ff'];
-  const SYMBOLS = ['◈','⬡','◭','⟁','⬖','◉'];
+function ago(d) {
+  if (!d) return '—';
+  const m = Math.floor((Date.now()-new Date(d))/60000);
+  if (m<1)  return 'just now';
+  if (m<60) return m+'m ago';
+  const hr = Math.floor(m/60);
+  if (hr<24) return hr+'h ago';
+  return Math.floor(hr/24)+'d ago';
+}
 
-  function hashStr(s) {
-    let h = 0;
-    for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0;
-    return h;
-  }
+function toast(msg) {
+  const t = document.createElement('div');
+  t.className = 'toast-msg';
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 2200);
+}
 
-  function initials(name) {
-    const parts = name.replace(/[^a-z0-9_]/gi,'').split('_').filter(Boolean);
-    if (parts.length >= 2) return (parts[0][0] + parts[parts.length-1][0]).toUpperCase();
-    return name.slice(0,2).toUpperCase();
-  }
+function logout() { localStorage.clear(); location.href = 'login.html'; }
 
-  function applyAvatar(username) {
-    const h = hashStr(username);
-    const color = PALETTE[h % PALETTE.length];
-    const symbol = SYMBOLS[(h >> 3) % SYMBOLS.length];
-    const av = document.getElementById('avatar');
-    av.style.background = color;
-    document.getElementById('av-initials').textContent = initials(username);
-    let sym = av.querySelector('.av-symbol');
-    if (!sym) { sym = document.createElement('span'); sym.className = 'av-symbol'; av.appendChild(sym); }
-    sym.textContent = symbol;
-  }
+/* ── LOAD PROFILE ─────────────────────────────────────────────────── */
+async function loadProfile() {
+  try {
+    const res  = await fetchWithAuth(`${API}/profile`);
+    const data = await res.json();
+    if (data.status !== 'success') { logout(); return; }
 
-  // ── EDIT TOGGLE ──
-  function toggleEdit() {
-    const body = document.getElementById('edit-body');
-    const icon = document.getElementById('edit-icon');
-    const open = body.classList.toggle('open');
-    icon.classList.toggle('open', open);
-    icon.textContent = open ? '×' : '+';
-  }
+    const u   = data.username || data.email?.split('@')[0] || 'Operative';
+    const age = calcVaultAge(data.created_at);
 
-  // ── SAVE PROFILE ──
-  async function saveProfile() {
-    const name = document.getElementById('input-name').value.trim() || 'AGENT';
-    const bio  = document.getElementById('input-bio').value.trim();
-    const btn  = document.querySelector('.save-btn');
-    const fl   = document.getElementById('save-flash');
-
-    btn.disabled = true;
-    btn.textContent = 'SAVING...';
-
-    try {
-      const res  = await fetchWithAuth(`${API}/profile/update`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username: name, bio })
-      });
-      const data = await res.json();
-      if (data.status === 'success' || res.ok) {
-        document.getElementById('display-username').textContent = name;
-        document.getElementById('display-bio').textContent = bio || '—';
-        document.getElementById('input-name').value = name;
-        applyAvatar(name);
-        fl.textContent = '> PROFILE UPDATED ✓';
-        fl.style.color  = 'var(--accent)';
-        fl.style.opacity = '1';
-        setTimeout(() => { fl.style.opacity = '0'; fl.textContent = ''; }, 2500);
-        setTimeout(() => {
-          document.getElementById('edit-body').classList.remove('open');
-          document.getElementById('edit-icon').classList.remove('open');
-          document.getElementById('edit-icon').textContent = '+';
-        }, 800);
-      } else {
-        fl.textContent  = '> ERROR: ' + (data.message || 'Save failed.');
-        fl.style.color  = 'var(--accent3)';
-        fl.style.opacity = '1';
-      }
-    } catch(e) {
-      if (e.message !== 'Session expired') {
-        fl.textContent  = '> CONNECTION ERROR.';
-        fl.style.color  = 'var(--accent3)';
-        fl.style.opacity = '1';
-      }
-    }
-    btn.disabled = false;
-    btn.textContent = 'SAVE CHANGES';
-  }
-
-  // ── ACTIVITY ──
-  const TYPE_CLASS = { tool:'act-type-tool', lab:'act-type-lab', ai:'act-type-ai', post:'act-type-tool' };
-
-  function renderActivity(items) {
-    const list = document.getElementById('activity-list');
-    if (!items || !items.length) {
-      list.innerHTML = '<div style="color:var(--text-dim);font-family:'Share Tech Mono',monospace;font-size:0.75rem;padding:12px 0;">// No activity yet.</div>';
-      return;
-    }
-    list.innerHTML = '';
-    items.forEach((a, i) => {
-      const el = document.createElement('div');
-      el.className = 'activity-item';
-      el.style.animationDelay = (0.2 + i * 0.07) + 's';
-      el.innerHTML = `
-        <div class="act-dot ${TYPE_CLASS[a.type] || 'act-type-tool'}"></div>
-        <div class="act-info">
-          <span class="act-name">${esc(a.name)}</span>
-          <span class="act-detail">${esc(a.detail)}</span>
+    document.getElementById('profile-card').innerHTML = `
+      <div class="profile-avatar">${u[0].toUpperCase()}</div>
+      <div class="profile-username">${esc(u)}</div>
+      <div class="profile-rank">${esc(data.rank || 'Ghost')}</div>
+      <div class="profile-vault-age">// VAULT AGE: ${age.long.toUpperCase()}</div>
+      <div class="profile-stats">
+        <div class="profile-stat">
+          <div class="val">${data.post_count||0}</div><div class="lbl">Posts</div>
         </div>
-        <span class="act-time">${esc(a.time || ago(a.created_at))}</span>
-      `;
-      list.appendChild(el);
-    });
-  }
+        <div class="profile-stat">
+          <div class="val">${data.tool_count||0}</div><div class="lbl">Tools</div>
+        </div>
+        <div class="profile-stat">
+          <div class="val">${data.sales_count||0}</div><div class="lbl">Sales</div>
+        </div>
+        <div class="profile-stat">
+          <div class="val">${age.days}</div><div class="lbl">Days In</div>
+        </div>
+      </div>`;
 
-  async function loadActivity() {
-    try {
-      const res  = await fetchWithAuth(`${API}/activity`);
-      const data = await res.json();
-      renderActivity(data.activity || data.items || []);
-    } catch(e) {
-      if (e.message !== 'Session expired') {
-        // endpoint may not exist yet — show empty state
-        renderActivity([]);
-      }
+    // Show referral code if available
+    if (data.referral_code) {
+      document.getElementById('referral-code').textContent = data.referral_code;
     }
-  }
 
-  // ── PARTICLES ──
-  function buildParticles() {
-    const c = document.getElementById('particles');
-    const colors = ['var(--accent3)', 'var(--accent2)', 'var(--accent)'];
-    for (let i = 0; i < 18; i++) {
-      const p = document.createElement('div');
-      p.className = 'particle';
-      p.style.cssText = `
-        left:${Math.random()*100}%;
-        height:${30+Math.random()*60}px;
-        animation-duration:${5+Math.random()*7}s;
-        animation-delay:${Math.random()*6}s;
-        background:${colors[Math.floor(Math.random()*colors.length)]};
-      `;
-      c.appendChild(p);
+  } catch(e) {
+    document.getElementById('profile-card').innerHTML = '<div class="empty">// Failed to load profile.</div>';
+  }
+}
+
+/* ── LOAD VC BALANCE ──────────────────────────────────────────────── */
+async function loadVCBalance() {
+  const el = document.getElementById('vc-balance-display');
+  try {
+    const res  = await fetchWithAuth(`${API}/vc/balance`);
+    const data = await res.json();
+    if (data.status === 'success') {
+      const bal = data.balance ?? 0;
+      el.innerHTML = `${bal} <span>VC</span>`;
+    } else {
+      el.innerHTML = `<span style="color:var(--text-dim);font-size:0.8rem;">// Could not load</span>`;
     }
+  } catch(e) {
+    el.innerHTML = `<span style="color:var(--text-dim);font-size:0.8rem;">// Error</span>`;
   }
+}
 
-  // ── BOOT ──
-  async function boot() {
-    buildParticles();
-    try {
-      const res  = await fetchWithAuth(`${API}/profile`);
-      const data = await res.json();
-
-      const u   = data.username || data.email?.split('@')[0] || 'OPERATIVE';
-      const bio = data.bio || '';
-      const rank = data.rank || 'Ghost';
-      const joinDate = data.created_at
-        ? new Date(data.created_at).toISOString().slice(0,10).replace(/-/g,'.')
-        : '—';
-
-      // Identity card
-      document.getElementById('display-username').textContent = u.toUpperCase();
-      document.getElementById('display-bio').textContent      = bio || '—';
-      document.getElementById('display-tier').textContent     = 'RANK · ' + rank.toUpperCase();
-      document.getElementById('join-date').textContent        = joinDate;
-
-      // Stats
-      document.getElementById('stat-tools').textContent = data.tool_count        || 0;
-      document.getElementById('stat-lab').textContent   = data.missions_completed || 0;
-      document.getElementById('stat-ai').textContent    = data.ai_queries         || 0;
-
-      // Edit form pre-fill
-      document.getElementById('input-name').value = u;
-      document.getElementById('input-bio').value  = bio;
-
-      applyAvatar(u);
-    } catch(e) {
-      if (e.message !== 'Session expired') {
-        // fallback — show cached username if available
-        const u = localStorage.getItem('gv_username') || 'OPERATIVE';
-        document.getElementById('display-username').textContent = u.toUpperCase();
-        document.getElementById('input-name').value = u;
-        applyAvatar(u);
-      }
+/* ── NOTIFICATIONS ────────────────────────────────────────────────── */
+async function loadNotifications() {
+  const nc = document.getElementById('notif-container');
+  try {
+    const res  = await fetchWithAuth(`${API}/notifications`);
+    const data = await res.json();
+    if (!data.notifications?.length) {
+      nc.innerHTML = '<div class="empty">// No notifications yet.</div>'; return;
     }
-    loadActivity();
+    nc.innerHTML = data.notifications.map(n => `
+      <div class="notification-item${n.is_read ? '' : ' notif-unread'}">
+        <div class="notif-type">${esc(n.type||'INFO')}</div>
+        <div>${esc(n.message)}</div>
+        <div class="notif-time">${ago(n.created_at)}</div>
+      </div>`).join('');
+  } catch(e) {
+    nc.innerHTML = '<div class="empty">// Failed to load notifications.</div>';
   }
+}
 
-  boot();
+async function markAllRead() {
+  try {
+    await fetchWithAuth(`${API}/notifications/read-all`, { method:'POST' });
+    toast('All notifications marked read.');
+    loadNotifications();
+  } catch(e) {}
+}
+
+/* ── REFERRAL COPY ────────────────────────────────────────────────── */
+function copyReferral() {
+  const code = document.getElementById('referral-code').textContent.trim();
+  if (!code || code === '——————') { toast('// No referral code found.'); return; }
+  navigator.clipboard.writeText(code).then(() => toast('✓ Referral code copied!'));
+}
+
+/* ── INIT ─────────────────────────────────────────────────────────── */
+loadProfile();
+loadVCBalance();
+loadNotifications();
 </script>
 </body>
 </html>
