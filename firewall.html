@@ -715,6 +715,36 @@ let activeFilter = 'all';
 let refreshTimer = null;
 const REFRESH_INTERVAL = 30000; // 30 seconds
 
+// ── FETCH WITH AUTH (401 → back to auth gate) ────────────────────────
+async function fetchWithAuth(url, options = {}) {
+  const res = await fetch(url, {
+    ...options,
+    headers: { 'Authorization': `Bearer ${adminToken}`, ...(options.headers || {}) }
+  });
+  if (res.status === 401) {
+    stopAutoRefresh(true);
+    sessionStorage.removeItem('gv_admin_token');
+    adminToken = '';
+    document.getElementById('main').style.display = 'none';
+    document.getElementById('auth-gate').style.display = 'flex';
+    const err = document.getElementById('auth-err');
+    err.textContent = '// SESSION EXPIRED — PLEASE RE-AUTHENTICATE';
+    err.style.display = 'block';
+    throw new Error('401 Unauthorized');
+  }
+  return res;
+}
+
+// ── STOP AUTO REFRESH ────────────────────────────────────────────────
+function stopAutoRefresh(resetToggle = false) {
+  clearInterval(refreshTimer);
+  refreshTimer = null;
+  if (resetToggle) {
+    const toggle = document.getElementById('auto-refresh');
+    if (toggle) toggle.checked = false;
+  }
+}
+
 // ── AUTH ────────────────────────────────────────────────────────────
 async function authenticate() {
   const token = document.getElementById('token-input').value.trim();
@@ -755,6 +785,7 @@ function showAuthErr() {
 }
 
 function logout() {
+  stopAutoRefresh(true);
   sessionStorage.removeItem('gv_admin_token');
   location.reload();
 }
@@ -768,9 +799,7 @@ async function loadAll() {
 // ── STATS ─────────────────────────────────────────────────────────────
 async function loadStats() {
   try {
-    const res  = await fetch(`${API}/api/admin/firewall/stats`, {
-      headers: { 'Authorization': `Bearer ${adminToken}` }
-    });
+    const res  = await fetchWithAuth(`${API}/api/admin/firewall/stats`);
     const data = await res.json();
     if (data.status !== 'success') return;
 
@@ -861,9 +890,7 @@ function renderTopIPs(ips) {
 // ── LOGS FEED ─────────────────────────────────────────────────────────
 async function loadLogs() {
   try {
-    const res  = await fetch(`${API}/api/admin/firewall/logs?limit=200`, {
-      headers: { 'Authorization': `Bearer ${adminToken}` }
-    });
+    const res  = await fetchWithAuth(`${API}/api/admin/firewall/logs?limit=200`);
     const data = await res.json();
     if (data.status !== 'success') return;
     allLogs = data.logs || [];
@@ -952,10 +979,7 @@ async function doPing() {
 async function clearLogs() {
   if (!confirm('Clear all firewall logs? This cannot be undone.')) return;
   try {
-    const res = await fetch(`${API}/api/admin/firewall/clear`, {
-      method: 'POST',
-      headers: { 'Authorization': `Bearer ${adminToken}` }
-    });
+    const res = await fetchWithAuth(`${API}/api/admin/firewall/clear`, { method: 'POST' });
     const data = await res.json();
     if (data.status === 'success') {
       allLogs = [];
@@ -980,8 +1004,7 @@ function toggleAutoRefresh() {
   if (on) {
     startAutoRefresh();
   } else {
-    clearInterval(refreshTimer);
-    refreshTimer = null;
+    stopAutoRefresh(); // user unchecked manually — don't reset the checkbox
   }
 }
 
