@@ -673,6 +673,13 @@
   <div class="slide-menu-user">
     <div class="smu-name" id="menu-username">—</div>
     <div class="smu-age"  id="menu-vault-age">// VAULT AGE: —</div>
+    <div style="margin-top:10px;display:flex;align-items:center;justify-content:space-between;background:var(--bg3);border:1px solid var(--border);padding:8px 12px;">
+      <div>
+        <div style="font-family:'Share Tech Mono',monospace;font-size:0.6rem;color:var(--text-dim);letter-spacing:2px;">VAULT CREDITS</div>
+        <div style="font-family:'Share Tech Mono',monospace;font-size:1.1rem;color:var(--accent);letter-spacing:2px;margin-top:2px;"><span id="menu-vc-balance">—</span> <span style="font-size:0.65rem;color:var(--text-dim);">VC</span></div>
+      </div>
+      <button onclick="closeSlideMenu();location.href='buy-vc.html'" style="background:none;border:1px solid var(--accent2);color:var(--accent2);font-family:'Share Tech Mono',monospace;font-size:0.6rem;letter-spacing:1px;padding:5px 10px;cursor:pointer;">+ BUY</button>
+    </div>
   </div>
   <div class="slide-menu-notifs">
     <div class="slide-menu-notifs-title">
@@ -715,6 +722,22 @@
       <div class="stat-card">
         <div class="stat-value" id="stat-missions">0</div>
         <div class="stat-label">Missions Done</div>
+      </div>
+      <div class="stat-card" style="grid-column:1/-1;border-left:none;position:relative;overflow:hidden;cursor:pointer;" onclick="location.href='buy-vc.html'" title="Buy more VC">
+        <div style="position:absolute;top:0;left:0;width:3px;height:100%;background:var(--accent);"></div>
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+          <div>
+            <div style="font-family:'Share Tech Mono',monospace;font-size:0.65rem;color:var(--text-dim);letter-spacing:2px;text-transform:uppercase;margin-bottom:4px;">Vault Credits (VC)</div>
+            <div style="display:flex;align-items:baseline;gap:8px;">
+              <span class="stat-value" id="stat-vc" style="font-size:2rem;">—</span>
+              <span style="font-family:'Share Tech Mono',monospace;font-size:0.65rem;color:var(--accent);letter-spacing:2px;">VC</span>
+            </div>
+          </div>
+          <div style="text-align:right;">
+            <div style="font-family:'Share Tech Mono',monospace;font-size:0.6rem;color:var(--accent2);letter-spacing:1px;border:1px solid var(--accent2);padding:4px 10px;">[ + BUY VC ]</div>
+            <div style="font-family:'Share Tech Mono',monospace;font-size:0.6rem;color:var(--text-dim);letter-spacing:1px;margin-top:4px;">10 VC / $1 USDT</div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -1018,6 +1041,21 @@ function calcVaultAge(createdAt) {
   return { days, label: `${years}YR`, long: `${years} year${years>1?'s':''}` };
 }
 
+/* ── VC BALANCE ─────────────────────────────────────────────────────── */
+async function fetchVCBalance() {
+  try {
+    const res  = await fetchWithAuth(`${API}/vc/balance`);
+    const data = await res.json();
+    if (data.status === 'success') {
+      const bal = data.balance ?? 0;
+      const statEl = document.getElementById('stat-vc');
+      const menuEl = document.getElementById('menu-vc-balance');
+      if (statEl) statEl.textContent = bal;
+      if (menuEl) menuEl.textContent = bal;
+    }
+  } catch(e) {}
+}
+
 /* ── BOOT ──────────────────────────────────────────────────────────── */
 async function boot() {
   try {
@@ -1060,6 +1098,9 @@ async function boot() {
       badge.textContent   = unread > 9 ? '9+' : unread;
       badge.style.display = 'inline';
     }
+
+    // VC Balance
+    fetchVCBalance();
 
   } catch(e) {
     const u   = localStorage.getItem('gv_username') || 'Operative';
@@ -1520,7 +1561,14 @@ async function loadProfile() {
           <div class="val">${age.days}</div><div class="lbl">Days In</div>
         </div>
       </div>`;
-  } catch(e) {
+    // Fetch and display VC balance in profile
+    fetchVCBalance().then(() => {
+      const bal = document.getElementById('stat-vc')?.textContent ?? '—';
+      const wrap = document.createElement('div');
+      wrap.innerHTML = `<div style="margin-top:16px;background:var(--bg3);border:1px solid var(--border);border-left:3px solid var(--accent);padding:14px 16px;display:flex;align-items:center;justify-content:space-between;"><div><div style="font-family:'Share Tech Mono',monospace;font-size:0.65rem;color:var(--text-dim);letter-spacing:2px;">VAULT CREDITS</div><div style="font-family:'Share Tech Mono',monospace;font-size:1.4rem;color:var(--accent);letter-spacing:2px;margin-top:3px;" id="profile-vc-balance">${bal} <span style="font-size:0.65rem;color:var(--text-dim);">VC</span></div></div><button onclick="location.href='buy-vc.html'" style="background:var(--accent);color:var(--bg);border:none;padding:9px 18px;font-family:'Rajdhani',sans-serif;font-weight:700;font-size:0.8rem;letter-spacing:2px;cursor:pointer;">[ BUY VC ]</button></div>`;
+      const card = document.getElementById('profile-card');
+      if (card) card.appendChild(wrap.firstElementChild);
+    });
     document.getElementById('profile-card').innerHTML = '<div class="empty">// Failed to load profile.</div>';
   }
   loadNotifications();
