@@ -1,0 +1,720 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>GENESIS VAULT // VOTE TERMINAL</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@700;900&display=swap');
+
+  :root {
+    --bg:      #020608;
+    --bg2:     #060d10;
+    --bg3:     #0a1520;
+    --cyan:    #00f5d4;
+    --red:     #ff003c;
+    --yellow:  #ffaa00;
+    --blue:    #00a8ff;
+    --text:    #c8e6f0;
+    --dim:     #4a7a8a;
+    --border:  #0f2a35;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Share Tech Mono', monospace;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* scanlines */
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background: repeating-linear-gradient(
+      0deg, transparent, transparent 2px,
+      rgba(0,245,212,0.012) 2px, rgba(0,245,212,0.012) 4px
+    );
+    pointer-events: none; z-index: 999;
+  }
+
+  /* grid */
+  body::after {
+    content: '';
+    position: fixed; inset: 0;
+    background-image:
+      linear-gradient(rgba(255,0,60,0.025) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,0,60,0.025) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none; z-index: 0;
+  }
+
+  /* ── NAV ── */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0;
+    background: rgba(2,6,8,0.97);
+    border-bottom: 1px solid var(--red);
+    padding: 0 20px; height: 56px;
+    display: flex; align-items: center; justify-content: space-between;
+    z-index: 100; backdrop-filter: blur(10px);
+  }
+
+  .nav-logo {
+    font-family: 'Orbitron', monospace;
+    font-size: 0.85rem; letter-spacing: 3px;
+  }
+  .nav-logo .g { color: var(--red); }
+  .nav-logo .v { color: white; }
+  .nav-tag {
+    font-size: 0.6rem; letter-spacing: 2px;
+    color: var(--red); display: block; margin-top: -2px;
+    animation: blink 1.5s step-end infinite;
+  }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+  .back-btn {
+    background: none; border: 1px solid var(--border);
+    color: var(--dim); font-family: 'Share Tech Mono', monospace;
+    font-size: 0.65rem; padding: 5px 12px; cursor: pointer;
+    letter-spacing: 1px; transition: all 0.2s;
+  }
+  .back-btn:hover { border-color: var(--cyan); color: var(--cyan); }
+
+  /* ── LOCK SCREEN ── */
+  #lock-screen {
+    position: fixed; inset: 0;
+    background: var(--bg);
+    z-index: 50;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    padding: 20px;
+  }
+
+  .lock-icon {
+    font-size: 3rem; margin-bottom: 16px;
+    filter: drop-shadow(0 0 12px var(--red));
+    animation: pulse 2s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%,100% { filter: drop-shadow(0 0 12px var(--red)); }
+    50%      { filter: drop-shadow(0 0 24px var(--red)); }
+  }
+
+  .lock-title {
+    font-family: 'Orbitron', monospace;
+    font-size: 0.85rem; letter-spacing: 4px;
+    color: var(--red); margin-bottom: 6px;
+  }
+
+  .lock-sub {
+    font-size: 0.6rem; color: var(--dim);
+    letter-spacing: 2px; text-align: center;
+    line-height: 1.8; margin-bottom: 32px;
+  }
+
+  .tap-hint {
+    font-size: 0.6rem; color: var(--dim);
+    letter-spacing: 2px; text-align: center;
+    margin-top: 24px; opacity: 0.5;
+  }
+
+  .tap-dots {
+    display: flex; gap: 8px; justify-content: center;
+    margin-top: 12px;
+  }
+  .tap-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    border: 1px solid var(--border);
+    transition: all 0.2s;
+  }
+  .tap-dot.active {
+    background: var(--red);
+    border-color: var(--red);
+    box-shadow: 0 0 8px var(--red);
+  }
+
+  /* ── MAIN CONTENT ── */
+  main {
+    position: relative; z-index: 1;
+    padding: 76px 16px 40px;
+    max-width: 600px; margin: 0 auto;
+  }
+
+  .page-header {
+    text-align: center; margin-bottom: 28px;
+    animation: fadeDown 0.5s ease both;
+  }
+  @keyframes fadeDown {
+    from { opacity:0; transform:translateY(-12px); }
+    to   { opacity:1; transform:translateY(0); }
+  }
+
+  .page-title {
+    font-family: 'Orbitron', monospace;
+    font-size: 0.8rem; letter-spacing: 4px;
+    color: var(--red); margin-bottom: 4px;
+  }
+
+  .page-sub {
+    font-size: 0.6rem; color: var(--dim); letter-spacing: 2px;
+  }
+
+  /* ── SECTION TITLE ── */
+  .section-title {
+    font-size: 0.7rem; color: var(--red);
+    letter-spacing: 3px; text-transform: uppercase;
+    margin-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 8px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+
+  .refresh-btn {
+    background: none; border: 1px solid var(--border);
+    color: var(--dim); font-family: 'Share Tech Mono', monospace;
+    font-size: 0.6rem; padding: 2px 8px; cursor: pointer;
+    letter-spacing: 1px; transition: all 0.2s;
+  }
+  .refresh-btn:hover { border-color: var(--red); color: var(--red); }
+
+  /* ── PROPOSE CARD ── */
+  .propose-card {
+    background: var(--bg2); border: 1px solid var(--border);
+    border-left: 3px solid var(--red);
+    padding: 20px; margin-bottom: 20px;
+    animation: fadeUp 0.4s ease both;
+  }
+  @keyframes fadeUp {
+    from { opacity:0; transform:translateY(10px); }
+    to   { opacity:1; transform:translateY(0); }
+  }
+
+  .propose-card p {
+    font-size: 0.72rem; color: var(--dim);
+    line-height: 1.8; margin-bottom: 14px;
+  }
+
+  /* ── ADMIN ROW ── */
+  .admin-row {
+    background: var(--bg2); border: 1px solid var(--border);
+    padding: 14px 16px; margin-bottom: 8px;
+    display: flex; align-items: center; justify-content: space-between;
+    animation: fadeUp 0.3s ease both;
+  }
+
+  .admin-name {
+    font-size: 0.85rem; color: var(--blue); letter-spacing: 1px;
+  }
+  .admin-meta { font-size: 0.62rem; color: var(--dim); margin-top: 2px; }
+
+  /* ── VOTE CARD ── */
+  .vote-card {
+    background: var(--bg3); border: 1px solid var(--yellow);
+    padding: 18px; margin-bottom: 12px;
+    animation: fadeUp 0.4s ease both;
+    position: relative;
+  }
+
+  .vote-card::before {
+    content: ''; position: absolute;
+    top: 0; left: 0; right: 0; height: 2px;
+    background: linear-gradient(90deg, transparent, var(--yellow), transparent);
+  }
+
+  .vote-card h4 {
+    font-family: 'Orbitron', monospace;
+    font-size: 0.7rem; color: var(--yellow);
+    margin-bottom: 10px; letter-spacing: 3px;
+  }
+
+  .vote-target {
+    font-size: 0.8rem; color: var(--red);
+    margin-bottom: 4px; letter-spacing: 1px;
+  }
+
+  .vote-meta {
+    font-size: 0.65rem; color: var(--dim);
+    margin-bottom: 14px; letter-spacing: 1px;
+  }
+
+  .vote-bar {
+    display: flex; gap: 3px;
+    height: 6px; margin-bottom: 8px;
+    background: var(--border); border-radius: 3px; overflow: hidden;
+  }
+  .vote-yes { background: var(--cyan); border-radius: 3px; transition: flex 0.4s; }
+  .vote-no  { background: var(--red);  border-radius: 3px; transition: flex 0.4s; }
+
+  .vote-counts {
+    font-size: 0.68rem; color: var(--dim); margin-bottom: 14px;
+    display: flex; gap: 16px;
+  }
+  .vote-counts .yes { color: var(--cyan); }
+  .vote-counts .no  { color: var(--red); }
+  .vote-counts .needed { color: var(--yellow); }
+
+  .vote-actions { display: flex; gap: 8px; }
+
+  /* ── BUTTONS ── */
+  .btn-yes {
+    flex: 1; padding: 12px;
+    background: var(--cyan); color: var(--bg);
+    border: none; font-family: 'Orbitron', monospace;
+    font-size: 0.7rem; font-weight: 700;
+    letter-spacing: 2px; cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn-yes:hover { background: white; }
+  .btn-yes:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .btn-no {
+    flex: 1; padding: 12px;
+    background: none; color: var(--red);
+    border: 1px solid var(--red);
+    font-family: 'Orbitron', monospace;
+    font-size: 0.7rem; font-weight: 700;
+    letter-spacing: 2px; cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn-no:hover { background: var(--red); color: white; }
+  .btn-no:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .btn-propose {
+    width: 100%; padding: 12px;
+    background: none; color: var(--red);
+    border: 1px solid var(--red);
+    font-family: 'Orbitron', monospace;
+    font-size: 0.7rem; letter-spacing: 3px;
+    cursor: pointer; transition: all 0.2s; margin-top: 4px;
+  }
+  .btn-propose:hover { background: var(--red); color: white; }
+  .btn-propose:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  /* ── BADGE ── */
+  .badge {
+    display: inline-block; font-size: 0.58rem;
+    padding: 2px 8px; letter-spacing: 1px;
+    border-radius: 2px;
+  }
+  .badge-voted   { border: 1px solid var(--yellow); color: var(--yellow); }
+  .badge-self    { border: 1px solid var(--dim);    color: var(--dim); }
+  .badge-passed  { border: 1px solid var(--cyan);   color: var(--cyan); background: rgba(0,245,212,0.08); }
+  .badge-admin   { border: 1px solid var(--blue);   color: var(--blue); }
+
+  /* ── EMPTY / LOADING ── */
+  .loading {
+    text-align: center; padding: 30px;
+    color: var(--dim); font-size: 0.75rem;
+  }
+  .empty {
+    text-align: center; padding: 24px;
+    color: var(--dim); font-size: 0.72rem;
+    border: 1px dashed var(--border);
+  }
+
+  .spinner {
+    display: inline-block; width: 14px; height: 14px;
+    border: 2px solid var(--border); border-top-color: var(--red);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    vertical-align: middle; margin-right: 6px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── TOAST ── */
+  .toast {
+    position: fixed; bottom: 24px; left: 50%;
+    transform: translateX(-50%);
+    background: var(--cyan); color: var(--bg);
+    padding: 10px 24px; font-size: 0.72rem;
+    letter-spacing: 2px; z-index: 300;
+    opacity: 0; transition: opacity 0.3s;
+    pointer-events: none; white-space: nowrap;
+  }
+  .toast.show { opacity: 1; }
+
+  /* ── MODAL ── */
+  .modal {
+    display: none; position: fixed; inset: 0;
+    background: rgba(2,6,8,0.96);
+    z-index: 200; padding: 20px;
+    align-items: center; justify-content: center;
+  }
+  .modal.active { display: flex; }
+
+  .modal-box {
+    background: var(--bg2); border: 1px solid var(--red);
+    padding: 28px; width: 100%; max-width: 340px;
+  }
+  .modal-box h3 {
+    font-family: 'Orbitron', monospace;
+    color: var(--red); letter-spacing: 3px;
+    font-size: 0.8rem; margin-bottom: 12px;
+  }
+  .modal-box p {
+    font-size: 0.7rem; color: var(--dim);
+    line-height: 1.7; margin-bottom: 20px;
+  }
+  .modal-actions { display: flex; gap: 10px; }
+  .btn-confirm {
+    flex: 1; padding: 12px;
+    background: var(--red); color: white;
+    border: none; font-family: 'Orbitron', monospace;
+    font-size: 0.7rem; letter-spacing: 2px;
+    cursor: pointer; transition: all 0.2s;
+  }
+  .btn-confirm:hover { background: #ff3355; }
+  .btn-cancel {
+    flex: 1; padding: 12px; background: none;
+    color: var(--dim); border: 1px solid var(--border);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.8rem; cursor: pointer; transition: all 0.2s;
+  }
+  .btn-cancel:hover { border-color: var(--dim); color: var(--text); }
+
+  .divider {
+    border: none; border-top: 1px solid var(--border); margin: 20px 0;
+  }
+</style>
+</head>
+<body>
+
+<!-- ── NAV ── -->
+<nav>
+  <div class="nav-logo">
+    <span class="g">GENESIS</span><span class="v">VAULT</span>
+    <span class="nav-tag">// VOTE TERMINAL</span>
+  </div>
+  <button class="back-btn" onclick="window.location.href='admin.html'">← BACK</button>
+</nav>
+
+<!-- ── LOCK SCREEN ── -->
+<div id="lock-screen">
+  <div class="lock-icon">⚠</div>
+  <div class="lock-title">RESTRICTED TERMINAL</div>
+  <div class="lock-sub">
+    This terminal handles admin revocation.<br/>
+    Triple-tap the warning icon to authenticate.
+  </div>
+  <div class="tap-dots">
+    <div class="tap-dot" id="dot-1"></div>
+    <div class="tap-dot" id="dot-2"></div>
+    <div class="tap-dot" id="dot-3"></div>
+  </div>
+  <div class="tap-hint">TAP 3× TO UNLOCK</div>
+</div>
+
+<!-- ── MAIN ── -->
+<main id="main-content" style="display:none;">
+
+  <div class="page-header">
+    <div class="page-title">[ VOTE TERMINAL ]</div>
+    <div class="page-sub">// ADMIN REVOCATION PROTOCOL · 2/3 REQUIRED</div>
+  </div>
+
+  <!-- Active motions -->
+  <div class="section-title">
+    // Active Revoke Motions
+    <button class="refresh-btn" onclick="loadMotions()">↻ REFRESH</button>
+  </div>
+  <div id="motions-container">
+    <div class="loading"><span class="spinner"></span>Loading...</div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- Propose new revoke -->
+  <div class="section-title">// Propose Revocation</div>
+  <div class="propose-card">
+    <p>
+      Proposing a revoke opens a vote. All 3 admins are notified.<br/>
+      2 YES votes are required to permanently remove the target admin.<br/>
+      Motion expires in 48 hours. You cannot vote on your own revoke.
+    </p>
+    <div id="propose-admins">
+      <div class="loading"><span class="spinner"></span>Loading admins...</div>
+    </div>
+  </div>
+
+</main>
+
+<!-- ── REVOKE CONFIRM MODAL ── -->
+<div class="modal" id="revoke-modal">
+  <div class="modal-box">
+    <h3>// PROPOSE REVOKE</h3>
+    <p id="revoke-label">This will open a vote against this admin. Your YES vote will be counted immediately.</p>
+    <div class="modal-actions">
+      <button class="btn-confirm" onclick="confirmRevoke()">[ PROPOSE ]</button>
+      <button class="btn-cancel"  onclick="closeModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── TOAST ── -->
+<div class="toast" id="toast"></div>
+
+<script>
+  const API     = 'https://genesis-vault-backend.onrender.com/api';
+  let token     = sessionStorage.getItem('gv_admin_token');
+  let adminId   = sessionStorage.getItem('gv_admin_id');
+  let tapCount  = 0;
+  let tapTimer  = null;
+  let revokeTargetId   = null;
+  let revokeTargetName = '';
+
+  // ── Auth guard ──────────────────────────────────────────────────────
+  if (!token) window.location.href = 'admin-login.html';
+
+  function authHeaders() {
+    return { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` };
+  }
+
+  // ── Triple-tap unlock ────────────────────────────────────────────────
+  document.getElementById('lock-screen').addEventListener('click', () => {
+    tapCount++;
+    // Light up dots
+    for (let i = 1; i <= tapCount && i <= 3; i++) {
+      document.getElementById(`dot-${i}`).classList.add('active');
+    }
+    clearTimeout(tapTimer);
+    if (tapCount >= 3) {
+      // Unlock
+      setTimeout(() => {
+        document.getElementById('lock-screen').style.opacity = '0';
+        document.getElementById('lock-screen').style.transition = 'opacity 0.4s';
+        setTimeout(() => {
+          document.getElementById('lock-screen').style.display = 'none';
+          document.getElementById('main-content').style.display = 'block';
+          loadMotions();
+          loadProposeAdmins();
+        }, 400);
+      }, 200);
+    } else {
+      // Reset after 2 seconds of inactivity
+      tapTimer = setTimeout(() => {
+        tapCount = 0;
+        for (let i = 1; i <= 3; i++) {
+          document.getElementById(`dot-${i}`).classList.remove('active');
+        }
+      }, 2000);
+    }
+  });
+
+  // ── Helpers ──────────────────────────────────────────────────────────
+  function toast(msg, color = 'var(--cyan)') {
+    const el = document.getElementById('toast');
+    el.textContent = msg;
+    el.style.background = color;
+    el.style.color = color === 'var(--cyan)' ? 'var(--bg)' : 'white';
+    el.classList.add('show');
+    setTimeout(() => el.classList.remove('show'), 3000);
+  }
+
+  function timeLeft(dateStr) {
+    if (!dateStr) return 'expired';
+    const diff = new Date(dateStr).getTime() - Date.now();
+    if (diff <= 0) return 'EXPIRED';
+    const hrs  = Math.floor(diff / 3600000);
+    const mins = Math.floor((diff % 3600000) / 60000);
+    return `${hrs}h ${mins}m left`;
+  }
+
+  function timeAgo(dateStr) {
+    if (!dateStr) return '—';
+    const diff = Date.now() - new Date(dateStr).getTime();
+    const mins = Math.floor(diff / 60000);
+    if (mins < 1)  return 'just now';
+    if (mins < 60) return `${mins}m ago`;
+    const hrs = Math.floor(mins / 60);
+    if (hrs < 24)  return `${hrs}h ago`;
+    return `${Math.floor(hrs / 24)}d ago`;
+  }
+
+  async function apiFetch(url, options = {}) {
+    try {
+      const res = await fetch(url, {
+        ...options,
+        headers: authHeaders(),
+        signal: AbortSignal.timeout(15000)
+      });
+      if (res.status === 401) {
+        sessionStorage.removeItem('gv_admin_token');
+        sessionStorage.removeItem('gv_admin_id');
+        window.location.href = 'admin-login.html';
+        return null;
+      }
+      return res;
+    } catch(e) {
+      console.error('apiFetch error:', e);
+      return null;
+    }
+  }
+
+  // ── Load active motions ──────────────────────────────────────────────
+  async function loadMotions() {
+    const c = document.getElementById('motions-container');
+    c.innerHTML = '<div class="loading"><span class="spinner"></span>Loading...</div>';
+    try {
+      const res = await apiFetch(`${API}/admin/vote-revoke`, {
+        method: 'POST',
+        body: JSON.stringify({ action: 'status' })
+      });
+      if (!res) return;
+      const d = await res.json();
+      const motions = d.motions || [];
+
+      if (!motions.length) {
+        c.innerHTML = '<div class="empty">// No active motions. Vault is secure. ✓</div>';
+        return;
+      }
+
+      c.innerHTML = motions.map(m => {
+        const total  = (m.votes_yes || 0) + (m.votes_no || 0);
+        const voters = m.voters || [];
+        const alreadyVoted = voters.includes(String(adminId));
+        const isSelf = String(m.target_admin_id) === String(adminId);
+        const expired = new Date(m.expires_at).getTime() < Date.now();
+
+        return `
+          <div class="vote-card" id="motion-${m.id}">
+            <h4>// MOTION TO REVOKE</h4>
+            <div class="vote-target">${m.target_username || m.target_admin_id}</div>
+            <div class="vote-meta">
+              Proposed ${timeAgo(m.created_at)} · ${timeLeft(m.expires_at)}
+              ${expired ? ' · <span style="color:var(--red)">EXPIRED</span>' : ''}
+            </div>
+            <div class="vote-bar">
+              <div class="vote-yes" style="flex:${m.votes_yes || 0}"></div>
+              <div class="vote-no"  style="flex:${m.votes_no  || 0}"></div>
+            </div>
+            <div class="vote-counts">
+              <span class="yes">YES: ${m.votes_yes || 0}</span>
+              <span class="no">NO: ${m.votes_no || 0}</span>
+              <span class="needed">NEED: 2/3</span>
+            </div>
+            ${alreadyVoted ? '<span class="badge badge-voted">VOTED</span>' : ''}
+            ${isSelf ? '<span class="badge badge-self">CANNOT VOTE ON OWN</span>' : ''}
+            ${(!alreadyVoted && !isSelf && !expired) ? `
+              <div class="vote-actions" style="margin-top:14px;">
+                <button class="btn-yes" onclick="castVote(${m.id}, 'yes', this)">[ VOTE YES ]</button>
+                <button class="btn-no"  onclick="castVote(${m.id}, 'no', this)">[ VOTE NO ]</button>
+              </div>
+            ` : ''}
+          </div>
+        `;
+      }).join('');
+    } catch(e) {
+      c.innerHTML = '<div class="empty">// Failed to load motions.</div>';
+    }
+  }
+
+  // ── Load admins for propose section ─────────────────────────────────
+  async function loadProposeAdmins() {
+    const c = document.getElementById('propose-admins');
+    c.innerHTML = '<div class="loading"><span class="spinner"></span>Loading...</div>';
+    try {
+      const res = await apiFetch(`${API}/admin/admins`);
+      if (!res) return;
+      const d = await res.json();
+      const admins = d.admins || [];
+      if (!admins.length) {
+        c.innerHTML = '<div class="empty">// No other admins found.</div>';
+        return;
+      }
+      c.innerHTML = admins.map(a => {
+        const isSelf = String(a.id) === String(adminId);
+        return `
+          <div class="admin-row">
+            <div>
+              <div class="admin-name">${a.username}
+                ${isSelf ? '<span class="badge badge-admin" style="margin-left:8px;">YOU</span>' : ''}
+              </div>
+              <div class="admin-meta">joined ${timeAgo(a.created_at)}</div>
+            </div>
+            ${!isSelf ? `
+              <button class="btn-propose" style="width:auto;padding:6px 14px;font-size:0.6rem;"
+                onclick="openRevokeModal('${a.id}', '${a.username}')">
+                [ PROPOSE REVOKE ]
+              </button>
+            ` : ''}
+          </div>
+        `;
+      }).join('');
+    } catch(e) {
+      c.innerHTML = '<div class="empty">// Failed to load admins.</div>';
+    }
+  }
+
+  // ── Revoke modal ─────────────────────────────────────────────────────
+  function openRevokeModal(id, username) {
+    revokeTargetId   = id;
+    revokeTargetName = username;
+    document.getElementById('revoke-label').textContent =
+      `Propose revocation of "${username}"? This opens a vote. Your YES vote counts immediately. Motion expires in 48 hours.`;
+    document.getElementById('revoke-modal').classList.add('active');
+  }
+
+  function closeModal() {
+    document.getElementById('revoke-modal').classList.remove('active');
+    revokeTargetId = null;
+  }
+
+  async function confirmRevoke() {
+    if (!revokeTargetId) return;
+    closeModal();
+    try {
+      const res = await apiFetch(`${API}/admin/vote-revoke`, {
+        method: 'POST',
+        body: JSON.stringify({ action: 'propose', target_admin_id: revokeTargetId })
+      });
+      if (!res) return;
+      const d = await res.json();
+      if (d.status === 'success') {
+        toast(`// Motion proposed against ${revokeTargetName}. Your YES vote counted.`);
+        loadMotions();
+      } else {
+        toast(`// ${d.message || 'Failed to propose.'}`, 'var(--red)');
+      }
+    } catch(e) {
+      toast('// Network error.', 'var(--red)');
+    }
+  }
+
+  // ── Cast vote ────────────────────────────────────────────────────────
+  async function castVote(motionId, vote, btn) {
+    btn.disabled = true;
+    btn.textContent = '...';
+    try {
+      const res = await apiFetch(`${API}/admin/vote-revoke`, {
+        method: 'POST',
+        body: JSON.stringify({ action: 'vote', motion_id: motionId, vote })
+      });
+      if (!res) return;
+      const d = await res.json();
+      if (d.status === 'success') {
+        if (d.outcome === 'passed') {
+          toast('// MOTION PASSED — Admin has been removed.', 'var(--red)');
+        } else if (d.outcome === 'rejected') {
+          toast('// Motion rejected — Admin keeps access.');
+        } else {
+          toast(`// Vote cast. YES: ${d.votes_yes} · NO: ${d.votes_no}`);
+        }
+        loadMotions();
+      } else {
+        toast(`// ${d.message || 'Vote failed.'}`, 'var(--red)');
+        btn.disabled = false;
+        btn.textContent = vote === 'yes' ? '[ VOTE YES ]' : '[ VOTE NO ]';
+      }
+    } catch(e) {
+      toast('// Network error.', 'var(--red)');
+      btn.disabled = false;
+      btn.textContent = vote === 'yes' ? '[ VOTE YES ]' : '[ VOTE NO ]';
+    }
+  }
+</script>
+</body>
+</html>
