@@ -268,7 +268,7 @@
     <p>Use VC to access labs, unlock courses, and buy tools instantly — no wait time.</p>
     <div class="vc-balance-hero">
       <span class="lbl">YOUR BALANCE</span>
-      <span class="val" id="hero-vc-balance">⬡ — VC</span>
+      <span class="val" id="hero-vc-balance"><span class="spinner"></span></span>
     </div>
   </div>
 
@@ -413,14 +413,17 @@ async function fetchWithAuth(url, options = {}) {
 
 /* ── LOAD VC BALANCE ── */
 async function loadBalance() {
+  const el = document.getElementById('hero-vc-balance');
   try {
     const res  = await fetchWithAuth(`${API}/vc/balance`);
     const data = await res.json();
     const vc   = data.balance ?? data.vc_balance ?? 0;
-    document.getElementById('hero-vc-balance').textContent = `⬡ ${vc.toLocaleString()} VC`;
+    el.textContent = `⬡ ${Number(vc).toLocaleString()} VC`;
+    // Keep stat-vc and menu-vc-balance in sync if user navigates back to dashboard
+    localStorage.setItem('gv_vc', vc);
   } catch(e) {
     const cached = parseInt(localStorage.getItem('gv_vc') || '0');
-    document.getElementById('hero-vc-balance').textContent = `⬡ ${cached.toLocaleString()} VC`;
+    el.textContent = `⬡ ${cached.toLocaleString()} VC`;
   }
 }
 
