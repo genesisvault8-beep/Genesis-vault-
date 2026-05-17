@@ -72,7 +72,7 @@
 
     main {
       position: relative; z-index: 10;
-      padding: 24px 20px; max-width: 600px; margin: 0 auto;
+      padding: 24px 20px; max-width: 620px; margin: 0 auto;
     }
 
     .tool-header { text-align: center; margin-bottom: 28px; }
@@ -81,9 +81,17 @@
       font-family: 'Orbitron', monospace; font-size: 22px; font-weight: 700;
       color: #fff; text-shadow: 0 0 20px rgba(0,255,136,0.5); letter-spacing: 2px;
     }
+    .tool-desc-text {
+      font-size: 12px; color: rgba(255,255,255,0.4); margin-top: 8px; line-height: 1.6;
+    }
     .tool-id-badge {
       display: inline-block; margin-top: 8px;
       border: 1px solid rgba(0,255,136,0.4); color: #00ff88;
+      padding: 3px 12px; font-size: 11px; letter-spacing: 2px;
+    }
+    .tool-type-badge {
+      display: inline-block; margin-top: 6px; margin-left: 6px;
+      border: 1px solid rgba(0,168,255,0.4); color: #00a8ff;
       padding: 3px 12px; font-size: 11px; letter-spacing: 2px;
     }
 
@@ -98,8 +106,16 @@
     }
     .panel-label {
       font-size: 10px; color: rgba(0,255,136,0.5);
-      letter-spacing: 3px; text-transform: uppercase; margin-bottom: 12px;
+      letter-spacing: 3px; text-transform: uppercase; margin-bottom: 14px;
     }
+
+    /* Dynamic inputs */
+    .param-group { margin-bottom: 14px; }
+    .param-label {
+      display: block; font-size: 10px; color: rgba(0,255,136,0.5);
+      letter-spacing: 2px; text-transform: uppercase; margin-bottom: 6px;
+    }
+    .param-hint { font-size: 11px; color: rgba(255,255,255,0.2); margin-top: 5px; letter-spacing: 1px; }
 
     .input-wrap {
       display: flex; align-items: center;
@@ -109,13 +125,24 @@
     .input-wrap:focus-within { border-color: #00ff88; box-shadow: 0 0 12px rgba(0,255,136,0.15); }
     .input-prefix { color: #00ff88; font-size: 14px; margin-right: 8px; user-select: none; }
 
-    input {
+    input, textarea, select {
       flex: 1; background: none; border: none; color: #e0f0e0;
-      font-family: 'Share Tech Mono', monospace; font-size: 15px;
-      padding: 14px 0; outline: none;
+      font-family: 'Share Tech Mono', monospace; font-size: 14px;
+      padding: 12px 0; outline: none; width: 100%;
     }
-    input::placeholder { color: rgba(255,255,255,0.2); }
-    .input-hint { font-size: 11px; color: rgba(255,255,255,0.25); margin-top: 8px; letter-spacing: 1px; }
+    textarea {
+      padding: 12px; resize: vertical; min-height: 80px;
+      border: 1px solid rgba(0,255,136,0.3); background: rgba(0,0,0,0.6);
+      transition: border-color 0.2s;
+    }
+    textarea:focus { border-color: #00ff88; box-shadow: 0 0 12px rgba(0,255,136,0.15); }
+    select {
+      background: rgba(0,0,0,0.6); border: 1px solid rgba(0,255,136,0.3);
+      cursor: pointer; padding: 12px; color: #e0f0e0;
+    }
+    select option { background: #0a1520; }
+    select:focus { border-color: #00ff88; }
+    input::placeholder, textarea::placeholder { color: rgba(255,255,255,0.2); }
 
     .run-btn {
       width: 100%; background: #00ff88; color: #000; border: none; padding: 16px;
@@ -169,14 +196,14 @@
     .status-indicator.red    { background: #ff4444; box-shadow: 0 0 6px #ff4444; }
     .status-indicator.yellow { background: #ffaa00; animation: blink 0.8s infinite; }
 
-    .sys-log {
-      border-left: 3px solid #ff003c; background: rgba(255,0,60,0.04);
-      padding: 14px 16px; margin-top: 16px; display: none;
+    .loading-panel {
+      text-align: center; padding: 40px;
+      color: rgba(0,255,136,0.4); font-size: 12px; letter-spacing: 3px;
     }
-    .sys-log.visible { display: block; }
-    .sys-log p { font-size: 12px; line-height: 1.8; color: rgba(255,255,255,0.5); }
-    .sys-log p.err { color: #ff4444; }
-    .sys-log p.ok  { color: #00ff88; }
+    .error-panel {
+      border: 1px solid rgba(255,68,68,0.4); background: rgba(255,0,0,0.04);
+      padding: 20px; text-align: center; color: #ff4444; font-size: 13px;
+    }
 
     pre::-webkit-scrollbar { width: 4px; }
     pre::-webkit-scrollbar-track { background: #000; }
@@ -198,22 +225,20 @@
     <div class="tool-header">
       <div class="tool-label">// TOOL RUNNER</div>
       <div class="tool-name" id="tool-name">LOADING...</div>
-      <div class="tool-id-badge" id="tool-badge">TOOL_ID: --</div>
-    </div>
-
-    <div class="panel">
-      <div class="panel-label">// TARGET NODE</div>
-      <div class="input-wrap">
-        <span class="input-prefix">$</span>
-        <input id="target" type="text" placeholder="scanme.nmap.org"
-          autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+      <div id="tool-desc-text" class="tool-desc-text"></div>
+      <div>
+        <span class="tool-id-badge" id="tool-badge">TOOL_ID: --</span>
+        <span class="tool-type-badge" id="tool-type-badge">--</span>
       </div>
-      <p class="input-hint">> DOMAIN OR IP ONLY — NO SLASHES OR SPECIAL CHARS</p>
     </div>
 
-    <button class="run-btn" id="run-btn" onclick="runTool()">▶ EXECUTE TOOL</button>
+    <div id="main-content">
+      <div class="loading-panel">// LOADING TOOL DATA...</div>
+    </div>
 
-    <div class="panel" style="margin-top:16px;">
+    <button class="run-btn" id="run-btn" onclick="runTool()" style="display:none;">▶ EXECUTE TOOL</button>
+
+    <div class="panel" id="output-panel" style="margin-top:16px; display:none;">
       <div class="terminal-header">
         <div class="terminal-dots">
           <span class="dot-red"></span>
@@ -223,118 +248,248 @@
         <span class="panel-label" style="margin:0;">// SYS OUTPUT</span>
         <button class="copy-btn" onclick="copyOutput()">COPY</button>
       </div>
-      <pre id="output" class="idle">> awaiting target input...</pre>
+      <pre id="output" class="idle">> awaiting execution...</pre>
       <div class="status-bar">
         <div class="status-indicator" id="status-dot"></div>
         <span id="status-text">IDLE</span>
       </div>
     </div>
-
-    <div class="sys-log" id="sys-log">
-      <p id="log-line-1">> resolving target...</p>
-      <p id="log-line-2">> connecting to node...</p>
-      <p id="log-line-3" class="err">> ERROR: --</p>
-    </div>
   </main>
 
 <script>
   const params  = new URLSearchParams(window.location.search);
-  const TOOL_ID = parseInt(params.get("tool_id")) || 1;
-  const TOOL_NAMES = {
-    1: "PORT SCANNER", 2: "SQL TESTER",
-    3: "DIR FUZZER",   4: "DNS LOOKUP", 5: "WHOIS LOOKUP",
-  };
-  document.getElementById("tool-name").textContent  = TOOL_NAMES[TOOL_ID] || `TOOL #${TOOL_ID}`;
-  document.getElementById("tool-badge").textContent = `TOOL_ID: ${TOOL_ID}`;
+  const TOOL_ID = parseInt(params.get('tool_id') || params.get('id')) || 0;
+  const API     = 'https://genesis-vault-backend.onrender.com/api';
 
-  const output   = document.getElementById("output");
-  const runBtn   = document.getElementById("run-btn");
-  const dot      = document.getElementById("status-dot");
-  const statusTx = document.getElementById("status-text");
-  const sysLog   = document.getElementById("sys-log");
-
-  function setStatus(state, text) {
-    dot.className = "status-indicator " + state;
-    statusTx.textContent = text;
-  }
+  let toolData = null;
 
   function getToken() {
-    return localStorage.getItem("token") ||
-           localStorage.getItem("vault_token") ||
-           sessionStorage.getItem("token") || "";
+    return localStorage.getItem('gv_token') ||
+           localStorage.getItem('token') ||
+           sessionStorage.getItem('token') || '';
+  }
+
+  function h() {
+    return {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${getToken()}`,
+      'Origin': 'https://genesisvault8-beep.github.io'
+    };
+  }
+
+  function setStatus(state, text) {
+    document.getElementById('status-dot').className = 'status-indicator ' + state;
+    document.getElementById('status-text').textContent = text;
   }
 
   function copyOutput() {
+    const output = document.getElementById('output');
     navigator.clipboard.writeText(output.textContent)
-      .then(() => { statusTx.textContent = "COPIED TO CLIPBOARD"; })
-      .catch(() => alert("Select text manually to copy"));
+      .then(() => { document.getElementById('status-text').textContent = 'COPIED TO CLIPBOARD'; })
+      .catch(() => alert('Select text manually to copy'));
   }
 
-  function showSysLog(l1, l2, l3, isError) {
-    document.getElementById("log-line-1").textContent = "> " + l1;
-    document.getElementById("log-line-2").textContent = "> " + l2;
-    const el = document.getElementById("log-line-3");
-    el.textContent = "> " + l3;
-    el.className = isError ? "err" : "ok";
-    sysLog.classList.add("visible");
-  }
-
-  async function runTool() {
-    const target = document.getElementById("target").value.trim();
-    sysLog.classList.remove("visible");
-
-    if (!target) {
-      output.textContent = "> ERROR: no target specified\n> enter a domain or IP address";
-      output.className = "error"; setStatus("red", "NO TARGET"); return;
+  // ── Load tool data from API ──────────────────────────────────────
+  async function boot() {
+    if (!TOOL_ID) {
+      showError('No tool_id specified in URL.');
+      return;
     }
     const token = getToken();
     if (!token) {
-      output.textContent = "> ERROR: authentication required\n> please log in first";
-      output.className = "error"; setStatus("red", "UNAUTHORIZED");
-      showSysLog("checking auth token...", "token not found", "UNAUTHORIZED [0x401]", true); return;
+      location.href = 'login.html';
+      return;
+    }
+    try {
+      // Fetch from marketplace to get tool details
+      const res  = await fetch(`${API}/marketplace`, { headers: h() });
+      const data = await res.json();
+      if (res.status === 401) { location.href = 'login.html'; return; }
+
+      const tools = data.tools || [];
+      toolData    = tools.find(t => String(t.id) === String(TOOL_ID));
+
+      if (!toolData) {
+        showError('Tool not found or not owned. Go back and purchase this tool first.');
+        return;
+      }
+      if (!toolData.owned) {
+        showError('You do not own this tool. Purchase it from the marketplace to access it.');
+        return;
+      }
+
+      renderToolUI(toolData);
+    } catch (e) {
+      showError('Failed to load tool data. Check your connection.');
+    }
+  }
+
+  function showError(msg) {
+    document.getElementById('main-content').innerHTML =
+      `<div class="error-panel">> ERROR: ${msg}</div>`;
+  }
+
+  // ── Render dynamic input fields from params_schema ───────────────
+  function renderToolUI(tool) {
+    document.getElementById('tool-name').textContent  = tool.title || `TOOL #${TOOL_ID}`;
+    document.getElementById('tool-badge').textContent = `TOOL_ID: ${TOOL_ID}`;
+    document.getElementById('tool-desc-text').textContent = tool.description || '';
+
+    const runType = (tool.tool_run_type || 'security').toLowerCase();
+    const typeLabelMap = { security: 'SECURITY', automation: 'AUTOMATION', script: 'SCRIPT' };
+    document.getElementById('tool-type-badge').textContent = typeLabelMap[runType] || runType.toUpperCase();
+
+    // Parse params_schema — array of { name, type, label, placeholder, hint, options }
+    let schema = [];
+    try {
+      if (tool.params_schema) {
+        schema = typeof tool.params_schema === 'string'
+          ? JSON.parse(tool.params_schema)
+          : tool.params_schema;
+      }
+    } catch(e) {}
+
+    // Default schema: just a "target" field
+    if (!schema || !schema.length) {
+      schema = [{ name: 'target', type: 'text', label: 'TARGET NODE', placeholder: 'Domain or IP (e.g. scanme.nmap.org)', hint: '> DOMAIN OR IP ONLY — NO SPECIAL CHARS' }];
     }
 
+    const content = document.getElementById('main-content');
+    content.innerHTML = `
+      <div class="panel">
+        <div class="panel-label">// INPUT PARAMETERS</div>
+        <div id="params-container"></div>
+      </div>
+    `;
+
+    const container = document.getElementById('params-container');
+    schema.forEach(field => {
+      const group = document.createElement('div');
+      group.className = 'param-group';
+
+      const label = document.createElement('label');
+      label.className = 'param-label';
+      label.textContent = field.label || field.name.toUpperCase();
+      group.appendChild(label);
+
+      if (field.type === 'textarea') {
+        const ta = document.createElement('textarea');
+        ta.id = 'param_' + field.name;
+        ta.className = 'tool-param';
+        ta.dataset.name = field.name;
+        ta.placeholder = field.placeholder || '';
+        group.appendChild(ta);
+
+      } else if (field.type === 'select' && field.options) {
+        const sel = document.createElement('select');
+        sel.id = 'param_' + field.name;
+        sel.className = 'tool-param';
+        sel.dataset.name = field.name;
+        field.options.forEach(opt => {
+          const o = document.createElement('option');
+          o.value = typeof opt === 'object' ? opt.value : opt;
+          o.textContent = typeof opt === 'object' ? opt.label : opt;
+          sel.appendChild(o);
+        });
+        group.appendChild(sel);
+
+      } else {
+        const wrap = document.createElement('div');
+        wrap.className = 'input-wrap';
+        const prefix = document.createElement('span');
+        prefix.className = 'input-prefix';
+        prefix.textContent = '$';
+        wrap.appendChild(prefix);
+        const inp = document.createElement('input');
+        inp.id = 'param_' + field.name;
+        inp.className = 'tool-param';
+        inp.dataset.name = field.name;
+        inp.type = field.type === 'number' ? 'number' : 'text';
+        inp.placeholder = field.placeholder || '';
+        inp.autocomplete = 'off';
+        inp.autocorrect = 'off';
+        inp.autocapitalize = 'off';
+        inp.spellcheck = false;
+        if (field.value !== undefined) inp.value = field.value;
+        inp.addEventListener('keydown', e => { if (e.key === 'Enter') runTool(); });
+        wrap.appendChild(inp);
+        group.appendChild(wrap);
+      }
+
+      if (field.hint) {
+        const hint = document.createElement('p');
+        hint.className = 'param-hint';
+        hint.textContent = '> ' + field.hint;
+        group.appendChild(hint);
+      }
+
+      container.appendChild(group);
+    });
+
+    document.getElementById('run-btn').style.display = 'block';
+    document.getElementById('output-panel').style.display = 'block';
+  }
+
+  // ── Run the tool ─────────────────────────────────────────────────
+  async function runTool() {
+    const output  = document.getElementById('output');
+    const runBtn  = document.getElementById('run-btn');
+
+    // Collect all params
+    const params = {};
+    document.querySelectorAll('.tool-param').forEach(el => {
+      params[el.dataset.name] = el.value.trim();
+    });
+
+    // Validate at least one non-empty value
+    const allEmpty = Object.values(params).every(v => !v);
+    if (allEmpty) {
+      output.textContent = '> ERROR: please fill in at least one parameter.';
+      output.className = 'error';
+      setStatus('red', 'NO INPUT');
+      return;
+    }
+
+    const token = getToken();
+    if (!token) { location.href = 'login.html'; return; }
+
     runBtn.disabled = true;
-    runBtn.textContent = "⏳ EXECUTING...";
-    output.textContent = "> initializing...\n> target: " + target + "\n> running (max 30s)...";
-    output.className = "running";
-    setStatus("yellow", "RUNNING...");
+    runBtn.textContent = '⏳ EXECUTING...';
+    output.textContent = '> initializing...\n> sending to backend...\n> running (max 30s)...';
+    output.className = 'running';
+    setStatus('yellow', 'RUNNING...');
 
     try {
-      const res = await fetch("https://genesis-vault-backend.onrender.com/api/tools/run", {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${token}`,
-          "Content-Type":  "application/json",
-          "Origin":        "https://genesisvault8-beep.github.io",
-        },
-        body: JSON.stringify({ tool_id: TOOL_ID, target }),
+      const res = await fetch(`${API}/tools/run`, {
+        method: 'POST',
+        headers: h(),
+        body: JSON.stringify({ tool_id: TOOL_ID, params }),
       });
+
+      if (res.status === 401) { location.href = 'login.html'; return; }
+
       const data = await res.json();
 
-      if (data.status === "success") {
+      if (data.status === 'success') {
         output.textContent = data.output;
-        output.className = "success";
-        setStatus("green", `COMPLETE — EXIT ${data.return_code ?? 0}`);
-        showSysLog("tool executed", "output received", "SCAN COMPLETE [0x200]", false);
+        output.className = 'success';
+        setStatus('green', `COMPLETE — EXIT ${data.return_code ?? 0}`);
       } else {
-        output.textContent = "> ERROR: " + data.message;
-        output.className = "error"; setStatus("red", "FAILED");
-        showSysLog("execution attempted", "server returned error", data.message, true);
+        output.textContent = '> ERROR: ' + (data.message || 'Unknown error');
+        output.className = 'error';
+        setStatus('red', 'FAILED');
       }
     } catch (err) {
-      output.textContent = "> NETWORK ERROR\n> " + err.message;
-      output.className = "error"; setStatus("red", "NETWORK ERROR");
-      showSysLog("connecting to backend...", "connection failed", "SIGNAL LOST [0x503]", true);
+      output.textContent = '> NETWORK ERROR\n> ' + err.message;
+      output.className = 'error';
+      setStatus('red', 'NETWORK ERROR');
     }
 
     runBtn.disabled = false;
-    runBtn.textContent = "▶ EXECUTE TOOL";
+    runBtn.textContent = '▶ EXECUTE TOOL';
   }
 
-  document.getElementById("target").addEventListener("keydown", e => {
-    if (e.key === "Enter") runTool();
-  });
+  boot();
 </script>
 </body>
 </html>
