@@ -211,12 +211,14 @@
     <div style="height:16px;"></div>
   </div>
 
-  <!-- PROMO CODE -->
-  <div class="promo-row">
-    <input class="promo-input" type="text" id="promo-input" placeholder="Promo / discount code" maxlength="32">
-    <button class="promo-btn" onclick="applyPromo()">[ APPLY ]</button>
+  <!-- VC BALANCE BANNER -->
+  <div style="background:var(--bg2);border:1px solid #f5c400;border-left:3px solid #f5c400;padding:12px 18px;margin-bottom:20px;display:flex;align-items:center;justify-content:space-between;">
+    <div>
+      <div style="font-family:'Share Tech Mono',monospace;font-size:0.62rem;color:var(--text-dim);letter-spacing:2px;margin-bottom:2px;">// YOUR VC BALANCE</div>
+      <div id="vc-balance-label" style="font-family:'Share Tech Mono',monospace;font-size:1.1rem;color:#f5c400;font-weight:700;">⬡ — VC</div>
+    </div>
+    <a href="buy-vc.html" style="font-family:'Share Tech Mono',monospace;font-size:0.7rem;color:#f5c400;border:1px solid #f5c400;padding:7px 14px;text-decoration:none;letter-spacing:1px;transition:all 0.2s;">[ BUY VC ]</a>
   </div>
-  <div class="promo-status" id="promo-status"></div>
 
   <!-- CATEGORY TABS -->
   <div class="cat-tabs">
@@ -246,7 +248,7 @@
 </div>
 </main>
 
-<!-- PURCHASE MODAL -->
+<!-- PURCHASE MODAL (VC) -->
 <div class="modal" id="modal-buy">
   <div class="modal-header">
     <h3>// Purchase Tool</h3>
@@ -255,25 +257,18 @@
 
   <div class="tool-preview-box">
     <div class="tool-preview-name"  id="buy-name">—</div>
-    <div>
-      <span class="tool-preview-price" id="buy-price-display">—</span>
-      <span class="tool-preview-orig"  id="buy-price-orig" style="display:none;"></span>
-    </div>
-    <div class="tool-preview-disc" id="buy-discount-label" style="display:none;"></div>
+    <div style="font-family:'Share Tech Mono',monospace;font-size:1.1rem;color:#f5c400;margin-top:6px;" id="buy-price-display">—</div>
+    <div style="font-family:'Share Tech Mono',monospace;font-size:0.7rem;color:var(--text-dim);margin-top:4px;" id="buy-balance-display"></div>
   </div>
 
   <div class="info-box">
-    // Send exact USDT <span>(BEP-20 / Binance Smart Chain)</span> to the Vault wallet<br>
-    // Paste your Binance TX ID below after sending<br>
-    // Admin reviews within <span>24 hours</span> — tool unlocks automatically<br>
-    // Questions? Message admin from the dashboard
+    // VC is deducted <span>instantly</span> — no waiting for admin<br>
+    // Tool unlocks immediately after purchase<br>
+    // Need VC? <a href="buy-vc.html" style="color:#f5c400;text-decoration:none;">[ BUY VC ]</a>
   </div>
 
-  <label>Binance TX ID</label>
-  <input type="text" id="buy-tx" placeholder="Transaction hash..." id="buy-tx-input">
-
   <div class="status-msg" id="buy-status"></div>
-  <button class="btn-submit" id="btn-buy-submit" onclick="submitPayment()">[ SUBMIT PAYMENT ]</button>
+  <button class="btn-submit" id="btn-buy-submit" onclick="submitPayment()">[ BUY WITH VC ]</button>
 </div>
 
 <!-- FREE UNLOCK MODAL -->
@@ -313,8 +308,7 @@ if (!token) location.href = 'login.html';
 let allTools      = [];
 let activeCategory = '';
 let activeTool    = null;
-let promoDiscount = 0;
-let promoCode     = '';
+let vcBalance     = 0;
 let ownedOpen     = false;
 
 function h() { return { 'Content-Type':'application/json', 'Authorization':`Bearer ${token}` }; }
@@ -333,6 +327,16 @@ async function fetchWithAuth(url, options = {}) {
 
 /* ── BOOT ── */
 async function boot() {
+  // Load VC balance
+  try {
+    const r = await fetchWithAuth(`${API}/vc/balance`);
+    const d = await r.json();
+    vcBalance = d.balance ?? 0;
+  } catch(e) {
+    vcBalance = parseInt(localStorage.getItem('gv_vc') || '0');
+  }
+  document.getElementById('vc-balance-label').textContent = `⬡ ${vcBalance.toLocaleString()} VC`;
+
   // Check URL params for auto-open
   const params = new URLSearchParams(location.search);
   if (params.get('cat')) {
@@ -391,7 +395,8 @@ function renderTools() {
 }
 
 function renderTool(t) {
-  const isFree  = t.price === 0;
+  const vcPrice = t.vc_price > 0 ? t.vc_price : 0;
+  const isFree  = vcPrice === 0;
   const isNew   = t.created_at && (Date.now() - new Date(t.created_at)) < 7*86400000;
 
   const badges = [
@@ -420,7 +425,7 @@ function renderTool(t) {
     <p class="tool-desc">${esc(t.description||'')}</p>
     ${meta ? `<div class="tool-meta">${meta}</div>` : ''}
     <div class="tool-footer">
-      <span class="tool-price ${isFree?'free':''}">${isFree ? 'FREE' : '$'+t.price+' USDT'}</span>
+      <span class="tool-price ${isFree?'free':''}" style="${isFree?'':'color:#f5c400;'}">${isFree ? 'FREE' : '⬡ '+vcPrice+' VC'}</span>
       ${footerBtn}
     </div>
   </div>`;
@@ -441,7 +446,7 @@ function renderKit(t) {
     <p class="tool-desc">${esc(t.description||'')}</p>
     ${items ? `<div class="kit-contents">${items}</div>` : ''}
     <div class="tool-footer">
-      <span class="tool-price">${t.price > 0 ? '$'+t.price+' USDT' : 'FREE'}</span>
+      <span class="tool-price" style="${(t.vc_price||0)>0?'color:#f5c400;':''}">${(t.vc_price||0) > 0 ? '⬡ '+t.vc_price+' VC' : 'FREE'}</span>
       ${footerBtn}
     </div>
   </div>`;
@@ -472,7 +477,7 @@ async function loadOwned() {
       <div class="owned-tool-row">
         <div>
           <div class="owned-tool-name">${esc(t.title)}</div>
-          <div class="owned-tool-type">${esc((t.type||'tool').toUpperCase())} · ${t.price>0?'$'+t.price+' USDT':'FREE'}</div>
+          <div class="owned-tool-type">${esc((t.type||'tool').toUpperCase())} · ${(t.vc_price||0)>0?'⬡ '+t.vc_price+' VC':'FREE'}</div>
         </div>
         <button class="btn-access" onclick="openAccess(${JSON.stringify(t)})">[ ACCESS ]</button>
       </div>`).join('');
@@ -487,90 +492,50 @@ function toggleOwned() {
   document.getElementById('owned-toggle-label').textContent = ownedOpen ? '[ HIDE ↑ ]' : '[ VIEW → ]';
 }
 
-/* ── PROMO CODE ── */
-async function applyPromo() {
-  const code = document.getElementById('promo-input').value.trim().toUpperCase();
-  const msg  = document.getElementById('promo-status');
-  if (!code) { showStatus(msg,'Enter a promo code.',true); return; }
-  try {
-    const res  = await fetchWithAuth(`${API}/marketplace/promo`, {
-      method:'POST', headers:h(), body: JSON.stringify({ code })
-    });
-    const data = await res.json();
-    if (data.status === 'success') {
-      promoDiscount = data.discount || 0;
-      promoCode     = code;
-      showStatus(msg, `✓ Code applied: ${promoDiscount}% off your next purchase.`, false);
-    } else {
-      promoDiscount = 0; promoCode = '';
-      showStatus(msg, data.message || '// Invalid code.', true);
-    }
-  } catch(e) {
-    showStatus(msg, '// Network error.', true);
-  }
-}
-
 /* ── BUY FLOW ── */
 function openBuy(t) {
   activeTool = t;
-  document.getElementById('buy-name').textContent = t.title;
-  document.getElementById('buy-tx').value         = '';
+  const vcPrice = t.vc_price || 0;
+  document.getElementById('buy-name').textContent    = t.title;
+  document.getElementById('buy-price-display').textContent = `⬡ ${vcPrice} VC`;
+  document.getElementById('buy-balance-display').textContent = `// Your balance: ⬡ ${vcBalance.toLocaleString()} VC`;
   document.getElementById('buy-status').style.display = 'none';
-  document.getElementById('btn-buy-submit').disabled  = false;
-  document.getElementById('btn-buy-submit').textContent = '[ SUBMIT PAYMENT ]';
-
-  const base     = t.price;
-  const disc     = promoDiscount > 0 ? Math.round(base * promoDiscount / 100) : 0;
-  const final    = base - disc;
-  const priceEl  = document.getElementById('buy-price-display');
-  const origEl   = document.getElementById('buy-price-orig');
-  const discEl   = document.getElementById('buy-discount-label');
-
-  priceEl.textContent = `$${final} USDT`;
-  if (disc > 0) {
-    origEl.textContent   = `$${base} USDT`;
-    origEl.style.display = 'inline';
-    discEl.textContent   = `// ${promoCode} applied — ${promoDiscount}% off`;
-    discEl.style.display = 'block';
-  } else {
-    origEl.style.display = 'none';
-    discEl.style.display = 'none';
-  }
+  const btn = document.getElementById('btn-buy-submit');
+  btn.disabled = vcBalance < vcPrice;
+  btn.textContent = vcBalance < vcPrice ? '[ INSUFFICIENT VC ]' : '[ BUY WITH VC ]';
   openModal('modal-buy');
 }
 
 async function submitPayment() {
-  const tx  = document.getElementById('buy-tx').value.trim();
   const btn = document.getElementById('btn-buy-submit');
   const msg = document.getElementById('buy-status');
-  if (!tx) { showStatus(msg,'// TX ID required.',true); return; }
-  btn.disabled = true; btn.textContent = '[ SUBMITTING... ]';
+  if (!activeTool) return;
+  btn.disabled = true; btn.textContent = '[ BUYING... ]';
   try {
-    const res  = await fetchWithAuth(`${API}/payments/submit`, {
-      method:'POST', headers:h(),
-      body: JSON.stringify({ tool_id: activeTool.id, binance_tx_id: tx, promo_code: promoCode || null })
+    const res  = await fetchWithAuth(`${API}/tools/${activeTool.id}/purchase-vc`, {
+      method:'POST', headers:h(), body: JSON.stringify({})
     });
     const data = await res.json();
     if (data.status === 'success') {
-      showStatus(msg,'✓ Submitted! Admin reviews within 24h. Tool unlocks automatically.',false);
-      btn.textContent = '[ SUBMITTED ]';
-      // Clear promo only on success
-      promoDiscount = 0; promoCode = '';
-      document.getElementById('promo-input').value  = '';
-      document.getElementById('promo-status').style.display = 'none';
-      // Refresh UI after short delay
+      vcBalance = data.new_balance ?? vcBalance;
+      showStatus(msg, `✓ Tool unlocked! ⬡ ${vcBalance.toLocaleString()} VC remaining.`, false);
+      btn.textContent = '[ UNLOCKED ]';
+      const t = allTools.find(x => x.id === activeTool.id);
+      if (t) t.owned = true;
       setTimeout(async () => {
-        await loadTools();
         await loadOwned();
         renderTools();
-      }, 1500);
+      }, 1200);
+    } else if (data.message === 'INSUFFICIENT_VC') {
+      showStatus(msg, `// Not enough VC. Need ${data.required} VC, have ${data.balance} VC.`, true);
+      btn.disabled = false; btn.textContent = '[ BUY WITH VC ]';
     } else {
-      showStatus(msg, data.message||'// Submission failed.', true);
-      btn.disabled = false; btn.textContent = '[ SUBMIT PAYMENT ]';
+      showStatus(msg, data.message||'// Purchase failed.', true);
+      btn.disabled = false; btn.textContent = '[ BUY WITH VC ]';
     }
   } catch(e) {
     showStatus(msg,'// Network error.',true);
-    btn.disabled = false; btn.textContent = '[ SUBMIT PAYMENT ]';
+    btn.disabled = false; btn.textContent = '[ BUY WITH VC ]';
   }
 }
 
