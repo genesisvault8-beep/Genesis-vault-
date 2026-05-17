@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tool Runner — Genesis Vault</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&display=swap');
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: #000;
+      color: #c8d8e8;
+      font-family: 'Share Tech Mono', monospace;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: repeating-linear-gradient(
+        0deg, transparent, transparent 2px,
+        rgba(0,0,0,0.08) 2px, rgba(0,0,0,0.08) 4px
+      );
+      pointer-events: none;
+      z-index: 999;
+    }
+
+    .grid-bg {
+      position: fixed; inset: 0;
+      background-image:
+        linear-gradient(rgba(0,255,136,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,255,136,0.03) 1px, transparent 1px);
+      background-size: 40px 40px;
+      z-index: 0;
+    }
+
+    .glitch-line {
+      position: fixed; left: 0; right: 0; height: 1px;
+      background: rgba(255,0,60,0.4);
+      animation: glitch-move 8s infinite; z-index: 1;
+    }
+    .glitch-line:nth-child(2) { animation-delay: 3s; background: rgba(0,255,136,0.3); }
+    @keyframes glitch-move {
+      0%   { top: -10%; opacity: 0; }
+      10%  { opacity: 1; }
+      90%  { opacity: 1; }
+      100% { top: 110%; opacity: 0; }
+    }
+
+    header {
+      position: relative; z-index: 10;
+      padding: 16px 20px;
+      border-bottom: 1px solid rgba(0,255,136,0.2);
+      display: flex; align-items: center; justify-content: space-between;
+    }
+
+    .logo { font-family: 'Orbitron', monospace; font-size: 14px; letter-spacing: 3px; }
+    .logo span:first-child { color: #00ff88; }
+    .logo span:last-child  { color: #fff; }
+
+    .back-btn {
+      background: none; border: 1px solid rgba(0,255,136,0.4);
+      color: #00ff88; padding: 6px 14px;
+      font-family: 'Share Tech Mono', monospace; font-size: 12px;
+      cursor: pointer; letter-spacing: 1px; transition: all 0.2s;
+    }
+    .back-btn:hover { background: rgba(0,255,136,0.1); border-color: #00ff88; }
+
+    main {
+      position: relative; z-index: 10;
+      padding: 24px 20px; max-width: 600px; margin: 0 auto;
+    }
+
+    .tool-header { text-align: center; margin-bottom: 28px; }
+    .tool-label  { font-size: 11px; color: rgba(0,255,136,0.6); letter-spacing: 4px; margin-bottom: 8px; }
+    .tool-name   {
+      font-family: 'Orbitron', monospace; font-size: 22px; font-weight: 700;
+      color: #fff; text-shadow: 0 0 20px rgba(0,255,136,0.5); letter-spacing: 2px;
+    }
+    .tool-id-badge {
+      display: inline-block; margin-top: 8px;
+      border: 1px solid rgba(0,255,136,0.4); color: #00ff88;
+      padding: 3px 12px; font-size: 11px; letter-spacing: 2px;
+    }
+
+    .panel {
+      border: 1px solid rgba(0,255,136,0.2);
+      background: rgba(0,255,136,0.02);
+      padding: 20px; margin-bottom: 16px; position: relative;
+    }
+    .panel::before {
+      content: ''; position: absolute; top: 0; left: 0;
+      width: 3px; height: 100%; background: #00ff88;
+    }
+    .panel-label {
+      font-size: 10px; color: rgba(0,255,136,0.5);
+      letter-spacing: 3px; text-transform: uppercase; margin-bottom: 12px;
+    }
+
+    .input-wrap {
+      display: flex; align-items: center;
+      border: 1px solid rgba(0,255,136,0.3);
+      background: rgba(0,0,0,0.6); padding: 0 14px; transition: border-color 0.2s;
+    }
+    .input-wrap:focus-within { border-color: #00ff88; box-shadow: 0 0 12px rgba(0,255,136,0.15); }
+    .input-prefix { color: #00ff88; font-size: 14px; margin-right: 8px; user-select: none; }
+
+    input {
+      flex: 1; background: none; border: none; color: #e0f0e0;
+      font-family: 'Share Tech Mono', monospace; font-size: 15px;
+      padding: 14px 0; outline: none;
+    }
+    input::placeholder { color: rgba(255,255,255,0.2); }
+    .input-hint { font-size: 11px; color: rgba(255,255,255,0.25); margin-top: 8px; letter-spacing: 1px; }
+
+    .run-btn {
+      width: 100%; background: #00ff88; color: #000; border: none; padding: 16px;
+      font-family: 'Orbitron', monospace; font-size: 14px; font-weight: 700;
+      letter-spacing: 3px; cursor: pointer; position: relative; overflow: hidden; transition: all 0.2s;
+    }
+    .run-btn::before {
+      content: ''; position: absolute; top: 0; left: -100%;
+      width: 100%; height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+      transition: left 0.4s;
+    }
+    .run-btn:hover::before { left: 100%; }
+    .run-btn:hover { background: #00cc66; box-shadow: 0 0 20px rgba(0,255,136,0.4); }
+    .run-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    .terminal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+    .terminal-dots { display: flex; gap: 6px; }
+    .terminal-dots span { width: 10px; height: 10px; border-radius: 50%; }
+    .dot-red    { background: #ff5f56; }
+    .dot-yellow { background: #ffbd2e; }
+    .dot-green  { background: #27c93f; }
+
+    .copy-btn {
+      background: none; border: 1px solid rgba(255,255,255,0.15);
+      color: rgba(255,255,255,0.4); padding: 4px 10px;
+      font-family: 'Share Tech Mono', monospace; font-size: 11px;
+      cursor: pointer; letter-spacing: 1px; transition: all 0.2s;
+    }
+    .copy-btn:hover { color: #00ff88; border-color: #00ff88; }
+
+    pre#output {
+      background: rgba(0,0,0,0.8); border: 1px solid rgba(0,255,136,0.15);
+      padding: 16px; font-family: 'Share Tech Mono', monospace;
+      font-size: 12px; line-height: 1.7; white-space: pre-wrap; word-break: break-all;
+      min-height: 180px; max-height: 380px; overflow-y: auto; color: #7fff7f;
+    }
+    pre#output.idle    { color: rgba(255,255,255,0.2); }
+    pre#output.running { color: rgba(0,255,136,0.5); animation: blink 1s infinite; }
+    pre#output.error   { color: #ff4444; }
+    pre#output.success { color: #7fff7f; }
+
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+    .status-bar {
+      display: flex; align-items: center; gap: 10px; margin-top: 12px;
+      font-size: 11px; color: rgba(255,255,255,0.3); letter-spacing: 1px;
+    }
+    .status-indicator { width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,0.2); }
+    .status-indicator.green  { background: #00ff88; box-shadow: 0 0 6px #00ff88; }
+    .status-indicator.red    { background: #ff4444; box-shadow: 0 0 6px #ff4444; }
+    .status-indicator.yellow { background: #ffaa00; animation: blink 0.8s infinite; }
+
+    .sys-log {
+      border-left: 3px solid #ff003c; background: rgba(255,0,60,0.04);
+      padding: 14px 16px; margin-top: 16px; display: none;
+    }
+    .sys-log.visible { display: block; }
+    .sys-log p { font-size: 12px; line-height: 1.8; color: rgba(255,255,255,0.5); }
+    .sys-log p.err { color: #ff4444; }
+    .sys-log p.ok  { color: #00ff88; }
+
+    pre::-webkit-scrollbar { width: 4px; }
+    pre::-webkit-scrollbar-track { background: #000; }
+    pre::-webkit-scrollbar-thumb { background: rgba(0,255,136,0.3); }
+  </style>
+</head>
+<body>
+
+  <div class="grid-bg"></div>
+  <div class="glitch-line"></div>
+  <div class="glitch-line"></div>
+
+  <header>
+    <div class="logo"><span>GENESIS</span><span>VAULT</span></div>
+    <button class="back-btn" onclick="history.back()">← BACK</button>
+  </header>
+
+  <main>
+    <div class="tool-header">
+      <div class="tool-label">// TOOL RUNNER</div>
+      <div class="tool-name" id="tool-name">LOADING...</div>
+      <div class="tool-id-badge" id="tool-badge">TOOL_ID: --</div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-label">// TARGET NODE</div>
+      <div class="input-wrap">
+        <span class="input-prefix">$</span>
+        <input id="target" type="text" placeholder="scanme.nmap.org"
+          autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+      </div>
+      <p class="input-hint">> DOMAIN OR IP ONLY — NO SLASHES OR SPECIAL CHARS</p>
+    </div>
+
+    <button class="run-btn" id="run-btn" onclick="runTool()">▶ EXECUTE TOOL</button>
+
+    <div class="panel" style="margin-top:16px;">
+      <div class="terminal-header">
+        <div class="terminal-dots">
+          <span class="dot-red"></span>
+          <span class="dot-yellow"></span>
+          <span class="dot-green"></span>
+        </div>
+        <span class="panel-label" style="margin:0;">// SYS OUTPUT</span>
+        <button class="copy-btn" onclick="copyOutput()">COPY</button>
+      </div>
+      <pre id="output" class="idle">> awaiting target input...</pre>
+      <div class="status-bar">
+        <div class="status-indicator" id="status-dot"></div>
+        <span id="status-text">IDLE</span>
+      </div>
+    </div>
+
+    <div class="sys-log" id="sys-log">
+      <p id="log-line-1">> resolving target...</p>
+      <p id="log-line-2">> connecting to node...</p>
+      <p id="log-line-3" class="err">> ERROR: --</p>
+    </div>
+  </main>
+
+<script>
+  const params  = new URLSearchParams(window.location.search);
+  const TOOL_ID = parseInt(params.get("tool_id")) || 1;
+  const TOOL_NAMES = {
+    1: "PORT SCANNER", 2: "SQL TESTER",
+    3: "DIR FUZZER",   4: "DNS LOOKUP", 5: "WHOIS LOOKUP",
+  };
+  document.getElementById("tool-name").textContent  = TOOL_NAMES[TOOL_ID] || `TOOL #${TOOL_ID}`;
+  document.getElementById("tool-badge").textContent = `TOOL_ID: ${TOOL_ID}`;
+
+  const output   = document.getElementById("output");
+  const runBtn   = document.getElementById("run-btn");
+  const dot      = document.getElementById("status-dot");
+  const statusTx = document.getElementById("status-text");
+  const sysLog   = document.getElementById("sys-log");
+
+  function setStatus(state, text) {
+    dot.className = "status-indicator " + state;
+    statusTx.textContent = text;
+  }
+
+  function getToken() {
+    return localStorage.getItem("token") ||
+           localStorage.getItem("vault_token") ||
+           sessionStorage.getItem("token") || "";
+  }
+
+  function copyOutput() {
+    navigator.clipboard.writeText(output.textContent)
+      .then(() => { statusTx.textContent = "COPIED TO CLIPBOARD"; })
+      .catch(() => alert("Select text manually to copy"));
+  }
+
+  function showSysLog(l1, l2, l3, isError) {
+    document.getElementById("log-line-1").textContent = "> " + l1;
+    document.getElementById("log-line-2").textContent = "> " + l2;
+    const el = document.getElementById("log-line-3");
+    el.textContent = "> " + l3;
+    el.className = isError ? "err" : "ok";
+    sysLog.classList.add("visible");
+  }
+
+  async function runTool() {
+    const target = document.getElementById("target").value.trim();
+    sysLog.classList.remove("visible");
+
+    if (!target) {
+      output.textContent = "> ERROR: no target specified\n> enter a domain or IP address";
+      output.className = "error"; setStatus("red", "NO TARGET"); return;
+    }
+    const token = getToken();
+    if (!token) {
+      output.textContent = "> ERROR: authentication required\n> please log in first";
+      output.className = "error"; setStatus("red", "UNAUTHORIZED");
+      showSysLog("checking auth token...", "token not found", "UNAUTHORIZED [0x401]", true); return;
+    }
+
+    runBtn.disabled = true;
+    runBtn.textContent = "⏳ EXECUTING...";
+    output.textContent = "> initializing...\n> target: " + target + "\n> running (max 30s)...";
+    output.className = "running";
+    setStatus("yellow", "RUNNING...");
+
+    try {
+      const res = await fetch("https://genesis-vault-backend.onrender.com/api/tools/run", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type":  "application/json",
+          "Origin":        "https://genesisvault8-beep.github.io",
+        },
+        body: JSON.stringify({ tool_id: TOOL_ID, target }),
+      });
+      const data = await res.json();
+
+      if (data.status === "success") {
+        output.textContent = data.output;
+        output.className = "success";
+        setStatus("green", `COMPLETE — EXIT ${data.return_code ?? 0}`);
+        showSysLog("tool executed", "output received", "SCAN COMPLETE [0x200]", false);
+      } else {
+        output.textContent = "> ERROR: " + data.message;
+        output.className = "error"; setStatus("red", "FAILED");
+        showSysLog("execution attempted", "server returned error", data.message, true);
+      }
+    } catch (err) {
+      output.textContent = "> NETWORK ERROR\n> " + err.message;
+      output.className = "error"; setStatus("red", "NETWORK ERROR");
+      showSysLog("connecting to backend...", "connection failed", "SIGNAL LOST [0x503]", true);
+    }
+
+    runBtn.disabled = false;
+    runBtn.textContent = "▶ EXECUTE TOOL";
+  }
+
+  document.getElementById("target").addEventListener("keydown", e => {
+    if (e.key === "Enter") runTool();
+  });
+</script>
+</body>
+</html>
