@@ -389,7 +389,10 @@
     <span class="g">GENESIS</span><span class="v">VAULT</span>
     <span class="nav-tag">// VOTE TERMINAL</span>
   </div>
-  <button class="back-btn" onclick="window.location.href='admin.html'">← BACK</button>
+  <div style="display:flex;align-items:center;gap:12px;">
+    <span id="nav-admin-name" style="font-family:'Share Tech Mono',monospace;font-size:0.6rem;color:var(--dim);letter-spacing:1px;"></span>
+    <button class="back-btn" onclick="window.location.href='admin.html'">← BACK</button>
+  </div>
 </nav>
 
 <!-- ── LOCK SCREEN ── -->
@@ -413,7 +416,7 @@
 
   <div class="page-header">
     <div class="page-title">[ VOTE TERMINAL ]</div>
-    <div class="page-sub">// ADMIN REVOCATION PROTOCOL · 2/3 REQUIRED</div>
+    <div class="page-sub" id="page-sub">// ADMIN REVOCATION PROTOCOL · 2/3 REQUIRED</div>
   </div>
 
   <!-- Active motions -->
@@ -465,6 +468,7 @@
   let tapTimer  = null;
   let revokeTargetId   = null;
   let revokeTargetName = '';
+  let totalAdminCount  = 3; // updated when admins load; used for dynamic threshold
 
   // ── Auth guard ──────────────────────────────────────────────────────
   if (!token) window.location.href = 'admin-login.html';
@@ -578,6 +582,8 @@
         const alreadyVoted = voters.includes(String(adminId));
         const isSelf = String(m.target_admin_id) === String(adminId);
         const expired = new Date(m.expires_at).getTime() < Date.now();
+        const threshold = Math.ceil(totalAdminCount * 2 / 3);
+        const thresholdLabel = `${threshold}/${totalAdminCount}`;
 
         return `
           <div class="vote-card" id="motion-${m.id}">
@@ -594,7 +600,7 @@
             <div class="vote-counts">
               <span class="yes">YES: ${m.votes_yes || 0}</span>
               <span class="no">NO: ${m.votes_no || 0}</span>
-              <span class="needed">NEED: 2/3</span>
+              <span class="needed">NEED: ${thresholdLabel}</span>
             </div>
             ${alreadyVoted ? '<span class="badge badge-voted">VOTED</span>' : ''}
             ${isSelf ? '<span class="badge badge-self">CANNOT VOTE ON OWN</span>' : ''}
@@ -621,6 +627,15 @@
       if (!res) return;
       const d = await res.json();
       const admins = d.admins || [];
+      totalAdminCount = admins.length || 3; // update global for threshold calc
+      const threshold = Math.ceil(totalAdminCount * 2 / 3);
+      // Update page subtitle with real threshold
+      const pageSub = document.getElementById('page-sub');
+      if (pageSub) pageSub.textContent = `// ADMIN REVOCATION PROTOCOL · ${threshold}/${totalAdminCount} REQUIRED`;
+      // Show logged-in admin name in nav
+      const self = admins.find(a => String(a.id) === String(adminId));
+      const navName = document.getElementById('nav-admin-name');
+      if (self && navName) navName.textContent = `// ${self.username}`;
       if (!admins.length) {
         c.innerHTML = '<div class="empty">// No other admins found.</div>';
         return;
@@ -698,12 +713,15 @@
       if (d.status === 'success') {
         if (d.outcome === 'passed') {
           toast('// MOTION PASSED — Admin has been removed.', 'var(--red)');
+          loadMotions();
+          loadProposeAdmins(); // refresh: revoked admin no longer appears
         } else if (d.outcome === 'rejected') {
           toast('// Motion rejected — Admin keeps access.');
+          loadMotions();
         } else {
           toast(`// Vote cast. YES: ${d.votes_yes} · NO: ${d.votes_no}`);
+          loadMotions();
         }
-        loadMotions();
       } else {
         toast(`// ${d.message || 'Vote failed.'}`, 'var(--red)');
         btn.disabled = false;
