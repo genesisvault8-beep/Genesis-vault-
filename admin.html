@@ -395,47 +395,7 @@
 
   .btn-cancel:hover { border-color: var(--accent3); color: var(--accent3); }
 
-  /* VOTE CARD */
-  .vote-card {
-    background: var(--bg3);
-    border: 1px solid var(--accent4);
-    padding: 16px;
-    margin-bottom: 10px;
-    animation: fadeIn 0.4s ease;
-  }
 
-  .vote-card h4 {
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 0.85rem;
-    color: var(--accent4);
-    margin-bottom: 8px;
-    letter-spacing: 2px;
-  }
-
-  .vote-bar {
-    display: flex;
-    gap: 4px;
-    margin: 10px 0;
-  }
-
-  .vote-yes, .vote-no {
-    height: 6px;
-    border-radius: 2px;
-    transition: width 0.4s;
-  }
-
-  .vote-yes { background: var(--accent); }
-  .vote-no  { background: var(--accent3); }
-
-  .vote-counts {
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 0.7rem;
-    color: var(--text-dim);
-    margin-bottom: 10px;
-  }
-
-  .vote-counts .yes { color: var(--accent); }
-  .vote-counts .no  { color: var(--accent3); }
 
   /* PAYOUT */
   .payout-amount {
@@ -694,20 +654,7 @@
   </div>
 </div>
 
-<!-- ══ REVOKE MODAL ══ -->
-<div class="modal" id="revoke-modal">
-  <div class="modal-box">
-    <h3>// PROPOSE REVOKE</h3>
-    <p style="color:var(--text-dim);font-size:0.8rem;margin-bottom:16px;font-family:'Share Tech Mono',monospace;" id="revoke-target-label"></p>
-    <p style="color:var(--accent4);font-size:0.75rem;margin-bottom:20px;font-family:'Share Tech Mono',monospace;line-height:1.6;">
-      This will open a vote. 2/3 admins must vote YES to permanently remove this admin. Motion expires in 48 hours.
-    </p>
-    <div class="modal-actions">
-      <button class="btn-full" style="background:var(--accent3);" onclick="confirmRevoke()">[ PROPOSE ]</button>
-      <button class="btn-cancel" onclick="closeRevokeModal()">Cancel</button>
-    </div>
-  </div>
-</div>
+
 
 <!-- ══ TOAST ══ -->
 <div class="toast" id="toast"></div>
@@ -717,8 +664,6 @@
   let token   = sessionStorage.getItem('gv_admin_token');
   let adminId = sessionStorage.getItem('gv_admin_id');
   let promoteUserId = null;
-  let revokeTargetId = null;
-  let revokeTargetName = '';
 
   // ── Auth guard ──────────────────────────────────────────────────────
   if (!token) window.location.href = 'admin-login.html';
@@ -895,21 +840,9 @@
           <div class="stat-value">${d.total_admins ?? 0}/3</div>
           <div class="stat-label">Admins Active</div>
         </div>
-        <div class="stat-card yellow">
-          <div class="stat-value">${d.pending_requests ?? 0}</div>
-          <div class="stat-label">Access Requests</div>
-        </div>
-        <div class="stat-card red">
-          <div class="stat-value">${d.active_votes ?? 0}</div>
-          <div class="stat-label">Active Votes</div>
-        </div>
         <div class="stat-card yellow wide">
           <div class="stat-value">${d.pending_payments ?? 0}</div>
           <div class="stat-label">Pending Payments</div>
-        </div>
-        <div class="stat-card green wide">
-          <div class="stat-value">${d.pending_payouts ?? 0}</div>
-          <div class="stat-label">Pending Payouts</div>
         </div>
         <div class="stat-card blue wide">
           <div class="stat-value">${d.total_courses ?? 0}</div>
@@ -945,7 +878,7 @@
               <div class="admin-name">${a.username} ${isSelf ? '<span style="color:var(--accent4);font-size:0.6rem;">[YOU]</span>' : ''}</div>
               <div class="admin-meta">joined ${timeAgo(a.created_at)}</div>
             </div>
-            ${!isSelf ? `<button class="btn-reject" style="font-size:0.65rem;padding:4px 10px;" onclick="window.location.href='vote.html'">[ VOTE ]</button>` : '<span class="badge badge-admin">SELF</span>'}
+            ${isSelf ? '<span class="badge badge-admin">SELF</span>' : ''}
           </div>
         `;
       }).join('');
@@ -954,115 +887,6 @@
     }
   }
 
-  async function loadMotions() {
-    const c = document.getElementById('motions-container');
-    c.innerHTML = '<div class="loading"><span class="spinner"></span>Loading...</div>';
-    try {
-      const res = await apiFetch(`${API}/admin/vote-revoke`, {
-        method: 'POST',
-        body: JSON.stringify({ action: 'status' })
-      });
-      if (!res) return;
-      const d = await res.json();
-      const motions = d.motions || [];
-      if (!motions.length) {
-        c.innerHTML = '<div class="empty">// No active motions. ✓</div>';
-        return;
-      }
-      c.innerHTML = motions.map(m => {
-        const totalVotes = m.votes_yes + m.votes_no;
-        const yesWidth = totalVotes > 0 ? (m.votes_yes / 2) * 100 : 0;
-        const noWidth  = totalVotes > 0 ? (m.votes_no  / 2) * 100 : 0;
-        const voters = m.voters || [];
-        const alreadyVoted = voters.includes(String(adminId));
-        const isSelf = String(m.target_admin_id) === String(adminId);
-        return `
-          <div class="vote-card" id="motion-${m.id}">
-            <h4>// MOTION TO REVOKE</h4>
-            <div class="item-meta">Target: <span>${m.target_admin_id}</span> · ${timeLeft(m.expires_at)}</div>
-            <div class="vote-bar">
-              <div class="vote-yes" style="width:${yesWidth}%;flex:${m.votes_yes}"></div>
-              <div class="vote-no"  style="width:${noWidth}%;flex:${m.votes_no}"></div>
-            </div>
-            <div class="vote-counts">
-              <span class="yes">YES: ${m.votes_yes}</span> &nbsp;·&nbsp; <span class="no">NO: ${m.votes_no}</span> &nbsp;·&nbsp; need 2 to pass
-            </div>
-            ${alreadyVoted ? '<div class="badge badge-pending">VOTED</div>' : ''}
-            ${isSelf ? '<div class="badge badge-flagged">CANNOT VOTE ON OWN</div>' : ''}
-            ${(!alreadyVoted && !isSelf) ? `
-              <div class="actions">
-                <button class="btn-approve" onclick="castVote(${m.id}, 'yes')">[ VOTE YES ]</button>
-                <button class="btn-reject"  onclick="castVote(${m.id}, 'no')">[ VOTE NO ]</button>
-              </div>
-            ` : ''}
-          </div>
-        `;
-      }).join('');
-    } catch(e) {
-      c.innerHTML = '<div class="empty">// Failed to load motions.</div>';
-    }
-  }
-
-  function openRevokeModal(id, username) {
-    revokeTargetId   = id;
-    revokeTargetName = username;
-    document.getElementById('revoke-target-label').textContent = `// Target: ${username}`;
-    document.getElementById('revoke-modal').classList.add('active');
-  }
-
-  function closeRevokeModal() {
-    document.getElementById('revoke-modal').classList.remove('active');
-    revokeTargetId = null;
-  }
-
-  async function confirmRevoke() {
-    if (!revokeTargetId) return;
-    closeRevokeModal();
-    try {
-      const res = await apiFetch(`${API}/admin/vote-revoke`, {
-        method: 'POST',
-        body: JSON.stringify({ action: 'propose', target_admin_id: revokeTargetId })
-      });
-      if (!res) return;
-      const d = await res.json();
-      if (d.status === 'success') {
-        toast(`// Motion proposed against ${revokeTargetName}. Your YES vote counted.`);
-        loadMotions();
-        loadDashboard();
-      } else {
-        toast(`// ${d.message}`, 'var(--accent3)');
-      }
-    } catch(e) {
-      toast('// Failed to propose motion.', 'var(--accent3)');
-    }
-  }
-
-  async function castVote(motionId, vote) {
-    try {
-      const res = await apiFetch(`${API}/admin/vote-revoke`, {
-        method: 'POST',
-        body: JSON.stringify({ action: 'vote', motion_id: motionId, vote })
-      });
-      if (!res) return;
-      const d = await res.json();
-      if (d.status === 'success') {
-        if (d.outcome === 'passed') {
-          toast('// MOTION PASSED — Admin removed.', 'var(--accent3)');
-        } else if (d.outcome === 'rejected') {
-          toast('// Motion rejected — Admin keeps access.');
-        } else {
-          toast(`// Vote cast. YES: ${d.votes_yes} NO: ${d.votes_no}`);
-        }
-        loadMotions();
-        loadAdmins();
-        loadDashboard();
-      } else {
-        toast(`// ${d.message}`, 'var(--accent3)');
-      }
-    } catch(e) {
-      toast('// Failed to cast vote.', 'var(--accent3)');
-    }
-  }
 
   // ══════════════════════════════════════════════════════════════════
   // TOOLS
