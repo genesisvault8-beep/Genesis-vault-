@@ -968,27 +968,6 @@
   <button class="copy-btn" id="cpy-xss" onclick="copyOut('out-xss')">[ COPY ANALYSIS ]</button>
 </div>
 
-<!-- BUY MODAL -->
-<div class="modal" id="modal-buy">
-  <div class="modal-header">
-    <h3>// Purchase Tool</h3>
-    <button class="close-btn" onclick="closeModal('modal-buy')">✕</button>
-  </div>
-  <div style="background:var(--bg2);border:1px solid var(--border);padding:14px;margin-bottom:16px;">
-    <div id="buy-name"  style="font-weight:700;font-size:1rem;letter-spacing:2px;color:white;margin-bottom:4px;"></div>
-    <div id="buy-price" style="font-family:'Share Tech Mono',monospace;font-size:0.9rem;color:var(--accent);"></div>
-  </div>
-  <div style="background:var(--bg3);border:1px solid var(--border);padding:14px;margin-bottom:16px;font-family:'Share Tech Mono',monospace;font-size:0.75rem;line-height:1.8;color:var(--text-dim);">
-    // Send exact USDT (BEP-20) to Vault wallet<br>
-    // Paste your Binance TX ID below<br>
-    // Admin confirms within 24h — tool unlocks automatically
-  </div>
-  <label>Binance TX ID</label>
-  <input type="text" id="buy-tx" placeholder="Transaction hash...">
-  <div class="status-msg" id="buy-status"></div>
-  <button class="btn" id="btn-buy" onclick="submitPayment()">[ SUBMIT PAYMENT ]</button>
-</div>
-
 <!-- NEW MESSAGE MODAL -->
 <div class="modal" id="modal-new-msg">
   <div class="modal-header">
@@ -1009,7 +988,6 @@ let token = localStorage.getItem('gv_token');
 if (!token) location.href = 'login.html';
 
 let currentFilter   = '';
-let buyTarget       = { id: null, title: '', price: 0 };
 let activeThreadId  = null;
 
 function h() {
@@ -1365,41 +1343,8 @@ async function loadMarketplace() {
   }
 }
 
-function openBuy(id, title, price) {
-  buyTarget = { id, title, price };
-  document.getElementById('buy-name').textContent  = title;
-  document.getElementById('buy-price').textContent = price > 0 ? `$${price} USDT` : 'FREE';
-  document.getElementById('buy-tx').value          = '';
-  document.getElementById('buy-status').style.display = 'none';
-  document.getElementById('btn-buy').disabled    = false;
-  document.getElementById('btn-buy').textContent = '[ SUBMIT PAYMENT ]';
-  openModal('modal-buy');
-}
-
-async function submitPayment() {
-  const tx  = document.getElementById('buy-tx').value.trim();
-  const btn = document.getElementById('btn-buy');
-  const msg = document.getElementById('buy-status');
-  if (!tx && buyTarget.price > 0) { showStatus(msg,'TX ID required.',true); return; }
-  btn.disabled = true; btn.textContent = '[ SUBMITTING... ]'; msg.style.display = 'none';
-  try {
-    const res  = await fetchWithAuth(`${API}/payments/submit`, {
-      method:'POST',
-      body: JSON.stringify({ tool_id: buyTarget.id, binance_tx_id: tx || 'FREE' })
-    });
-    const data = await res.json();
-    if (data.status === 'success') {
-      showStatus(msg,'✓ Submitted. Admin confirms within 24h.',false);
-      btn.textContent = '[ SUBMITTED ]';
-    } else {
-      showStatus(msg, data.message||'Failed.', true);
-      btn.disabled = false; btn.textContent = '[ SUBMIT PAYMENT ]';
-    }
-  } catch(e) {
-    showStatus(msg,'Network error.',true);
-    btn.disabled = false; btn.textContent = '[ SUBMIT PAYMENT ]';
-  }
-}
+// openBuy / submitPayment removed — tool purchases via USDT no longer used.
+// All real-money purchases are handled by buy-vc.html.
 
 /* ── MESSAGES ──────────────────────────────────────────────────────── */
 async function loadMessages() {
@@ -1539,10 +1484,16 @@ function closeConversation() {
 /* ── PROFILE ───────────────────────────────────────────────────────── */
 async function loadProfile() {
   try {
-    const res  = await fetchWithAuth(`${API}/profile`);
-    const data = await res.json();
-    const u    = data.username || data.email?.split('@')[0] || 'Operative';
-    const age  = calcVaultAge(data.created_at);
+    const [profRes, vcRes] = await Promise.all([
+      fetchWithAuth(`${API}/profile`),
+      fetchWithAuth(`${API}/vc/balance`)
+    ]);
+    const data  = await profRes.json();
+    const vcData = await vcRes.json();
+    const u   = data.username || data.email?.split('@')[0] || 'Operative';
+    const age = calcVaultAge(data.created_at);
+    const bal = vcData.balance ?? 0;
+
     document.getElementById('profile-card').innerHTML = `
       <div class="profile-avatar">${u[0].toUpperCase()}</div>
       <div class="profile-username">${esc(u)}</div>
@@ -1560,15 +1511,17 @@ async function loadProfile() {
         <div class="profile-stat">
           <div class="val">${age.days}</div><div class="lbl">Days In</div>
         </div>
+      </div>
+      <div style="margin-top:16px;background:var(--bg3);border:1px solid var(--border);border-left:3px solid var(--accent);padding:14px 16px;display:flex;align-items:center;justify-content:space-between;">
+        <div>
+          <div style="font-family:'Share Tech Mono',monospace;font-size:0.65rem;color:var(--text-dim);letter-spacing:2px;">VAULT CREDITS</div>
+          <div style="font-family:'Share Tech Mono',monospace;font-size:1.4rem;color:var(--accent);letter-spacing:2px;margin-top:3px;" id="profile-vc-balance">
+            ${bal.toLocaleString()} <span style="font-size:0.65rem;color:var(--text-dim);">VC</span>
+          </div>
+        </div>
+        <button onclick="location.href='buy-vc.html'" style="background:var(--accent);color:var(--bg);border:none;padding:9px 18px;font-family:'Rajdhani',sans-serif;font-weight:700;font-size:0.8rem;letter-spacing:2px;cursor:pointer;">[ BUY VC ]</button>
       </div>`;
-    // Fetch and display VC balance in profile
-    fetchVCBalance().then(() => {
-      const bal = document.getElementById('stat-vc')?.textContent ?? '—';
-      const wrap = document.createElement('div');
-      wrap.innerHTML = `<div style="margin-top:16px;background:var(--bg3);border:1px solid var(--border);border-left:3px solid var(--accent);padding:14px 16px;display:flex;align-items:center;justify-content:space-between;"><div><div style="font-family:'Share Tech Mono',monospace;font-size:0.65rem;color:var(--text-dim);letter-spacing:2px;">VAULT CREDITS</div><div style="font-family:'Share Tech Mono',monospace;font-size:1.4rem;color:var(--accent);letter-spacing:2px;margin-top:3px;" id="profile-vc-balance">${bal} <span style="font-size:0.65rem;color:var(--text-dim);">VC</span></div></div><button onclick="location.href='buy-vc.html'" style="background:var(--accent);color:var(--bg);border:none;padding:9px 18px;font-family:'Rajdhani',sans-serif;font-weight:700;font-size:0.8rem;letter-spacing:2px;cursor:pointer;">[ BUY VC ]</button></div>`;
-      const card = document.getElementById('profile-card');
-      if (card) card.appendChild(wrap.firstElementChild);
-    });
+  } catch(e) {
     document.getElementById('profile-card').innerHTML = '<div class="empty">// Failed to load profile.</div>';
   }
   loadNotifications();
