@@ -787,7 +787,6 @@
         const res = await fetch(url, {
           ...options,
           headers: authHeaders(),
-          ,
           signal: AbortSignal.timeout(15000)
         });
 
@@ -1100,6 +1099,7 @@
   }
 
   async function approveTool(id, btn) {
+    if (!confirm('Approve this tool and make it live?')) return;
     btn.disabled = true;
     btn.textContent = '...';
     try {
@@ -1122,6 +1122,7 @@
   }
 
   async function rejectTool(id, btn) {
+    if (!confirm('Reject this tool? The seller will be notified.')) return;
     btn.disabled = true;
     btn.textContent = '...';
     try {
@@ -1467,9 +1468,8 @@
     document.getElementById('modal-course-body').innerHTML = '<div class="loading"><span class="spinner"></span>Loading...</div>';
     document.getElementById('modal-course-view').style.display = 'block';
     try {
-      const res = await fetch(`${API}/courses/${id}`, {
-        headers: authHeaders()
-      });
+      const res = await apiFetch(`${API}/courses/${id}`);
+      if (!res) { document.getElementById('modal-course-body').innerHTML = '// Failed to load content.'; return; }
       const d = await res.json();
       const raw = d.content || d.course?.content || 'No content available.';
       document.getElementById('modal-course-body').innerHTML = marked.parse(raw);
@@ -1504,26 +1504,36 @@
       const vcLock   = document.getElementById('c-vc-lock').checked;
       const vcCost   = vcLock ? (parseInt(document.getElementById('c-vc-cost').value) || 0) : 0;
       if (!title || !content) { toast('// Title and content are required.', 'var(--accent3)'); return; }
-      const updateRes = await apiFetch(`${API}/admin/courses/${id}/update`, {
-        method: 'POST',
-        body: JSON.stringify({ title, description: desc, content, category, price, is_free: price === 0, vc_locked: vcLock, vc_cost: vcCost })
-      });
-      if (!updateRes) return;
-      const ud = await updateRes.json();
-      if (ud.status === 'success') {
-        toast('// Course updated!');
-        document.getElementById('c-title').value   = '';
-        document.getElementById('c-desc').value    = '';
-        document.getElementById('c-content').value = '';
-        document.getElementById('c-price').value   = '';
-        document.getElementById('c-vc-lock').checked = false;
-        document.getElementById('c-vc-cost').value = '';
-        document.getElementById('vc-lock-input').style.display = 'none';
-        btn.textContent = '[ PUBLISH COURSE ]';
-        btn.onclick = postCourse;
-        loadCourses();
-      } else {
-        toast(`// ${ud.message || 'Update failed.'}`, 'var(--accent3)');
+      btn.disabled = true;
+      btn.textContent = '[ UPDATING... ]';
+      try {
+        const updateRes = await apiFetch(`${API}/admin/courses/${id}/update`, {
+          method: 'POST',
+          body: JSON.stringify({ title, description: desc, content, category, price, is_free: price === 0, vc_locked: vcLock, vc_cost: vcCost })
+        });
+        if (!updateRes) { btn.disabled = false; btn.textContent = '[ UPDATE COURSE ]'; return; }
+        const ud = await updateRes.json();
+        if (ud.status === 'success') {
+          toast('// Course updated!');
+          document.getElementById('c-title').value   = '';
+          document.getElementById('c-desc').value    = '';
+          document.getElementById('c-content').value = '';
+          document.getElementById('c-price').value   = '';
+          document.getElementById('c-vc-lock').checked = false;
+          document.getElementById('c-vc-cost').value = '';
+          document.getElementById('vc-lock-input').style.display = 'none';
+          btn.textContent = '[ PUBLISH COURSE ]';
+          btn.onclick = postCourse;
+          loadCourses();
+        } else {
+          toast(`// ${ud.message || 'Update failed.'}`, 'var(--accent3)');
+          btn.disabled = false;
+          btn.textContent = '[ UPDATE COURSE ]';
+        }
+      } catch(e) {
+        toast('// Network error.', 'var(--accent3)');
+        btn.disabled = false;
+        btn.textContent = '[ UPDATE COURSE ]';
       }
     };
     document.getElementById('c-title').scrollIntoView({ behavior: 'smooth' });
@@ -1564,7 +1574,6 @@
     try {
       const res = await fetch(`${API}/admin/dashboard`, {
         headers: authHeaders(),
-        ,
         signal: AbortSignal.timeout(15000)
       });
 
@@ -1574,7 +1583,6 @@
         await new Promise(r => setTimeout(r, 8000));
         const retry = await fetch(`${API}/admin/dashboard`, {
           headers: authHeaders(),
-          ,
           signal: AbortSignal.timeout(15000)
         });
         if (retry.status === 401) {
