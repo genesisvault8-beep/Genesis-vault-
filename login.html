@@ -476,7 +476,7 @@
         <label>Referral Code <span class="optional">(optional — earn bonus VC)</span></label>
         <div class="referral-wrap">
           <input type="text" id="reg-referral" placeholder="XXXXXXXX"
-            oninput="onReferralInput(this)" maxlength="8" autocomplete="off">
+            oninput="onReferralInput(this)" maxlength="16" autocomplete="off">
           <span class="referral-badge" id="referral-badge">✓ VALID</span>
         </div>
         <div class="vc-hint" id="vc-hint">// +25 VC bonus will be applied on signup</div>
@@ -506,29 +506,16 @@
   <div class="wakeup-timer" id="wakeup-timer"></div>
 </div>
 
-<!-- Supabase CDN -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
 <script>
-// ── SUPABASE INIT ──────────────────────────────────────────────────────
-const SUPABASE_URL = 'https://pesrhpgixkronvzeouek.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_LPyioDvbIyZ3oy1PhccOMg_EcwWJjnr';
-const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
-const VC_SIGNUP_BONUS    = 50;
-const VC_REFERRAL_BONUS  = 25; // new user gets this
-const VC_REFERRER_BONUS  = 25; // person whose code was used
-
 // ── REDIRECT IF ALREADY LOGGED IN ────────────────────────────────────
-(async () => {
-  const { data: { session } } = await sb.auth.getSession();
-  if (session) window.location.replace('dashboard.html');
-})();
+if (localStorage.getItem('gv_token')) {
+  window.location.replace('dashboard.html');
+}
 
 // ── TAB SWITCHING ─────────────────────────────────────────────────────
 function switchTab(tab) {
   document.querySelectorAll('.tab').forEach((t, i) => {
-    t.classList.toggle('active', ['login','register','forgot'][i] === tab);
+    t.classList.toggle('active', ['login', 'register'][i] === tab);
   });
   document.querySelectorAll('.form-panel').forEach(p => p.classList.remove('active'));
   document.getElementById(`panel-${tab}`).classList.add('active');
@@ -548,6 +535,22 @@ function clearMsg() {
   el.textContent = '';
 }
 
+// ── FRIENDLY ERROR MESSAGES ───────────────────────────────────────────
+const ERROR_MAP = {
+  EMAIL_ALREADY_REGISTERED: 'That email is already registered. Try logging in instead.',
+  USERNAME_TAKEN:           'Username already taken. Choose another.',
+  INVALID_CREDENTIALS:      'Invalid email or password.',
+  INVALID_EMAIL:            'Please enter a valid email address.',
+  WEAK_PASSWORD:            'Password does not meet requirements.',
+  INVALID_REFERRAL_CODE:    'Referral code not found. Leave it blank to skip.',
+  USER_NOT_FOUND:           'No account found with that email.',
+  ACCOUNT_DISABLED:         'This account has been disabled. Contact support.',
+};
+
+function friendlyError(code) {
+  return ERROR_MAP[code] || code || 'Something went wrong. Please try again.';
+}
+
 // ── PASSWORD TOGGLE ───────────────────────────────────────────────────
 function togglePw(id, btn) {
   const inp = document.getElementById(id);
@@ -562,11 +565,11 @@ function checkStrength(val) {
   const fill  = document.getElementById('strength-fill');
   const label = document.getElementById('strength-label');
   let s = 0;
-  if (val.length >= 8)  s++;
-  if (val.length >= 12) s++;
-  if (/[A-Z]/.test(val)) s++;
-  if (/[0-9]/.test(val)) s++;
-  if (/[^A-Za-z0-9]/.test(val)) s++;
+  if (val.length >= 8)            s++;
+  if (val.length >= 12)           s++;
+  if (/[A-Z]/.test(val))         s++;
+  if (/[0-9]/.test(val))         s++;
+  if (/[^A-Za-z0-9]/.test(val))  s++;
   const levels = [
     { pct:'0%',   color:'transparent', text:'' },
     { pct:'25%',  color:'#ff003c',     text:'// WEAK' },
@@ -582,46 +585,28 @@ function checkStrength(val) {
   label.style.color     = lvl.color;
 }
 
-// ── REFERRAL INPUT (async DB validation with debounce) ────────────────
-let refTimeout = null;
-let referralValid = false;
+// ── EMAIL VALIDATION ──────────────────────────────────────────────────
+function isValidEmail(email) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
 
-async function onReferralInput(inp) {
+// ── REFERRAL INPUT (client-side formatting only) ──────────────────────
+// Validation happens server-side on submit; badge just shows input is present.
+function onReferralInput(inp) {
   inp.value = inp.value.toUpperCase();
   const code  = inp.value.trim();
   const badge = document.getElementById('referral-badge');
   const hint  = document.getElementById('vc-hint');
 
-  clearTimeout(refTimeout);
-  referralValid = false;
-
-  if (code.length < 6) {
+  if (code.length === 0) {
     badge.style.display = 'none';
     hint.style.display  = 'none';
-    return;
+  } else {
+    badge.textContent   = '// PENDING';
+    badge.style.color   = 'var(--accent2)';
+    badge.style.display = 'block';
+    hint.style.display  = 'none';
   }
-
-  badge.textContent    = '// CHECKING...';
-  badge.style.color    = 'var(--accent2)';
-  badge.style.display  = 'block';
-  hint.style.display   = 'none';
-
-  refTimeout = setTimeout(async () => {
-    const { data } = await sb.from('users').select('id').eq('referral_code', code).maybeSingle();
-    if (data) {
-      referralValid        = true;
-      badge.textContent    = '✓ VALID';
-      badge.style.color    = 'var(--accent)';
-      badge.style.display  = 'block';
-      hint.style.display   = 'block';
-    } else {
-      referralValid        = false;
-      badge.textContent    = '✗ INVALID';
-      badge.style.color    = 'var(--accent3)';
-      badge.style.display  = 'block';
-      hint.style.display   = 'none';
-    }
-  }, 500);
 }
 
 // ── WAKE-UP OVERLAY ───────────────────────────────────────────────────
@@ -636,6 +621,7 @@ const WAKE_MESSAGES = [
 ];
 
 function showWakeup() {
+  document.getElementById('wakeup-log').innerHTML = '';
   document.getElementById('wakeup-overlay').classList.add('active');
   const start = Date.now();
   wakeTimerInterval = setInterval(() => {
@@ -662,13 +648,26 @@ function addLog(msg, type = 'log-wait') {
 }
 function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
+// ── API HELPER ────────────────────────────────────────────────────────
+async function apiPost(endpoint, body) {
+  const res = await fetch(endpoint, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+  const data = await res.json();
+  return { ok: res.ok, status: res.status, data };
+}
+
 // ── LOGIN ─────────────────────────────────────────────────────────────
 async function handleLogin() {
   const email    = document.getElementById('login-email').value.trim();
   const password = document.getElementById('login-password').value;
   const btn      = document.getElementById('login-btn');
 
+  // ── Client-side validation ──
   if (!email || !password) return showMsg('All fields required.');
+  if (!isValidEmail(email)) return showMsg('Please enter a valid email address.');
 
   btn.disabled = true;
   btn.textContent = '[ AUTHENTICATING... ]';
@@ -685,34 +684,29 @@ async function handleLogin() {
   }, 800);
 
   try {
-    const { data, error } = await sb.auth.signInWithPassword({ email, password });
+    const { ok, data } = await apiPost('/api/auth/login', { email, password });
 
     clearInterval(wakeInterval);
 
-    if (error) {
+    if (!ok || data.status !== 'success') {
       hideWakeup();
-      const msg = error.message.includes('Invalid') ? 'Invalid email or password.' : error.message;
-      showMsg(msg);
+      showMsg(friendlyError(data.error || data.message));
       btn.disabled = false;
       btn.textContent = '[ ACCESS VAULT ]';
       return;
     }
 
+    // ── Store token and redirect ──
+    localStorage.setItem('gv_token', data.token);
+
     addLog('Authentication successful!', 'log-ok');
     setWakeStatus('Access granted. Redirecting...');
-
-    // Store the session token for dashboard
-    const { data: { session } } = await sb.auth.getSession();
-    if (session?.access_token) {
-      localStorage.setItem('gv_token', session.access_token);
-    }
-
     await sleep(800);
     hideWakeup();
     showMsg('Access granted. Welcome back.', 'success');
     setTimeout(() => window.location.replace('dashboard.html'), 800);
 
-  } catch(e) {
+  } catch (e) {
     clearInterval(wakeInterval);
     hideWakeup();
     showMsg('Connection failed. Please try again.');
@@ -729,17 +723,11 @@ async function handleRegister() {
   const referral_code = document.getElementById('reg-referral').value.trim().toUpperCase();
   const btn           = document.getElementById('reg-btn');
 
+  // ── Client-side validation ──
   if (!username || !email || !password) return showMsg('All fields required.');
-  if (username.length < 3) return showMsg('Username must be at least 3 characters.');
-  if (password.length < 8) return showMsg('Password must be at least 8 characters.');
-
-  // Block if a referral code was typed but didn't pass DB validation yet
-  const refInput = document.getElementById('reg-referral').value.trim().toUpperCase();
-  if (refInput.length >= 6 && !referralValid) {
-    const badge = document.getElementById('referral-badge');
-    if (badge.textContent === '// CHECKING...') return showMsg('Please wait — validating referral code.');
-    return showMsg('Referral code is invalid. Clear it or use a valid code.');
-  }
+  if (username.length < 3)             return showMsg('Username must be at least 3 characters.');
+  if (!isValidEmail(email))            return showMsg('Please enter a valid email address.');
+  if (password.length < 8)            return showMsg('Password must be at least 8 characters.');
 
   btn.disabled = true;
   btn.textContent = '[ PROCESSING... ]';
@@ -756,168 +744,49 @@ async function handleRegister() {
   }, 700);
 
   try {
-    // ── 1. Check username is unique ──
-    const { data: existing } = await sb
-      .from('users')
-      .select('id')
-      .eq('username', username)
-      .maybeSingle();
+    // ── Build payload (referral_code optional) ──
+    const payload = { username, email, password };
+    if (referral_code) payload.referral_code = referral_code;
 
-    if (existing) {
-      clearInterval(wakeInterval); hideWakeup();
-      showMsg('Username already taken. Choose another.');
-      btn.disabled = false; btn.textContent = '[ JOIN THE VAULT ]';
-      return;
-    }
-
-    // ── 2. Validate referral code if provided ──
-    let referrerId = null;
-    if (referral_code) {
-      const { data: referrer } = await sb
-        .from('users')
-        .select('id')
-        .eq('referral_code', referral_code)
-        .maybeSingle();
-
-      if (referrer) {
-        referrerId = referrer.id;
-        addLog('Referral code validated!', 'log-ok');
-      } else {
-        addLog('Referral code not found — skipping bonus.', 'log-warn');
-      }
-    }
-
-    // ── 3. Sign up with Supabase Auth ──
-    const { data: authData, error: authError } = await sb.auth.signUp({
-      email,
-      password,
-      options: {
-        data: { username } // stored in auth.users raw_user_meta_data
-      }
-    });
-
-    if (authError) {
-      clearInterval(wakeInterval); hideWakeup();
-      showMsg(authError.message);
-      btn.disabled = false; btn.textContent = '[ JOIN THE VAULT ]';
-      return;
-    }
-
-    const userId = authData.user.id;
-
-    // ── 4. Generate unique referral code for this new user ──
-    const newReferralCode = generateCode(username);
-
-    // ── 5. Calculate starting VC ──
-    const startVC = VC_SIGNUP_BONUS + (referrerId ? VC_REFERRAL_BONUS : 0);
-
-    // ── 6. Insert into users table ──
-    const { error: insertError } = await sb.from('users').insert({
-      id:            userId,
-      username:      username,
-      email:         email,
-      credits:       startVC,
-      referral_code: newReferralCode,
-      referred_by:   referrerId,
-      tier:          'Ghost',
-      created_at:    new Date().toISOString(),
-    });
-
-    if (insertError) {
-      clearInterval(wakeInterval); hideWakeup();
-      // Handle unique username race condition
-      if (insertError.code === '23505' || insertError.message.includes('unique')) {
-        showMsg('Username already taken. Please choose another.');
-      } else {
-        showMsg('Account setup failed. Please try again.');
-      }
-      // Clean up the auth user we just created since profile insert failed
-      await sb.auth.signOut();
-      btn.disabled = false; btn.textContent = '[ JOIN THE VAULT ]';
-      return;
-    }
-
-    // ── 7. Log signup VC transaction ──
-    await sb.from('credit_transactions').insert({
-      user_id:     userId,
-      amount:      VC_SIGNUP_BONUS,
-      type:        'signup_bonus',
-      description: 'Welcome bonus',
-      created_at:  new Date().toISOString(),
-    });
-
-    // ── 8. If referral valid — log bonus for new user + reward referrer ──
-    if (referrerId) {
-      await sb.from('credit_transactions').insert([
-        {
-          user_id:     userId,
-          amount:      VC_REFERRAL_BONUS,
-          type:        'referral_bonus',
-          description: `Referral bonus — used code ${referral_code}`,
-          created_at:  new Date().toISOString(),
-        },
-        {
-          user_id:     referrerId,
-          amount:      VC_REFERRER_BONUS,
-          type:        'referral_reward',
-          description: `Referred ${username}`,
-          created_at:  new Date().toISOString(),
-        }
-      ]);
-
-      // Add VC to referrer
-      const { data: referrerUser } = await sb
-        .from('users')
-        .select('credits')
-        .eq('id', referrerId)
-        .single();
-
-      if (referrerUser) {
-        await sb.from('users')
-          .update({ credits: referrerUser.credits + VC_REFERRER_BONUS })
-          .eq('id', referrerId);
-      }
-    }
+    const { ok, data } = await apiPost('/api/auth/register', payload);
 
     clearInterval(wakeInterval);
-    addLog('Account created!', 'log-ok');
 
-    // ── Handle email confirmation requirement ──
-    if (!authData.user.confirmed_at && !authData.user.email_confirmed_at) {
-      setWakeStatus('Almost there! Check your inbox to confirm.');
-      await sleep(1200);
+    if (!ok || data.status !== 'success') {
       hideWakeup();
-      showMsg('Account created! Please check your email to confirm before logging in.', 'info');
+      showMsg(friendlyError(data.error || data.message));
+
+      // Highlight referral badge as invalid if that was the issue
+      if ((data.error || '').includes('REFERRAL')) {
+        const badge = document.getElementById('referral-badge');
+        badge.textContent   = '✗ INVALID';
+        badge.style.color   = 'var(--accent3)';
+        badge.style.display = 'block';
+        document.getElementById('vc-hint').style.display = 'none';
+      }
+
       btn.disabled = false;
       btn.textContent = '[ JOIN THE VAULT ]';
       return;
     }
 
-    setWakeStatus(`+${startVC} VC credited. Welcome to the Vault.`);
+    // ── Success ──
+    localStorage.setItem('gv_token', data.token);
+
+    addLog('Account created!', 'log-ok');
+    setWakeStatus('Welcome to the Vault.');
     await sleep(1200);
     hideWakeup();
+    showMsg('Account created! Welcome to Genesis Vault.', 'success');
+    setTimeout(() => window.location.replace('dashboard.html'), 1000);
 
-    // Store session token if available (email already confirmed)
-    if (authData.session?.access_token) {
-      localStorage.setItem('gv_token', authData.session.access_token);
-    }
-
-    showMsg(`Account created! ${startVC} VC credited. Welcome to Genesis Vault.`, 'success');
-    setTimeout(() => window.location.replace('dashboard.html'), 1500);
-
-  } catch(e) {
-    clearInterval(wakeInterval); hideWakeup();
-    showMsg('Something went wrong. Please try again.');
-    btn.disabled = false; btn.textContent = '[ JOIN THE VAULT ]';
+  } catch (e) {
+    clearInterval(wakeInterval);
+    hideWakeup();
+    showMsg('Connection failed. Please try again.');
+    btn.disabled = false;
+    btn.textContent = '[ JOIN THE VAULT ]';
   }
-}
-
-
-// ── GENERATE REFERRAL CODE ────────────────────────────────────────────
-function generateCode(username) {
-  const base = username.replace(/[^a-z0-9]/gi, '').toUpperCase().slice(0, 4);
-  const rand = Math.random().toString(36).substring(2, 6).toUpperCase();
-  return (base + rand).slice(0, 8).padEnd(8, '0');
 }
 
 // ── ENTER KEY SUPPORT ─────────────────────────────────────────────────
