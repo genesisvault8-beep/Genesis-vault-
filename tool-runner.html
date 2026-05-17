@@ -336,7 +336,7 @@
     document.getElementById('tool-desc-text').textContent = tool.description || '';
 
     const runType = (tool.tool_run_type || 'security').toLowerCase();
-    const typeLabelMap = { security: 'SECURITY', automation: 'AUTOMATION', script: 'SCRIPT' };
+    const typeLabelMap = { security: 'SECURITY', automation: 'AUTOMATION', script: 'SCRIPT', ai: 'AI TOOL' };
     document.getElementById('tool-type-badge').textContent = typeLabelMap[runType] || runType.toUpperCase();
 
     // Parse params_schema — array of { name, type, label, placeholder, hint, options }
@@ -349,7 +349,18 @@
       }
     } catch(e) {}
 
-    // Default schema: just a "target" field
+    // AI tools: default to a single textarea called "input"
+    if (runType === 'ai' && (!schema || !schema.length)) {
+      schema = [{
+        name:        'input',
+        type:        'textarea',
+        label:       tool.input_label || 'YOUR INPUT',
+        placeholder: tool.input_label || 'Type your question or paste your data here...',
+        hint:        'Rate limit: 30 AI requests per day'
+      }];
+    }
+
+    // Default schema for security/automation: just a "target" field
     if (!schema || !schema.length) {
       schema = [{ name: 'target', type: 'text', label: 'TARGET NODE', placeholder: 'Domain or IP (e.g. scanme.nmap.org)', hint: '> DOMAIN OR IP ONLY — NO SPECIAL CHARS' }];
     }
@@ -467,13 +478,23 @@
       });
 
       if (res.status === 401) { location.href = 'login.html'; return; }
+      if (res.status === 429) {
+        const errData = await res.json();
+        output.textContent = '> RATE LIMIT REACHED\n> ' + (errData.message || 'Daily AI limit reached. Resets at midnight UTC.');
+        output.className = 'error';
+        setStatus('red', 'RATE LIMITED');
+        runBtn.disabled = false;
+        runBtn.textContent = '▶ EXECUTE TOOL';
+        return;
+      }
 
       const data = await res.json();
 
       if (data.status === 'success') {
         output.textContent = data.output;
         output.className = 'success';
-        setStatus('green', `COMPLETE — EXIT ${data.return_code ?? 0}`);
+        const exitLabel = data.source === 'ai' ? 'AI' : `EXIT ${data.return_code ?? 0}`;
+        setStatus('green', `COMPLETE — ${exitLabel}`);
       } else {
         output.textContent = '> ERROR: ' + (data.message || 'Unknown error');
         output.className = 'error';
