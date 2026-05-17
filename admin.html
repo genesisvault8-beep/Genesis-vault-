@@ -536,17 +536,45 @@
 
   <!-- ══ VC SPENDING ══ -->
   <div class="page" id="page-vc">
-    <div class="section-title">
-      // VC Spending Logs
-      <button class="refresh-btn" onclick="loadVCLogs()">↻ REFRESH</button>
+
+    <!-- SUB-TABS -->
+    <div style="display:flex;gap:0;border-bottom:1px solid var(--border);margin-bottom:16px;">
+      <div id="vc-sub-purchases" onclick="switchVCTab('purchases')"
+           style="padding:7px 16px;font-family:'Share Tech Mono',monospace;font-size:0.65rem;letter-spacing:2px;cursor:pointer;border-bottom:2px solid var(--accent);color:var(--accent);">
+        PENDING TOPUPS
+      </div>
+      <div id="vc-sub-logs" onclick="switchVCTab('logs')"
+           style="padding:7px 16px;font-family:'Share Tech Mono',monospace;font-size:0.65rem;letter-spacing:2px;cursor:pointer;border-bottom:2px solid transparent;color:var(--text-dim);">
+        SPEND LOGS
+      </div>
     </div>
-    <div style="margin-bottom:12px;">
-      <input type="text" id="vc-search" placeholder="Search by user or reason..." oninput="filterVCLogs()" style="margin-bottom:0;">
+
+    <!-- PENDING VC PURCHASES -->
+    <div id="vc-purchases-panel">
+      <div class="section-title">
+        // Pending VC Top-Ups
+        <button class="refresh-btn" onclick="loadVCPurchases()">↻ REFRESH</button>
+      </div>
+      <div id="vc-purchases-container">
+        <div class="loading"><span class="spinner"></span>Loading...</div>
+      </div>
     </div>
-    <div id="vc-stats" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;"></div>
-    <div id="vc-container">
-      <div class="loading"><span class="spinner"></span>Loading...</div>
+
+    <!-- VC SPEND LOGS -->
+    <div id="vc-logs-panel" style="display:none;">
+      <div class="section-title">
+        // VC Spending Logs
+        <button class="refresh-btn" onclick="loadVCLogs()">↻ REFRESH</button>
+      </div>
+      <div style="margin-bottom:12px;">
+        <input type="text" id="vc-search" placeholder="Search by user or reason..." oninput="filterVCLogs()" style="margin-bottom:0;">
+      </div>
+      <div id="vc-stats" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;"></div>
+      <div id="vc-container">
+        <div class="loading"><span class="spinner"></span>Loading...</div>
+      </div>
     </div>
+
   </div>
 
   <!-- ══ USERS ══ -->
@@ -786,7 +814,7 @@
     el.classList.add('active');
     if (name === 'dashboard') { loadDashboard(); loadAdmins(); }
     if (name === 'tools')     loadPendingTools();
-    if (name === 'vc')        loadVCLogs();
+    if (name === 'vc')        loadVCPurchases();
     if (name === 'users')     loadUsers();
     if (name === 'courses')   { loadCourses(); }
   }
@@ -975,6 +1003,75 @@
 
   function toggleVCLock(checkbox) {
     document.getElementById('vc-lock-input').style.display = checkbox.checked ? 'flex' : 'none';
+  }
+
+  /* ── VC SUB-TAB SWITCH ── */
+  function switchVCTab(tab) {
+    const isPurchases = tab === 'purchases';
+    document.getElementById('vc-purchases-panel').style.display = isPurchases ? 'block' : 'none';
+    document.getElementById('vc-logs-panel').style.display      = isPurchases ? 'none'  : 'block';
+    document.getElementById('vc-sub-purchases').style.cssText =
+      `padding:7px 16px;font-family:'Share Tech Mono',monospace;font-size:0.65rem;letter-spacing:2px;cursor:pointer;border-bottom:2px solid ${isPurchases?'var(--accent)':'transparent'};color:${isPurchases?'var(--accent)':'var(--text-dim)'};`;
+    document.getElementById('vc-sub-logs').style.cssText =
+      `padding:7px 16px;font-family:'Share Tech Mono',monospace;font-size:0.65rem;letter-spacing:2px;cursor:pointer;border-bottom:2px solid ${!isPurchases?'var(--accent)':'transparent'};color:${!isPurchases?'var(--accent)':'var(--text-dim)'};`;
+    if (isPurchases) loadVCPurchases();
+    else loadVCLogs();
+  }
+
+  /* ── LOAD PENDING VC PURCHASES ── */
+  async function loadVCPurchases() {
+    const c = document.getElementById('vc-purchases-container');
+    c.innerHTML = '<div class="loading"><span class="spinner"></span>Loading...</div>';
+    try {
+      const res  = await authedFetch(`${API}/admin/vc/pending`);
+      const data = await res.json();
+      const purchases = data.purchases || [];
+      if (!purchases.length) {
+        c.innerHTML = '<div class="empty-queue">// No pending VC purchases.</div>'; return;
+      }
+      c.innerHTML = purchases.map(p => `
+        <div class="item-card" style="margin-bottom:12px;">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;gap:10px;">
+            <div>
+              <div style="font-weight:700;color:white;letter-spacing:1px;">${esc(p.username || p.user_id)}</div>
+              <div style="font-family:'Share Tech Mono',monospace;font-size:0.65rem;color:var(--text-dim);margin-top:3px;">
+                Balance: ⬡ ${p.current_balance ?? '?'} VC · ${esc(p.package || '?')} package
+              </div>
+            </div>
+            <div style="text-align:right;">
+              <div style="font-family:'Share Tech Mono',monospace;font-size:1rem;color:#f5c400;font-weight:700;">⬡ ${p.vc_received} VC</div>
+              <div style="font-family:'Share Tech Mono',monospace;font-size:0.7rem;color:var(--accent);">$${p.usdt_amount} USDT</div>
+            </div>
+          </div>
+          <div style="font-family:'Share Tech Mono',monospace;font-size:0.65rem;color:var(--text-dim);margin-bottom:10px;word-break:break-all;">
+            TX: <span style="color:var(--accent2);">${esc(p.binance_tx_id)}</span>
+          </div>
+          <div style="display:flex;gap:8px;">
+            <button class="btn-approve" onclick="confirmVCPurchase(${p.id})" style="flex:1;">[ ✓ CONFIRM ]</button>
+            <button class="btn-reject"  onclick="rejectVCPurchase(${p.id})"  style="flex:1;">[ ✗ REJECT ]</button>
+          </div>
+        </div>`).join('');
+    } catch(e) {
+      c.innerHTML = '<div class="empty-queue">// Failed to load VC purchases.</div>';
+    }
+  }
+
+  async function confirmVCPurchase(id) {
+    try {
+      const res  = await authedFetch(`${API}/admin/vc/confirm/${id}`, { method:'POST', body: JSON.stringify({}) });
+      const data = await res.json();
+      if (data.status === 'success') { toast('✓ ' + data.message); loadVCPurchases(); }
+      else toast('Error: ' + data.message, true);
+    } catch(e) { toast('Network error', true); }
+  }
+
+  async function rejectVCPurchase(id) {
+    try {
+      const res  = await authedFetch(`${API}/admin/vc/reject/${id}`, { method:'POST', body: JSON.stringify({}) });
+      const data = await res.json();
+      if (data.status === 'success') { toast('Purchase rejected.'); loadVCPurchases(); }
+      else toast('Error: ' + data.message, true);
+    } catch(e) { toast('Network error', true); }
   }
 
   async function loadVCLogs() {
