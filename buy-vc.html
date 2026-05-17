@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Genesis Vault | Buy VC</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:       #020608;
+    --bg2:      #060d10;
+    --bg3:      #0a1520;
+    --accent:   #00f5c4;
+    --accent2:  #00a8ff;
+    --accent3:  #ff003c;
+    --text:     #c8e6f0;
+    --text-dim: #4a7a8a;
+    --border:   #0f2a35;
+    --glow:     0 0 20px rgba(0,245,196,0.2);
+    --vc:       #f5c400;
+    --vc-glow:  0 0 20px rgba(245,196,0,0.25);
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  body {
+    background:var(--bg); color:var(--text);
+    font-family:'Rajdhani',sans-serif; min-height:100vh;
+  }
+
+  body::before {
+    content:''; position:fixed; inset:0;
+    background-image:
+      linear-gradient(rgba(0,245,196,0.02) 1px,transparent 1px),
+      linear-gradient(90deg,rgba(0,245,196,0.02) 1px,transparent 1px);
+    background-size:40px 40px; pointer-events:none; z-index:0;
+  }
+
+  /* NAV */
+  nav {
+    position:fixed; top:0; left:0; right:0;
+    background:rgba(2,6,8,0.95); border-bottom:1px solid var(--border);
+    padding:0 20px; height:56px; display:flex; align-items:center;
+    justify-content:space-between; z-index:100; backdrop-filter:blur(10px);
+  }
+  .nav-logo { font-family:'Share Tech Mono',monospace; font-size:1rem; letter-spacing:3px; }
+  .nav-logo span:first-child { color:var(--accent); }
+  .nav-logo span:last-child  { color:white; }
+  .back-btn {
+    background:none; border:1px solid var(--border); color:var(--text-dim);
+    padding:6px 14px; font-family:'Share Tech Mono',monospace; font-size:0.7rem;
+    cursor:pointer; letter-spacing:1px; transition:all 0.2s;
+  }
+  .back-btn:hover { border-color:var(--accent); color:var(--accent); }
+
+  /* MAIN */
+  main {
+    padding-top:76px; padding-bottom:40px;
+    position:relative; z-index:1; max-width:500px;
+    margin:0 auto; padding-left:20px; padding-right:20px;
+  }
+
+  /* HERO */
+  .vc-hero {
+    text-align:center; padding:24px 0 20px;
+    border-bottom:1px solid var(--border); margin-bottom:24px;
+  }
+  .vc-hero-tag {
+    font-family:'Share Tech Mono',monospace;
+    font-size:0.65rem; color:var(--vc);
+    letter-spacing:4px; margin-bottom:10px;
+  }
+  .vc-hero h1 {
+    font-size:2rem; font-weight:700;
+    letter-spacing:4px; color:white;
+    text-transform:uppercase; margin-bottom:6px;
+  }
+  .vc-hero h1 span { color:var(--vc); }
+  .vc-hero p {
+    font-size:0.82rem; color:var(--text-dim);
+    line-height:1.6; max-width:320px; margin:0 auto 16px;
+  }
+  .vc-balance-hero {
+    display:inline-flex; align-items:center; gap:10px;
+    background:var(--bg2); border:1px solid var(--vc);
+    padding:10px 20px;
+  }
+  .vc-balance-hero .lbl {
+    font-family:'Share Tech Mono',monospace;
+    font-size:0.65rem; color:var(--text-dim); letter-spacing:2px;
+  }
+  .vc-balance-hero .val {
+    font-family:'Share Tech Mono',monospace;
+    font-size:1.1rem; color:var(--vc); font-weight:700;
+  }
+
+  /* SECTION TITLE */
+  .section-title {
+    font-family:'Share Tech Mono',monospace; font-size:0.75rem;
+    color:var(--accent); letter-spacing:3px; text-transform:uppercase;
+    margin-bottom:16px; border-bottom:1px solid var(--border); padding-bottom:8px;
+  }
+
+  /* VC PACKAGES */
+  .packages-grid { display:grid; gap:12px; margin-bottom:28px; }
+
+  .pkg-card {
+    background:var(--bg2); border:1px solid var(--border);
+    padding:18px; cursor:pointer; transition:all 0.25s;
+    animation:fadeIn 0.4s ease; position:relative; overflow:hidden;
+  }
+  .pkg-card::before {
+    content:''; position:absolute; top:0; left:0; right:0; height:2px;
+    background:linear-gradient(90deg, transparent, var(--vc), transparent);
+    opacity:0; transition:opacity 0.3s;
+  }
+  .pkg-card:hover { border-color:var(--vc); box-shadow:var(--vc-glow); }
+  .pkg-card:hover::before { opacity:1; }
+  .pkg-card.popular {
+    border-color:var(--vc);
+  }
+  .pkg-card.popular::after {
+    content:'// BEST VALUE';
+    position:absolute; top:12px; right:14px;
+    font-family:'Share Tech Mono',monospace; font-size:0.58rem;
+    color:var(--vc); letter-spacing:2px;
+  }
+
+  .pkg-top { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:10px; }
+  .pkg-amount {
+    font-family:'Share Tech Mono',monospace;
+    font-size:1.6rem; color:var(--vc); font-weight:700; line-height:1;
+  }
+  .pkg-amount span { font-size:0.8rem; color:var(--text-dim); margin-left:4px; }
+  .pkg-price {
+    font-family:'Share Tech Mono',monospace;
+    font-size:0.9rem; color:var(--accent); letter-spacing:1px;
+  }
+  .pkg-desc {
+    font-size:0.78rem; color:var(--text-dim); line-height:1.5; margin-bottom:12px;
+  }
+  .pkg-bonus {
+    font-family:'Share Tech Mono',monospace; font-size:0.65rem;
+    color:var(--accent3); letter-spacing:1px;
+    border:1px solid rgba(255,0,60,0.3); padding:2px 8px;
+    display:inline-block; margin-bottom:10px;
+  }
+  .pkg-btn {
+    width:100%; padding:11px; background:none;
+    border:1px solid var(--vc); color:var(--vc);
+    font-family:'Share Tech Mono',monospace; font-size:0.75rem;
+    letter-spacing:2px; cursor:pointer; transition:all 0.2s;
+  }
+  .pkg-btn:hover, .pkg-card.popular .pkg-btn {
+    background:var(--vc); color:#000; font-weight:700;
+  }
+  .pkg-card.popular .pkg-btn:hover { background:white; color:#000; }
+
+  /* EARN SECTION */
+  .earn-grid { display:grid; gap:10px; margin-bottom:28px; }
+  .earn-item {
+    background:var(--bg2); border:1px solid var(--border);
+    border-left:3px solid var(--accent2); padding:14px 16px;
+    display:flex; justify-content:space-between; align-items:center;
+  }
+  .earn-left .earn-title {
+    font-weight:700; letter-spacing:1px; color:white; font-size:0.9rem; margin-bottom:2px;
+  }
+  .earn-left .earn-desc {
+    font-family:'Share Tech Mono',monospace; font-size:0.62rem; color:var(--text-dim); letter-spacing:1px;
+  }
+  .earn-amount {
+    font-family:'Share Tech Mono',monospace; font-size:0.9rem; color:var(--vc); font-weight:700;
+  }
+
+  /* HOW IT WORKS */
+  .how-step {
+    display:flex; gap:14px; align-items:flex-start;
+    margin-bottom:14px;
+  }
+  .step-num {
+    font-family:'Share Tech Mono',monospace; font-size:0.75rem;
+    color:var(--vc); border:1px solid var(--vc);
+    width:28px; height:28px; display:flex; align-items:center;
+    justify-content:center; flex-shrink:0;
+  }
+  .step-text { font-size:0.85rem; color:var(--text); line-height:1.5; }
+  .step-text strong { color:white; }
+
+  /* MODAL */
+  .modal {
+    display:none; position:fixed; inset:0;
+    background:rgba(2,6,8,0.97); z-index:200;
+    padding:20px; overflow-y:auto; flex-direction:column;
+    align-items:center; justify-content:flex-start;
+  }
+  .modal.active { display:flex; }
+  .modal-box {
+    background:var(--bg2); border:1px solid var(--vc);
+    padding:24px; width:100%; max-width:420px; margin-top:40px;
+  }
+  .modal-box h3 {
+    font-family:'Share Tech Mono',monospace; color:var(--vc);
+    letter-spacing:3px; font-size:0.9rem; margin-bottom:6px;
+  }
+  .modal-pkg-name { color:white; font-weight:700; font-size:1rem; letter-spacing:2px; margin-bottom:16px; }
+  .modal label {
+    display:block; font-size:0.68rem; letter-spacing:2px;
+    color:var(--text-dim); margin-bottom:6px;
+    font-family:'Share Tech Mono',monospace; text-transform:uppercase;
+  }
+  .modal input {
+    width:100%; background:var(--bg); border:1px solid var(--border);
+    color:var(--text); padding:11px 14px;
+    font-family:'Share Tech Mono',monospace; font-size:0.85rem;
+    outline:none; transition:border-color 0.2s; margin-bottom:14px;
+  }
+  .modal input:focus { border-color:var(--vc); }
+  .modal input::placeholder { color:var(--text-dim); }
+  .info-box {
+    background:var(--bg3); border:1px solid var(--border);
+    border-left:3px solid var(--accent2); padding:14px 16px;
+    margin-bottom:16px; font-family:'Share Tech Mono',monospace;
+    font-size:0.72rem; line-height:1.9; color:var(--text-dim);
+  }
+  .info-box span { color:var(--accent); }
+  .btn-submit {
+    width:100%; padding:14px; background:var(--vc); color:#000;
+    border:none; font-family:'Rajdhani',sans-serif; font-weight:700;
+    font-size:1rem; letter-spacing:3px; cursor:pointer; transition:all 0.2s;
+    clip-path:polygon(8px 0%,100% 0%,calc(100% - 8px) 100%,0% 100%);
+  }
+  .btn-submit:hover { background:white; }
+  .btn-submit:disabled { opacity:0.5; cursor:not-allowed; }
+  .btn-cancel {
+    width:100%; padding:10px; background:none; color:var(--text-dim);
+    border:1px solid var(--border); font-family:'Share Tech Mono',monospace;
+    font-size:0.75rem; cursor:pointer; margin-top:8px; transition:all 0.2s;
+  }
+  .btn-cancel:hover { border-color:var(--accent3); color:var(--accent3); }
+  .status-msg {
+    padding:10px 14px; font-family:'Share Tech Mono',monospace;
+    font-size:0.75rem; letter-spacing:1px; margin-bottom:12px; display:none;
+  }
+  .status-msg.ok  { border:1px solid var(--accent);  color:var(--accent);  background:rgba(0,245,196,0.05); }
+  .status-msg.err { border:1px solid var(--accent3); color:var(--accent3); background:rgba(255,0,60,0.05); }
+
+  .loading { text-align:center; padding:20px; color:var(--text-dim); font-family:'Share Tech Mono',monospace; font-size:0.8rem; }
+  .spinner { display:inline-block; width:16px; height:16px; border:2px solid var(--border); border-top-color:var(--vc); border-radius:50%; animation:spin 0.8s linear infinite; vertical-align:middle; margin-right:8px; }
+
+  @keyframes spin    { to { transform:rotate(360deg); } }
+  @keyframes fadeIn  { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-logo"><span>GENESIS</span><span>VAULT</span></div>
+  <button class="back-btn" onclick="history.back()">← BACK</button>
+</nav>
+
+<main>
+
+  <!-- HERO -->
+  <div class="vc-hero">
+    <p class="vc-hero-tag">// VAULT CURRENCY</p>
+    <h1>BUY <span>VC</span></h1>
+    <p>Use VC to access labs, unlock courses, and buy tools instantly — no wait time.</p>
+    <div class="vc-balance-hero">
+      <span class="lbl">YOUR BALANCE</span>
+      <span class="val" id="hero-vc-balance">⬡ — VC</span>
+    </div>
+  </div>
+
+  <!-- PACKAGES -->
+  <p class="section-title">// VC Packages</p>
+  <div class="packages-grid">
+
+    <div class="pkg-card" onclick="openBuy('starter')">
+      <div class="pkg-top">
+        <div class="pkg-amount">100 <span>VC</span></div>
+        <div class="pkg-price">$1 USDT</div>
+      </div>
+      <p class="pkg-desc">Good for trying out a lab or two. Perfect for new operatives.</p>
+      <button class="pkg-btn">[ GET 100 VC ]</button>
+    </div>
+
+    <div class="pkg-card popular" onclick="openBuy('standard')">
+      <div class="pkg-top">
+        <div class="pkg-amount">500 <span>VC</span></div>
+        <div class="pkg-price">$4 USDT</div>
+      </div>
+      <div class="pkg-bonus">+50 BONUS VC</div>
+      <p class="pkg-desc">Most popular package. Access multiple labs and courses.</p>
+      <button class="pkg-btn">[ GET 550 VC ]</button>
+    </div>
+
+    <div class="pkg-card" onclick="openBuy('pro')">
+      <div class="pkg-top">
+        <div class="pkg-amount">1000 <span>VC</span></div>
+        <div class="pkg-price">$7 USDT</div>
+      </div>
+      <div class="pkg-bonus">+200 BONUS VC</div>
+      <p class="pkg-desc">Serious operatives. Full access to the vault ecosystem.</p>
+      <button class="pkg-btn">[ GET 1200 VC ]</button>
+    </div>
+
+    <div class="pkg-card" onclick="openBuy('elite')">
+      <div class="pkg-top">
+        <div class="pkg-amount">2500 <span>VC</span></div>
+        <div class="pkg-price">$15 USDT</div>
+      </div>
+      <div class="pkg-bonus">+750 BONUS VC</div>
+      <p class="pkg-desc">Elite tier. Maximum VC at maximum value. Unlock everything.</p>
+      <button class="pkg-btn">[ GET 3250 VC ]</button>
+    </div>
+
+  </div>
+
+  <!-- EARN VC -->
+  <p class="section-title">// Earn VC Free</p>
+  <div class="earn-grid">
+    <div class="earn-item">
+      <div class="earn-left">
+        <div class="earn-title">Daily Login</div>
+        <div class="earn-desc">// Login every day for your bonus</div>
+      </div>
+      <div class="earn-amount">+10 VC / day</div>
+    </div>
+    <div class="earn-item">
+      <div class="earn-left">
+        <div class="earn-title">Signup Bonus</div>
+        <div class="earn-desc">// One-time new account bonus</div>
+      </div>
+      <div class="earn-amount">+50 VC</div>
+    </div>
+    <div class="earn-item">
+      <div class="earn-left">
+        <div class="earn-title">Referral Bonus</div>
+        <div class="earn-desc">// Invite a friend who joins</div>
+      </div>
+      <div class="earn-amount">+25 VC</div>
+    </div>
+  </div>
+
+  <!-- HOW IT WORKS -->
+  <p class="section-title">// How to Buy</p>
+  <div style="margin-bottom:28px;">
+    <div class="how-step">
+      <div class="step-num">1</div>
+      <div class="step-text">Select a VC package above and click the button.</div>
+    </div>
+    <div class="how-step">
+      <div class="step-num">2</div>
+      <div class="step-text">Send the exact USDT amount <strong>(BEP-20 / Binance Smart Chain)</strong> to the Vault wallet address shown.</div>
+    </div>
+    <div class="how-step">
+      <div class="step-num">3</div>
+      <div class="step-text">Copy your <strong>Binance TX ID</strong> (transaction hash) and paste it in the form.</div>
+    </div>
+    <div class="how-step">
+      <div class="step-num">4</div>
+      <div class="step-text">Admin verifies within <strong>24 hours</strong> and your VC balance updates automatically.</div>
+    </div>
+  </div>
+
+</main>
+
+<!-- PURCHASE MODAL -->
+<div class="modal" id="modal-buy">
+  <div class="modal-box">
+    <h3>// BUY VC PACKAGE</h3>
+    <div class="modal-pkg-name" id="modal-pkg-name">—</div>
+
+    <div class="info-box">
+      // Send exact USDT <span>(BEP-20 / Binance Smart Chain)</span> to:<br>
+      // Vault wallet: <span id="modal-wallet-addr" style="word-break:break-all;">Loading...</span><br>
+      // Then paste your TX ID below<br>
+      // Admin confirms within <span>24 hours</span>
+    </div>
+
+    <label>Your Binance TX ID</label>
+    <input type="text" id="buy-tx" placeholder="Transaction hash...">
+
+    <div class="status-msg" id="buy-status"></div>
+    <button class="btn-submit" id="btn-submit" onclick="submitPayment()">[ SUBMIT PAYMENT ]</button>
+    <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+  </div>
+</div>
+
+<script>
+const API   = 'https://genesis-vault-backend.onrender.com/api';
+let token   = localStorage.getItem('gv_token');
+if (!token) location.href = 'login.html';
+
+let activePkg = null;
+
+const PACKAGES = {
+  starter:  { label: '100 VC — $1 USDT',           usdt: 1,  vc: 100,  bonus: 0   },
+  standard: { label: '500 VC + 50 Bonus — $4 USDT', usdt: 4,  vc: 500,  bonus: 50  },
+  pro:      { label: '1000 VC + 200 Bonus — $7 USDT', usdt: 7,  vc: 1000, bonus: 200 },
+  elite:    { label: '2500 VC + 750 Bonus — $15 USDT', usdt: 15, vc: 2500, bonus: 750 },
+};
+
+function h() { return { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }; }
+
+async function fetchWithAuth(url, options = {}) {
+  options.headers = { ...h(), ...(options.headers || {}) };
+  const res = await fetch(url, options);
+  if (res.status === 401) { localStorage.removeItem('gv_token'); location.href = 'login.html'; }
+  return res;
+}
+
+/* ── LOAD VC BALANCE ── */
+async function loadBalance() {
+  try {
+    const res  = await fetchWithAuth(`${API}/vc/balance`);
+    const data = await res.json();
+    const vc   = data.balance ?? data.vc_balance ?? 0;
+    document.getElementById('hero-vc-balance').textContent = `⬡ ${vc.toLocaleString()} VC`;
+  } catch(e) {
+    const cached = parseInt(localStorage.getItem('gv_vc') || '0');
+    document.getElementById('hero-vc-balance').textContent = `⬡ ${cached.toLocaleString()} VC`;
+  }
+}
+
+/* ── LOAD WALLET ADDRESS ── */
+async function loadWallet() {
+  try {
+    const res  = await fetchWithAuth(`${API}/settings/wallet`);
+    const data = await res.json();
+    const addr = data.wallet_address || data.address || 'Contact admin for wallet address';
+    document.getElementById('modal-wallet-addr').textContent = addr;
+  } catch(e) {
+    document.getElementById('modal-wallet-addr').textContent = 'Contact admin for wallet address';
+  }
+}
+
+/* ── OPEN BUY MODAL ── */
+function openBuy(pkgKey) {
+  activePkg = { key: pkgKey, ...PACKAGES[pkgKey] };
+  document.getElementById('modal-pkg-name').textContent = activePkg.label;
+  document.getElementById('buy-tx').value = '';
+  document.getElementById('buy-status').style.display = 'none';
+  document.getElementById('btn-submit').disabled = false;
+  document.getElementById('btn-submit').textContent = '[ SUBMIT PAYMENT ]';
+  loadWallet();
+  document.getElementById('modal-buy').classList.add('active');
+}
+
+function closeModal() {
+  document.getElementById('modal-buy').classList.remove('active');
+  activePkg = null;
+}
+
+/* ── SUBMIT PAYMENT ── */
+async function submitPayment() {
+  const tx  = document.getElementById('buy-tx').value.trim();
+  const btn = document.getElementById('btn-submit');
+  const msg = document.getElementById('buy-status');
+  if (!tx) { showStatus(msg, '// TX ID required.', true); return; }
+  btn.disabled = true; btn.textContent = '[ SUBMITTING... ]';
+  try {
+    const res  = await fetchWithAuth(`${API}/vc/purchase`, {
+      method: 'POST',
+      body: JSON.stringify({
+        package:      activePkg.key,
+        usdt_amount:  activePkg.usdt,
+        vc_amount:    activePkg.vc + activePkg.bonus,
+        binance_tx_id: tx
+      })
+    });
+    const data = await res.json();
+    if (data.status === 'success') {
+      showStatus(msg, `✓ Submitted! Admin verifies within 24h. You'll receive ${(activePkg.vc + activePkg.bonus).toLocaleString()} VC.`, false);
+      btn.textContent = '[ SUBMITTED ]';
+    } else {
+      showStatus(msg, data.message || '// Submission failed.', true);
+      btn.disabled = false; btn.textContent = '[ SUBMIT PAYMENT ]';
+    }
+  } catch(e) {
+    showStatus(msg, '// Network error.', true);
+    btn.disabled = false; btn.textContent = '[ SUBMIT PAYMENT ]';
+  }
+}
+
+/* ── UTILS ── */
+function showStatus(el, msg, err) {
+  el.textContent = msg;
+  el.className   = 'status-msg ' + (err ? 'err' : 'ok');
+  el.style.display = 'block';
+}
+
+/* ── INIT ── */
+loadBalance();
+</script>
+</body>
+</html>
