@@ -336,8 +336,8 @@
         </select>
       </div>
       <div>
-        <label>PRICE (USDT)</label>
-        <input type="number" id="t-price" placeholder="0" min="0" step="0.01">
+        <label>PRICE (VC)</label>
+        <input type="number" id="t-price" placeholder="0 (VC price)" min="0" step="1">
       </div>
     </div>
 
@@ -451,7 +451,7 @@
         <label>DISCOUNT TYPE</label>
         <select id="p-type">
           <option value="percent">PERCENTAGE (%)</option>
-          <option value="fixed">FIXED (USDT)</option>
+          <option value="fixed">FIXED (VC)</option>
         </select>
       </div>
       <div>
@@ -692,7 +692,7 @@ function renderToolsMgr() {
   <div class="tool-mgr-card" id="tmgr-${t.id}">
     <div class="tool-mgr-info">
       <div class="tool-mgr-name">${esc(t.title)}</div>
-      <div class="tool-mgr-meta">${esc((t.type||'tool').toUpperCase())} · $${t.price > 0 ? t.price+' USDT' : 'FREE'}${t.is_kit?' · KIT':''}</div>
+      <div class="tool-mgr-meta">${esc((t.type||'tool').toUpperCase())} · ${t.vc_price > 0 ? '⬡'+t.vc_price+' VC' : 'FREE'}${t.is_kit?' · KIT':''}</div>
     </div>
     <div class="tool-mgr-actions">
       <div class="toggle-switch" onclick="toggleToolActive('${t.id}', this)">
@@ -746,7 +746,7 @@ function openEditTool(id) {
   document.getElementById('t-title').value    = t.title || '';
   document.getElementById('t-desc').value     = t.description || '';
   document.getElementById('t-cat').value      = t.type || 'automation';
-  document.getElementById('t-price').value    = t.price || 0;
+  document.getElementById('t-price').value    = t.vc_price || t.price || 0;
 
   // Run type
   const runType = t.tool_run_type || (t.download_url ? 'download' : 'security');
@@ -835,7 +835,8 @@ async function submitTool() {
     title:            document.getElementById('t-title').value.trim(),
     description:      document.getElementById('t-desc').value.trim(),
     type:             document.getElementById('t-cat').value,
-    price:            parseFloat(document.getElementById('t-price').value) || 0,
+    vc_price:         parseInt(document.getElementById('t-price').value) || 0,
+            price:            0,
     tool_run_type:    runType,
     command_template: runType === 'security'   ? getVal('t-cmd') : null,
     language:         runType === 'automation' ? getVal('t-language') : null,
