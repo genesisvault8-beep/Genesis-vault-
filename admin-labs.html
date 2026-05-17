@@ -309,7 +309,7 @@
 
   <!-- ══ ADD LAB ══ -->
   <div class="page" id="page-add">
-    <div class="section-title">// Add New Lab</div>
+    <div class="section-title" id="add-section-title">// Add New Lab</div>
 
     <div class="form-card">
       <label>Lab Title *</label>
@@ -359,6 +359,17 @@
       <textarea id="lab-html-content" placeholder="<!DOCTYPE html><html>..."></textarea>
     </div>
 
+    <div class="form-card" style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;">
+      <label style="margin-bottom:0;font-size:0.65rem;color:var(--dim);letter-spacing:2px;">PUBLISH STATUS</label>
+      <div class="toggle-wrap">
+        <span class="toggle-label" id="live-toggle-label">LIVE</span>
+        <label class="toggle">
+          <input type="checkbox" id="f-is-live" checked onchange="document.getElementById('live-toggle-label').textContent = this.checked ? 'LIVE' : 'OFFLINE'">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+    </div>
+
     <button class="btn-full" onclick="publishLab()" id="publish-btn">[ PUBLISH LAB ]</button>
   </div>
 
@@ -406,6 +417,18 @@ function authH() {
   return { 'Content-Type':'application/json', 'Authorization':`Bearer ${token}` };
 }
 
+// ── FETCH WITH AUTH (401 redirect) ────────────────────────────────────
+async function fetchWithAuth(url, options = {}) {
+  const res = await fetch(url, { ...options, headers: { ...authH(), ...(options.headers || {}) } });
+  if (res.status === 401) {
+    localStorage.removeItem('gv_admin_token');
+    toast('// Session expired – redirecting…', 'var(--accent3)');
+    setTimeout(() => { window.location.href = 'admin-login.html'; }, 1200);
+    throw new Error('401 Unauthorized');
+  }
+  return res;
+}
+
 // ── TOAST ─────────────────────────────────────────────────────────────
 function toast(msg, color = 'var(--accent)') {
   const el = document.getElementById('toast');
@@ -431,7 +454,7 @@ function showPage(name, el) {
 async function loadStats() {
   const grid = document.getElementById('stats-grid');
   try {
-    const res  = await fetch(`${API}/admin/labs/stats`, { headers: authH() });
+    const res  = await fetchWithAuth(`${API}/admin/labs/stats`);
     const data = await res.json();
     const d    = data.stats || {};
     grid.innerHTML = `
@@ -465,7 +488,7 @@ async function loadLabs() {
   const list = document.getElementById('labs-overview-list');
   list.innerHTML = '<div class="loading"><span class="spinner"></span>Loading...</div>';
   try {
-    const res  = await fetch(`${API}/admin/labs`, { headers: authH() });
+    const res  = await fetchWithAuth(`${API}/admin/labs`);
     const data = await res.json();
     const labs = data.labs || [];
 
@@ -514,9 +537,8 @@ async function toggleLive(id, checkbox) {
   const label  = checkbox.closest('.toggle-wrap').querySelector('.toggle-label');
   label.textContent = isLive ? 'LIVE' : 'OFF';
   try {
-    const res = await fetch(`${API}/admin/labs/${id}/toggle`, {
+    const res = await fetchWithAuth(`${API}/admin/labs/${id}/toggle`, {
       method:  'POST',
-      headers: authH(),
       body:    JSON.stringify({ is_live: isLive })
     });
     const d = await res.json();
@@ -540,7 +562,7 @@ async function deleteLab(id, btn) {
   if (!confirm('Permanently delete this lab? This cannot be undone.')) return;
   btn.disabled = true; btn.textContent = '...';
   try {
-    const res = await fetch(`${API}/admin/labs/${id}/delete`, { method:'POST', headers:authH() });
+    const res = await fetchWithAuth(`${API}/admin/labs/${id}/delete`, { method:'POST' });
     if (res.ok) {
       document.getElementById(`lab-item-${id}`).remove();
       toast('// Lab deleted', 'var(--accent3)');
@@ -558,7 +580,7 @@ async function deleteLab(id, btn) {
 // ── EDIT LAB ──────────────────────────────────────────────────────────
 async function editLab(id) {
   try {
-    const res  = await fetch(`${API}/admin/labs/${id}`, { headers: authH() });
+    const res  = await fetchWithAuth(`${API}/admin/labs/${id}`);
     const data = await res.json();
     const lab  = data.lab;
     if (!lab) { toast('// Failed to load lab', 'var(--accent3)'); return; }
@@ -570,6 +592,7 @@ async function editLab(id) {
     document.getElementById('f-category').value  = lab.category || 'AUTH';
     document.getElementById('f-difficulty').value= lab.difficulty || 'easy';
     document.getElementById('lab-html-content').value = lab.html_content || '';
+    document.getElementById('f-is-live').checked = lab.is_live ?? true;
 
     currentTags = lab.tags || [];
     renderTags();
@@ -584,8 +607,10 @@ async function editLab(id) {
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
     document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
     document.getElementById('page-add').classList.add('active');
-    document.querySelectorAll('.nav-item')[1].classList.add('active');
-    document.querySelector('.section-title').textContent = `// Edit Lab #${id}`;
+    const addNavItem = document.querySelectorAll('.nav-item')[1];
+    addNavItem.classList.add('active');
+    addNavItem.querySelector('.nav-label').textContent = 'Edit Lab';
+    document.getElementById('add-section-title').textContent = `// Edit Lab #${id}`;
     window.scrollTo(0,0);
     toast('// Lab loaded for editing');
   } catch(e) {
@@ -638,6 +663,7 @@ async function publishLab() {
   const difficulty=document.getElementById('f-difficulty').value;
   const html     = document.getElementById('lab-html-content').value.trim();
   const hints    = getHints();
+  const isLive   = document.getElementById('f-is-live').checked;
 
   if (!title || !desc || !objective || !html) {
     toast('// Title, description, objective and HTML are required', 'var(--accent3)');
@@ -648,13 +674,13 @@ async function publishLab() {
   btn.textContent = editingLabId ? '[ UPDATING... ]' : '[ PUBLISHING... ]';
 
   const payload = { title, description: desc, objective, category, difficulty,
-                    tags: currentTags, hints, html_content: html, is_live: true };
+                    tags: currentTags, hints, html_content: html, is_live: isLive };
 
   const url    = editingLabId ? `${API}/admin/labs/${editingLabId}/update` : `${API}/admin/labs/create`;
   const method = 'POST';
 
   try {
-    const res  = await fetch(url, { method, headers: authH(), body: JSON.stringify(payload) });
+    const res  = await fetchWithAuth(url, { method, body: JSON.stringify(payload) });
     const data = await res.json();
     if (data.status === 'success') {
       toast(editingLabId ? '// Lab updated!' : '// Lab published!');
@@ -684,6 +710,11 @@ function resetForm() {
   document.getElementById('hints-list').innerHTML   = '';
   document.getElementById('publish-btn').textContent = '[ PUBLISH LAB ]';
   document.getElementById('publish-btn').disabled    = false;
+  document.getElementById('f-is-live').checked = true;
+  document.getElementById('live-toggle-label').textContent = 'LIVE';
+  document.getElementById('add-section-title').textContent = '// Add New Lab';
+  const addNavItem = document.querySelectorAll('.nav-item')[1];
+  addNavItem.querySelector('.nav-label').textContent = 'Add Lab';
   currentTags = [];
   renderTags();
   // Add 2 blank hint rows by default
@@ -695,7 +726,7 @@ async function loadCompletions() {
   const list = document.getElementById('completions-list');
   list.innerHTML = '<div class="loading"><span class="spinner"></span>Loading...</div>';
   try {
-    const res  = await fetch(`${API}/admin/labs/completions`, { headers: authH() });
+    const res  = await fetchWithAuth(`${API}/admin/labs/completions`);
     const data = await res.json();
     const rows = data.completions || [];
 
