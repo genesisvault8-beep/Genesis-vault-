@@ -347,6 +347,7 @@
     <select id="t-run-type" onchange="onRunTypeChange()">
       <option value="security">SECURITY (pre-installed binary)</option>
       <option value="automation">AUTOMATION (Python / Bash script)</option>
+      <option value="ai">AI TOOL (Groq LLM)</option>
       <option value="download">DOWNLOAD / EXTERNAL LINK</option>
     </select>
 
@@ -387,6 +388,16 @@
       </div>
       <label>FILE URL or APP ID</label>
       <input type="text" id="t-fileurl" placeholder="https://... or app-id">
+    </div>
+
+    <!-- AI fields -->
+    <div id="ai-fields" style="display:none;">
+      <label>SYSTEM PROMPT</label>
+      <textarea id="t-system-prompt" rows="8" placeholder="You are a penetration testing report writer. Given the user's findings, produce a professional pentest report with Executive Summary, Findings, and Recommendations sections."></textarea>
+      <p style="font-family:'Share Tech Mono',monospace;font-size:0.65rem;color:var(--text-dim);margin-top:-10px;margin-bottom:14px;letter-spacing:1px;">// Defines the AI's role and behaviour. Users cannot see this prompt.</p>
+      <label>INPUT LABEL (shown to user)</label>
+      <input type="text" id="t-input-label" placeholder="Paste your findings or question here...">
+      <p style="font-family:'Share Tech Mono',monospace;font-size:0.65rem;color:var(--text-dim);margin-top:-10px;margin-bottom:14px;letter-spacing:1px;">// Label shown on the textarea the user types into. Rate limit: 30 requests / user / day.</p>
     </div>
 
     <div class="divider"></div>
@@ -722,6 +733,7 @@ function onRunTypeChange() {
   const v = document.getElementById('t-run-type').value;
   document.getElementById('security-fields').style.display   = v === 'security'   ? 'block' : 'none';
   document.getElementById('automation-fields').style.display = v === 'automation' ? 'block' : 'none';
+  document.getElementById('ai-fields').style.display         = v === 'ai'         ? 'block' : 'none';
   document.getElementById('download-fields').style.display   = v === 'download'   ? 'block' : 'none';
 }
 
@@ -755,6 +767,10 @@ function openEditTool(id) {
   if (ft) ft.value = t.file_type || '';
   const fu = document.getElementById('t-fileurl');
   if (fu) fu.value = t.download_url || t.app_id || '';
+
+  // AI fields
+  document.getElementById('t-system-prompt').value = t.system_prompt || '';
+  document.getElementById('t-input-label').value   = t.input_label   || '';
 
   // Params schema
   const ps = document.getElementById('t-params-schema');
@@ -827,6 +843,8 @@ async function submitTool() {
     delivery:         runType === 'download'   ? getVal('t-delivery') : null,
     file_type:        runType === 'download'   ? getVal('t-filetype') : null,
     download_url:     runType === 'download'   ? getVal('t-fileurl') : null,
+    system_prompt:    runType === 'ai'         ? document.getElementById('t-system-prompt').value.trim() : null,
+    input_label:      runType === 'ai'         ? getVal('t-input-label') : null,
     params_schema:    paramsSchemaVal,
     is_kit:           toggleStates['kit'],
     kit_items:        toggleStates['kit'] ? kitFields.filter(Boolean) : [],
@@ -834,6 +852,7 @@ async function submitTool() {
     is_new:           toggleStates['new-badge'],
   };
   if (!payload.title) { showStatus(msg,'// Title required.',true); return; }
+  if (runType === 'ai' && !payload.system_prompt) { showStatus(msg,'// System prompt required for AI tools.',true); return; }
   btn.disabled = true; btn.textContent = '[ SAVING... ]';
   try {
     const url    = editingToolId ? `${API}/admin/tools/${editingToolId}` : `${API}/admin/tools`;
@@ -980,7 +999,7 @@ function renderRevenue() {
 
 /* ═══════════════════════════ UTILS ═══════════════════════════ */
 function clearToolForm() {
-  ['t-title','t-desc','t-filetype','t-fileurl','t-cmd','t-script','t-params-schema'].forEach(id => {
+  ['t-title','t-desc','t-filetype','t-fileurl','t-cmd','t-script','t-params-schema','t-system-prompt','t-input-label'].forEach(id => {
     const el = document.getElementById(id); if (el) el.value = '';
   });
   const rt = document.getElementById('t-run-type');
