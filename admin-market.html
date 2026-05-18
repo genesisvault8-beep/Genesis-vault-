@@ -1127,7 +1127,14 @@ function toast(msg, err=false) {
   document.body.appendChild(t); setTimeout(()=>t.remove(), 2800);
 }
 
-boot();
+(function guardInit() {
+  const token = getToken();
+  if (!isTokenValid(token)) {
+    blockAccess('INVALID OR EXPIRED TOKEN');
+    return;
+  }
+  boot();
+})();
 </script>
 </body>
 </html>
