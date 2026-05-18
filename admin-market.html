@@ -262,6 +262,11 @@
         <div class="stat-value" id="stat-sales"><span class="spinner"></span></div>
         <div class="stat-sub">all time count</div>
       </div>
+      <div class="stat-card green" style="grid-column:1/-1;">
+        <div class="stat-label">VC SALES (INSTANT)</div>
+        <div class="stat-value" id="stat-vc-sales" style="font-size:1.4rem;"><span class="spinner"></span></div>
+        <div class="stat-sub">tools sold via VC · bypasses queue</div>
+      </div>
     </div>
     <div class="s-title">// QUICK ACTIONS</div>
     <div style="display:flex;gap:10px;flex-wrap:wrap;">
@@ -282,6 +287,9 @@
       <button class="btn-add" onclick="openAddTool()">[ + ADD NEW TOOL ]</button>
     </div>
     <div class="s-title">// TOOL LISTINGS</div>
+    <input type="text" id="tools-mgr-search" placeholder="// search tools..." oninput="filterToolsMgr()"
+      style="width:100%;background:var(--bg2);border:1px solid var(--border);color:var(--text);padding:9px 14px;font-family:'Share Tech Mono',monospace;font-size:0.8rem;outline:none;margin-bottom:14px;transition:border-color 0.2s;"
+      onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'">
     <div id="tools-mgr-container"><div class="loading"><span class="spinner"></span>Loading tools...</div></div>
   </div>
 
@@ -545,6 +553,9 @@ async function loadStats() {
     document.getElementById('stat-pending').textContent = data.pending_count  || 0;
     document.getElementById('stat-tools').textContent   = data.tools_count    || 0;
     document.getElementById('stat-sales').textContent   = data.total_sales    || 0;
+    document.getElementById('stat-vc-sales').textContent = data.vc_sales_count != null
+      ? `${data.vc_sales_count} sales`
+      : '—';
 
     const badge = document.getElementById('queue-count-badge');
     if (data.pending_count > 0) badge.textContent = `(${data.pending_count} PENDING)`;
@@ -703,6 +714,15 @@ function renderToolsMgr() {
       <button class="btn-sm btn-sm-red" onclick="openDeleteTool('${t.id}', '${esc(t.title)}')">[ DELETE ]</button>
     </div>
   </div>`).join('');
+}
+
+function filterToolsMgr() {
+  const q = (document.getElementById('tools-mgr-search')?.value || '').toLowerCase();
+  document.querySelectorAll('[id^="tmgr-"]').forEach(card => {
+    const name = card.querySelector('.tool-mgr-name')?.textContent.toLowerCase() || '';
+    const meta = card.querySelector('.tool-mgr-meta')?.textContent.toLowerCase() || '';
+    card.style.display = (!q || name.includes(q) || meta.includes(q)) ? '' : 'none';
+  });
 }
 
 async function toggleToolActive(id, el) {
