@@ -86,7 +86,6 @@
   .nav-right { display:flex; align-items:center; gap:14px; }
   .nav-user  { font-size:0.85rem; color:var(--text-dim); letter-spacing:1px; }
 
-  /* VAULT AGE badge in nav */
   .vault-age-badge {
     font-family:'Share Tech Mono',monospace; font-size:0.65rem;
     color:var(--accent2); border:1px solid var(--accent2);
@@ -437,7 +436,6 @@
     flex-shrink:0;
   }
 
-  /* Message conversation view */
   .msg-conversation { display:none; flex-direction:column; height:calc(100vh - 160px); }
   .msg-conversation.open { display:flex; }
   .msg-conv-header {
@@ -486,7 +484,6 @@
   }
   .msg-send:hover { background:white; }
 
-  /* Admin broadcast banner */
   .admin-broadcast {
     background:var(--bg2); border:1px solid var(--accent2);
     border-left:3px solid var(--accent2); padding:14px 16px;
@@ -502,7 +499,6 @@
     color:var(--text-dim); margin-top:6px;
   }
 
-  /* New message button */
   .new-msg-btn {
     width:100%; padding:12px; background:none;
     border:1px solid var(--accent); color:var(--accent);
@@ -533,7 +529,6 @@
   .profile-stat .val { font-size:1.2rem; font-weight:700; color:var(--accent); }
   .profile-stat .lbl { font-size:0.62rem; color:var(--text-dim); letter-spacing:1px; }
 
-  /* Profile action buttons */
   .profile-actions { display:grid; gap:10px; margin-top:20px; }
   .profile-action-btn {
     width:100%; padding:12px; background:none;
@@ -554,6 +549,39 @@
     font-family:'Share Tech Mono',monospace; font-size:0.65rem;
     color:var(--accent2); letter-spacing:2px; text-transform:uppercase; margin-bottom:4px;
   }
+
+  /* ── VC HISTORY ── */
+  .vc-tx-item {
+    background:var(--bg2); border:1px solid var(--border);
+    padding:12px 16px; margin-bottom:8px;
+    display:flex; justify-content:space-between; align-items:center;
+    animation:fadeIn 0.4s ease; transition:border-color 0.2s;
+  }
+  .vc-tx-item:hover { border-color:rgba(0,245,196,0.15); }
+  .vc-tx-item.credit { border-left:3px solid var(--accent); }
+  .vc-tx-item.debit  { border-left:3px solid var(--accent3); }
+  .vc-tx-left { flex:1; min-width:0; }
+  .vc-tx-type {
+    font-family:'Share Tech Mono',monospace; font-size:0.6rem;
+    letter-spacing:2px; text-transform:uppercase; margin-bottom:3px;
+  }
+  .vc-tx-item.credit .vc-tx-type { color:var(--accent); }
+  .vc-tx-item.debit  .vc-tx-type { color:var(--accent3); }
+  .vc-tx-desc {
+    font-size:0.82rem; color:var(--text); line-height:1.4;
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  }
+  .vc-tx-time {
+    font-family:'Share Tech Mono',monospace; font-size:0.6rem;
+    color:var(--text-dim); margin-top:3px;
+  }
+  .vc-tx-amount {
+    font-family:'Share Tech Mono',monospace; font-size:1rem;
+    letter-spacing:1px; white-space:nowrap; padding-left:12px;
+    flex-shrink:0;
+  }
+  .vc-tx-item.credit .vc-tx-amount { color:var(--accent); }
+  .vc-tx-item.debit  .vc-tx-amount { color:var(--accent3); }
 
   /* ── STATUS ── */
   .status-msg {
@@ -784,7 +812,6 @@
   <div class="page" id="page-community">
     <p class="section-title">// Community Feed</p>
 
-    <!-- Post composer -->
     <div class="post-box">
       <div class="post-category-row" id="post-cat-row">
         <button class="cat-btn active" onclick="selectCat('General',this)">General</button>
@@ -802,7 +829,6 @@
       </div>
     </div>
 
-    <!-- Feed filter tabs -->
     <div class="feed-tabs">
       <div class="feed-tab active" onclick="filterFeed('',this)">ALL</div>
       <div class="feed-tab" onclick="filterFeed('General',this)">GENERAL</div>
@@ -818,16 +844,14 @@
   <div class="page" id="page-marketplace">
     <p class="section-title">// Marketplace</p>
 
-    <!-- Hero banner -->
     <div style="background:var(--bg2);border:1px solid var(--border);border-left:3px solid var(--accent);padding:18px 20px;margin-bottom:16px;position:relative;overflow:hidden;">
       <div style="position:absolute;top:0;right:0;width:80px;height:100%;background:linear-gradient(90deg,transparent,rgba(0,245,196,0.04));pointer-events:none;"></div>
       <div style="font-family:'Share Tech Mono',monospace;font-size:0.65rem;color:var(--text-dim);letter-spacing:2px;margin-bottom:6px;">// GENESIS VAULT STORE</div>
       <div style="font-size:1.2rem;font-weight:700;color:white;letter-spacing:2px;margin-bottom:4px;">Scripts. Apps. Kits. <span style="color:var(--accent);">Automation.</span></div>
-      <div style="font-size:0.82rem;color:var(--text-dim);line-height:1.5;margin-bottom:14px;">Tools built for hackers and non-hackers alike. Buy once, run inside the Vault.</div>
+      <div style="font-size:0.82rem;color:var(--text-dim);line-height:1.5;margin-bottom:14px;">Tools built for hackers and non-hackers alike. Buy with VC, run inside the Vault.</div>
       <button onclick="location.href='market.html'" style="background:var(--accent);color:var(--bg);border:none;padding:10px 24px;font-family:'Rajdhani',sans-serif;font-weight:700;font-size:0.9rem;letter-spacing:3px;cursor:pointer;transition:all 0.2s;clip-path:polygon(6px 0%,100% 0%,calc(100% - 6px) 100%,0% 100%);" onmouseover="this.style.background='white'" onmouseout="this.style.background='var(--accent)'">[ OPEN MARKETPLACE ]</button>
     </div>
 
-    <!-- Categories preview -->
     <p class="section-title">// Categories</p>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px;">
       <div onclick="location.href='market.html?cat=automation'" style="background:var(--bg2);border:1px solid var(--border);padding:14px;cursor:pointer;transition:border-color 0.2s;" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
@@ -852,14 +876,12 @@
       </div>
     </div>
 
-    <!-- Owned tools preview -->
     <p class="section-title">// Your Tools</p>
     <div id="owned-preview"><div class="loading"><span class="spinner"></span>Loading...</div></div>
   </div>
 
   <!-- MESSAGES -->
   <div class="page" id="page-messages">
-    <!-- Thread list view -->
     <div id="msg-list-view">
       <p class="section-title">// Messages</p>
       <button class="new-msg-btn" onclick="openNewMessage()">[ + MESSAGE ADMIN ]</button>
@@ -867,7 +889,6 @@
       <div id="threads-container"><div class="loading"><span class="spinner"></span>Loading messages...</div></div>
     </div>
 
-    <!-- Conversation view -->
     <div class="msg-conversation" id="msg-conv-view">
       <div class="msg-conv-header">
         <button class="msg-back" onclick="closeConversation()">← BACK</button>
@@ -886,12 +907,19 @@
     <div class="profile-card" id="profile-card">
       <div class="loading"><span class="spinner"></span>Loading...</div>
     </div>
+
     <div class="profile-actions">
       <button class="profile-action-btn" onclick="location.href='settings.html'">[ ⚙ SETTINGS ]</button>
       <button class="profile-action-btn" onclick="showPage('messages', document.querySelector('.nav-item:nth-child(4)'))">[ ✉ MESSAGES ]</button>
       <button class="profile-action-btn" onclick="markAllRead()">[ ✓ MARK ALL NOTIFS READ ]</button>
       <button class="profile-action-btn danger" onclick="logout()">[ ⏻ EXIT VAULT ]</button>
     </div>
+
+    <!-- VC Transaction History -->
+    <p class="section-title" style="margin-top:20px;">// VC History</p>
+    <div id="vc-history-container"><div class="loading"><span class="spinner"></span>Loading...</div></div>
+
+    <!-- Notifications -->
     <p class="section-title" style="margin-top:20px;">// Notifications</p>
     <div id="notif-container"><div class="loading"><span class="spinner"></span>Loading...</div></div>
   </div>
@@ -983,18 +1011,18 @@
 </div>
 
 <script>
-const API   = 'https://genesis-vault-backend.onrender.com/api';
-let token = localStorage.getItem('gv_token');
+const API  = 'https://genesis-vault-backend.onrender.com/api';
+let token  = localStorage.getItem('gv_token');
 if (!token) location.href = 'login.html';
 
-let currentFilter   = '';
-let activeThreadId  = null;
+let currentFilter  = '';
+let activeThreadId = null;
 
 function h() {
   return { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` };
 }
 
-// ── AUTH-AWARE FETCH — redirects to login on 401 ──────────────────────
+/* ── AUTH-AWARE FETCH ───────────────────────────────────────────────── */
 async function fetchWithAuth(url, options = {}) {
   options.headers = { ...h(), ...(options.headers || {}) };
   const res = await fetch(url, options);
@@ -1028,8 +1056,8 @@ async function fetchVCBalance() {
       const bal = data.balance ?? 0;
       const statEl = document.getElementById('stat-vc');
       const menuEl = document.getElementById('menu-vc-balance');
-      if (statEl) statEl.textContent = bal;
-      if (menuEl) menuEl.textContent = bal;
+      if (statEl) statEl.textContent = bal.toLocaleString();
+      if (menuEl) menuEl.textContent = bal.toLocaleString();
     }
   } catch(e) {}
 }
@@ -1046,19 +1074,13 @@ async function boot() {
     localStorage.setItem('gv_username',   u);
     localStorage.setItem('gv_created_at', data.created_at || '');
 
-    // Nav
     document.getElementById('nav-username').textContent  = u;
     document.getElementById('nav-vault-age').textContent = age.label;
-
-    // Slide menu
     document.getElementById('menu-username').textContent  = u;
     document.getElementById('menu-vault-age').textContent = `// VAULT AGE: ${age.long.toUpperCase()}`;
-
-    // Welcome bar
     document.getElementById('welcome-name').textContent = u.charAt(0).toUpperCase() + u.slice(1);
     document.getElementById('welcome-age').textContent  = age.long;
 
-    // Stats
     document.getElementById('stat-posts').textContent    = data.post_count    || 0;
     document.getElementById('stat-tools').textContent    = data.tool_count    || 0;
     document.getElementById('stat-days').textContent     = age.days;
@@ -1069,7 +1091,6 @@ async function boot() {
         'since ' + new Date(data.created_at).toLocaleDateString('en-GB',{month:'short',year:'numeric'});
     }
 
-    // Notif badge
     const unread = data.unread_notifications || 0;
     const badge  = document.getElementById('notif-count-badge');
     if (unread > 0) {
@@ -1077,7 +1098,6 @@ async function boot() {
       badge.style.display = 'inline';
     }
 
-    // VC Balance
     fetchVCBalance();
 
   } catch(e) {
@@ -1086,10 +1106,10 @@ async function boot() {
     const age = calcVaultAge(ca);
     document.getElementById('nav-username').textContent   = u;
     document.getElementById('nav-vault-age').textContent  = age.label;
-    document.getElementById('welcome-name').textContent   = u;
-    document.getElementById('welcome-age').textContent    = age.long;
     document.getElementById('menu-username').textContent  = u;
     document.getElementById('menu-vault-age').textContent = `// VAULT AGE: ${age.long.toUpperCase()}`;
+    document.getElementById('welcome-name').textContent   = u;
+    document.getElementById('welcome-age').textContent    = age.long;
     document.getElementById('stat-days').textContent      = age.days;
   }
 }
@@ -1189,11 +1209,7 @@ function renderPost(p) {
     const cnt = rx[e] || 0;
     return `<button class="react-btn" onclick="reactPost(${p.id},'${e}',this)">${e}${cnt>0?' '+cnt:''}</button>`;
   }).join('');
-
-  const codeBlock = p.code_content
-    ? `<div class="post-code">${esc(p.code_content)}</div>`
-    : '';
-
+  const codeBlock = p.code_content ? `<div class="post-code">${esc(p.code_content)}</div>` : '';
   return `
   <div class="post-card" id="post-${p.id}">
     <div class="post-meta">
@@ -1308,7 +1324,7 @@ async function sendReply(postId) {
 
 async function flagPost(postId) {
   try {
-    await fetchWithAuth(`${API}/posts/${postId}/flag`, { method:'POST'});
+    await fetchWithAuth(`${API}/posts/${postId}/flag`, { method:'POST' });
     toast('Post flagged for review.');
   } catch(e) {}
 }
@@ -1343,9 +1359,6 @@ async function loadMarketplace() {
   }
 }
 
-// openBuy / submitPayment removed — tool purchases via USDT no longer used.
-// All real-money purchases are handled by buy-vc.html.
-
 /* ── MESSAGES ──────────────────────────────────────────────────────── */
 async function loadMessages() {
   closeConversation();
@@ -1355,7 +1368,6 @@ async function loadMessages() {
   bc.innerHTML = '';
 
   try {
-    // Load broadcasts
     const br = await fetchWithAuth(`${API}/messages/broadcasts`);
     const bd = await br.json();
     if (bd.broadcasts?.length) {
@@ -1370,7 +1382,6 @@ async function loadMessages() {
   } catch(e) {}
 
   try {
-    // Load DM threads
     const res  = await fetchWithAuth(`${API}/messages/threads`);
     const data = await res.json();
     if (!data.threads?.length) {
@@ -1457,21 +1468,25 @@ async function sendMessage() {
   const input   = document.getElementById('msg-input');
   const message = input.value.trim();
   if (!message) return;
-  input.value = '';
   try {
     const res  = await fetchWithAuth(`${API}/messages/threads/${activeThreadId}/reply`, {
       method:'POST', body: JSON.stringify({ message })
     });
     const data = await res.json();
     if (data.status === 'success') {
+      input.value = '';
       const bubbles = document.getElementById('conv-bubbles');
       const el      = document.createElement('div');
       el.className  = 'msg-bubble from-user';
       el.innerHTML  = `<div class="msg-bubble-meta">// YOU · just now</div>${esc(message)}`;
       bubbles.appendChild(el);
       bubbles.scrollTop = bubbles.scrollHeight;
+    } else {
+      toast('// Failed to send. Try again.');
     }
-  } catch(e) {}
+  } catch(e) {
+    toast('// Network error.');
+  }
 }
 
 function closeConversation() {
@@ -1488,7 +1503,7 @@ async function loadProfile() {
       fetchWithAuth(`${API}/profile`),
       fetchWithAuth(`${API}/vc/balance`)
     ]);
-    const data  = await profRes.json();
+    const data   = await profRes.json();
     const vcData = await vcRes.json();
     const u   = data.username || data.email?.split('@')[0] || 'Operative';
     const age = calcVaultAge(data.created_at);
@@ -1524,9 +1539,48 @@ async function loadProfile() {
   } catch(e) {
     document.getElementById('profile-card').innerHTML = '<div class="empty">// Failed to load profile.</div>';
   }
+
+  loadVCHistory();
   loadNotifications();
 }
 
+/* ── VC HISTORY ─────────────────────────────────────────────────────── */
+async function loadVCHistory() {
+  const container = document.getElementById('vc-history-container');
+  try {
+    const res  = await fetchWithAuth(`${API}/vc/history`);
+    const data = await res.json();
+    if (!data.history?.length) {
+      container.innerHTML = '<div class="empty" style="padding:20px 0;">// No transactions yet.</div>';
+      return;
+    }
+    container.innerHTML = data.history.map(t => {
+      const isCredit = t.amount > 0;
+      const sign     = isCredit ? '+' : '';
+      const typeMap  = {
+        vc_purchase:    'VC PURCHASED',
+        tool_purchase:  'TOOL PURCHASE',
+        course_unlock:  'COURSE UNLOCK',
+        admin_grant:    'ADMIN GRANT',
+        spend:          'SPENT',
+      };
+      const typeLabel = typeMap[t.type] || (t.type||'TX').toUpperCase();
+      return `
+        <div class="vc-tx-item ${isCredit ? 'credit' : 'debit'}">
+          <div class="vc-tx-left">
+            <div class="vc-tx-type">${esc(typeLabel)}</div>
+            <div class="vc-tx-desc">${esc(t.description || '—')}</div>
+            <div class="vc-tx-time">${ago(t.created_at)}</div>
+          </div>
+          <div class="vc-tx-amount">${sign}${Math.abs(t.amount).toLocaleString()} VC</div>
+        </div>`;
+    }).join('');
+  } catch(e) {
+    container.innerHTML = '<div class="empty" style="padding:20px 0;">// Failed to load history.</div>';
+  }
+}
+
+/* ── NOTIFICATIONS ──────────────────────────────────────────────────── */
 async function loadNotifications() {
   const nc = document.getElementById('notif-container');
   try {
@@ -1547,11 +1601,13 @@ async function loadNotifications() {
 
 async function markAllRead() {
   try {
-    await fetchWithAuth(`${API}/notifications/read-all`, { method:'POST'});
+    await fetchWithAuth(`${API}/notifications/read-all`, { method:'POST' });
     document.getElementById('notif-count-badge').style.display = 'none';
     toast('All notifications marked read.');
     loadNotifications();
-  } catch(e) {}
+  } catch(e) {
+    toast('// Failed to mark notifications read.');
+  }
 }
 
 /* ── AI TOOLS ──────────────────────────────────────────────────────── */
@@ -1559,12 +1615,13 @@ async function callAI(prompt, btnId, outId, cpyId, label) {
   const btn = document.getElementById(btnId);
   const out = document.getElementById(outId);
   const cpy = document.getElementById(cpyId);
+  if (!prompt.trim()) { toast('// Please fill in the required fields.'); return; }
   btn.disabled = true; btn.textContent = '[ THINKING... ]';
   out.style.display = 'none'; cpy.style.display = 'none';
   try {
     const res  = await fetchWithAuth(`${API}/vault-ai`, {
       method:'POST',
-      body: JSON.stringify({ message:prompt })
+      body: JSON.stringify({ message: prompt })
     });
     const data = await res.json();
     out.textContent   = data.response || 'No response.';
@@ -1578,34 +1635,55 @@ async function callAI(prompt, btnId, outId, cpyId, label) {
 }
 
 function generateReport() {
+  const vuln     = document.getElementById('r-vuln').value.trim();
+  const target   = document.getElementById('r-target').value.trim();
+  const findings = document.getElementById('r-findings').value.trim();
+  const steps    = document.getElementById('r-steps').value.trim();
+  if (!vuln || !target || !findings) { toast('// Fill in Vulnerability, Target, and Findings.'); return; }
   callAI(
-    `Write a professional HackerOne bug bounty report:\nVulnerability: ${document.getElementById('r-vuln').value}\nTarget: ${document.getElementById('r-target').value}\nSeverity: ${document.getElementById('r-severity').value}\nFindings: ${document.getElementById('r-findings').value}\nSteps: ${document.getElementById('r-steps').value}`,
+    `Write a professional HackerOne bug bounty report:\nVulnerability: ${vuln}\nTarget: ${target}\nSeverity: ${document.getElementById('r-severity').value}\nFindings: ${findings}\nSteps: ${steps}`,
     'btn-report','out-report','cpy-report','[ GENERATE REPORT ]'
   );
 }
+
 function analyzeRecon() {
+  const target = document.getElementById('recon-target').value.trim();
+  const data   = document.getElementById('recon-data').value.trim();
+  if (!target || !data) { toast('// Fill in Target and Recon Output.'); return; }
   callAI(
-    `Analyze this recon output for ${document.getElementById('recon-target').value} and identify attack surface and priorities:\n${document.getElementById('recon-data').value}`,
+    `Analyze this recon output for ${target} and identify attack surface and priorities:\n${data}`,
     'btn-recon','out-recon','cpy-recon','[ ANALYZE ]'
   );
 }
+
 function triageXSS() {
+  const target = document.getElementById('xss-target').value.trim();
+  const urls   = document.getElementById('xss-urls').value.trim();
+  if (!target || !urls) { toast('// Fill in Target and URLs.'); return; }
   callAI(
-    `Triage these URLs for XSS vulnerabilities on ${document.getElementById('xss-target').value}. Rank by likelihood and suggest payloads:\n${document.getElementById('xss-urls').value}`,
+    `Triage these URLs for XSS vulnerabilities on ${target}. Rank by likelihood and suggest payloads:\n${urls}`,
     'btn-xss','out-xss','cpy-xss','[ TRIAGE URLS ]'
   );
 }
+
 function copyOut(id) {
-  navigator.clipboard.writeText(document.getElementById(id).textContent);
-  toast('Copied!');
+  navigator.clipboard.writeText(document.getElementById(id).textContent)
+    .then(() => toast('Copied!'))
+    .catch(() => toast('// Copy failed.'));
 }
 
 /* ── UTILS ─────────────────────────────────────────────────────────── */
 function esc(s) {
   if (!s) return '';
-  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  return String(s)
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;');
 }
-function escAttr(s) { return (s||'').replace(/'/g,"\\'"); }
+function escAttr(s) {
+  return encodeURIComponent(s || '');
+}
 function ago(d) {
   if (!d) return '—';
   const m = Math.floor((Date.now()-new Date(d))/60000);
@@ -1627,7 +1705,8 @@ function toast(msg) {
     position:'fixed',bottom:'90px',left:'50%',transform:'translateX(-50%)',
     background:'var(--bg2)',border:'1px solid var(--accent)',color:'var(--accent)',
     padding:'8px 20px',fontFamily:'Share Tech Mono,monospace',fontSize:'0.75rem',
-    letterSpacing:'1px',zIndex:'999',pointerEvents:'none',animation:'fadeIn 0.3s ease'
+    letterSpacing:'1px',zIndex:'999',pointerEvents:'none',animation:'fadeIn 0.3s ease',
+    whiteSpace:'nowrap'
   });
   document.body.appendChild(t);
   setTimeout(()=>t.remove(),2000);
