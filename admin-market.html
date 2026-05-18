@@ -539,14 +539,21 @@ function h() {
   return { 'Content-Type':'application/json', 'Authorization': `Bearer ${_token}` };
 }
 
-// ── AUTH-AWARE FETCH — redirects to admin-login on 401 ──
-async function fetchWithAuth(url, options = {}) {
-  if (!options.headers) options.headers = h();
-  const res = await fetch(url, options);
+async function fetchWithAuth(url, opts = {}) {
+  const token = getToken();
+  if (!isTokenValid(token)) {
+    blockAccess('SESSION EXPIRED');
+    return Promise.reject('Session expired');
+  }
+  return fetch(url, {
+    ...opts,
+    headers: {
+      ...opts.headers,
+      'Authorization': `Bearer ${token}`
+    }
+  });
+  }
   
-  return res;
-}
-
 /* ── STATE ── */
 let allRevenue  = [];
 let allTools    = [];
