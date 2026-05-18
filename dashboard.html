@@ -1462,7 +1462,7 @@ async function submitNewMessage() {
 
 async function openConversation(threadId, subject) {
   activeThreadId = threadId;
-  document.getElementById('msg-list-view').style.display  = 'none';
+  document.getElementById('msg-list-view').classList.add('hidden');
   document.getElementById('conv-title').textContent       = `// ${subject.toUpperCase()}`;
   const conv = document.getElementById('msg-conv-view');
   conv.classList.add('open');
