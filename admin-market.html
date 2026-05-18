@@ -554,10 +554,11 @@
 const API = 'https://genesis-vault-backend.onrender.com/api';
 
 /* ═══════════════════ TOKEN GATE ═══════════════════ */
+const TOKEN_KEY = 'gv_admin_token';
 let _cachedToken = '';
 
 function getToken() {
-  return _cachedToken || sessionStorage.getItem('gv_token') || '';
+  return _cachedToken || sessionStorage.getItem(TOKEN_KEY) || '';
 }
 
 function showGate(msg) {
@@ -575,6 +576,13 @@ function hideGate() {
   document.getElementById('token-gate').style.display = 'none';
   document.querySelector('nav').style.display = 'flex';
   document.querySelector('main').style.display = 'block';
+}
+
+function logout401() {
+  sessionStorage.removeItem(TOKEN_KEY);
+  _cachedToken = '';
+  document.getElementById('gate-token-input').value = '';
+  showGate('// SESSION EXPIRED — RE-AUTHENTICATE');
 }
 
 async function gateAuthenticate() {
@@ -602,7 +610,7 @@ async function gateAuthenticate() {
       return;
     }
     _cachedToken = input;
-    sessionStorage.setItem('gv_token', input);
+    sessionStorage.setItem(TOKEN_KEY, input);
     btn.textContent = 'AUTHENTICATE';
     btn.disabled = false;
     hideGate();
@@ -624,9 +632,7 @@ async function fetchWithAuth(url, options = {}) {
   if (!options.headers) options.headers = h();
   const res = await fetch(url, options);
   if (res.status === 401) {
-    sessionStorage.removeItem('gv_token');
-    _cachedToken = '';
-    showGate('// SESSION EXPIRED — RE-AUTHENTICATE');
+    logout401();
     throw new Error('Unauthorized');
   }
   return res;
@@ -1207,7 +1213,7 @@ function toast(msg, err=false) {
 
 // Auto-restore session or show gate
 (async function init() {
-  const saved = sessionStorage.getItem('gv_token');
+  const saved = sessionStorage.getItem(TOKEN_KEY);
   if (saved) {
     document.getElementById('gate-token-input').value = saved;
     await gateAuthenticate();
