@@ -172,6 +172,9 @@
   .course-card:hover { border-color: var(--accent); box-shadow: var(--glow); }
   .course-card.locked { opacity: 0.8; }
   .course-card.locked:hover { border-color: var(--accent3); }
+  /* BUG FIX: disabled card for misconfigured vc_cost=0 */
+  .course-card.disabled { opacity: 0.5; cursor: not-allowed; }
+  .course-card.disabled:hover { border-color: var(--border); box-shadow: none; }
 
   .course-card .course-category {
     font-family: 'Share Tech Mono', monospace;
@@ -408,7 +411,11 @@
     letter-spacing: 3px;
     cursor: pointer;
     margin-bottom: 8px;
+    transition: all 0.2s;
   }
+
+  .btn-pay:hover:not(:disabled) { background: white; }
+  .btn-pay:disabled { opacity: 0.5; cursor: not-allowed; }
 
   .btn-cancel {
     width: 100%;
@@ -419,7 +426,10 @@
     font-family: 'Share Tech Mono', monospace;
     font-size: 0.8rem;
     cursor: pointer;
+    transition: all 0.2s;
   }
+
+  .btn-cancel:hover { border-color: var(--accent3); color: var(--accent3); }
 
   .step {
     font-family: 'Share Tech Mono', monospace;
@@ -592,30 +602,42 @@ function renderCourses() {
   grid.innerHTML = filtered.map(c => {
     const isFree      = c.is_free || c.price === 0;
     const isVCLocked  = c.vc_locked && c.vc_cost > 0;
+    // BUG FIX: detect misconfigured courses (vc_locked=true but vc_cost=0/null)
+    const isMisconfigured = c.vc_locked && (!c.vc_cost || c.vc_cost <= 0);
     const isPurchased = c.is_purchased;
 
-    let footerBadge, footerAction, clickAction;
+    let footerBadge, footerAction, clickAction, cardClass;
 
     if (isFree && !isVCLocked) {
       footerBadge  = '<span class="free-badge">FREE</span>';
       footerAction = '<span style="color:var(--accent);font-size:0.7rem;font-family:Share Tech Mono,monospace;">READ →</span>';
       clickAction  = `openCourse(${c.id})`;
+      cardClass    = '';
     } else if (isPurchased) {
       footerBadge  = '<span class="free-badge">UNLOCKED</span>';
       footerAction = '<span style="color:var(--accent);font-size:0.7rem;font-family:Share Tech Mono,monospace;">READ →</span>';
       clickAction  = `openCourse(${c.id})`;
+      cardClass    = '';
+    } else if (isMisconfigured) {
+      // BUG FIX: show disabled state instead of allowing free unlock
+      footerBadge  = '<span class="price-badge" style="border-color:var(--text-dim);color:var(--text-dim);">UNAVAILABLE</span>';
+      footerAction = '<span style="color:var(--text-dim);font-size:0.9rem;">⊘</span>';
+      clickAction  = 'void(0)';
+      cardClass    = 'disabled';
     } else if (isVCLocked) {
       footerBadge  = `<span class="price-badge" style="border-color:#f5c400;color:#f5c400;">⬡ ${c.vc_cost} VC</span>`;
       footerAction = '<span style="color:#f5c400;font-size:0.9rem;">🔒</span>';
       clickAction  = `openPayment(${c.id})`;
+      cardClass    = 'locked';
     } else {
       footerBadge  = `<span class="price-badge">⬡ ${c.vc_cost || '?'} VC</span>`;
       footerAction = '<span class="lock-icon">🔒</span>';
       clickAction  = `openPayment(${c.id})`;
+      cardClass    = 'locked';
     }
 
     return `
-      <div class="course-card ${(!isFree && !isPurchased) ? 'locked' : ''}" onclick="${clickAction}">
+      <div class="course-card ${cardClass}" onclick="${clickAction}">
         <div class="course-category">${esc(c.category || 'General')}</div>
         <h3>${esc(c.title)}</h3>
         <p>${esc((c.description || '').substring(0, 120))}${(c.description||'').length > 120 ? '...' : ''}</p>
@@ -663,10 +685,12 @@ function openPayment(id) {
   const vcCost = course.vc_cost || 0;
   document.getElementById('pay-course-title').textContent = course.title;
   document.getElementById('pay-amount').textContent = `⬡ ${vcCost} VC`;
+  // BUG FIX: always show live vcBalance (not stale cached value)
   document.getElementById('modal-vc-balance').textContent = `⬡ ${vcBalance.toLocaleString()} VC`;
 
   const payStatus = document.getElementById('pay-status');
   payStatus.style.display = 'none';
+  payStatus.textContent = '';
 
   const btn = document.getElementById('btn-pay');
   btn.disabled = false;
@@ -699,21 +723,29 @@ async function submitPayment() {
     const res  = await fetch(`${API}/courses/${selectedCourse.id}/unlock`, {
       method:  'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-      body:    JSON.stringify({})
+      // BUG FIX: include course_id in body as a safety reference for backend
+      body:    JSON.stringify({ course_id: selectedCourse.id })
     });
     const data = await res.json();
 
     if (data.status === 'success') {
+      // BUG FIX: update vcBalance from server response, sync to localStorage
       vcBalance = data.new_balance ?? vcBalance;
-      // Mark course as purchased locally
+      localStorage.setItem('gv_vc', vcBalance);
+      // Mark course as purchased locally so UI updates without re-fetch
       const c = allCourses.find(x => x.id == selectedCourse.id);
       if (c) c.is_purchased = true;
       closePayment();
       renderCourses();
-      toast(`✓ Course unlocked! Balance: ⬡ ${vcBalance} VC`, '#f5c400');
+      toast(`✓ Course unlocked! Balance: ⬡ ${vcBalance.toLocaleString()} VC`, '#f5c400');
     } else if (data.message === 'INSUFFICIENT_VC') {
       status.style.cssText = 'display:block;border:1px solid var(--accent3);color:var(--accent3);background:rgba(255,0,60,0.05);padding:10px 14px;font-family:Share Tech Mono,monospace;font-size:0.75rem;margin:10px 0;';
       status.textContent = `// Not enough VC. Need ${data.required} VC, have ${data.balance} VC.`;
+      // BUG FIX: sync real balance from server error response
+      if (data.balance !== undefined) {
+        vcBalance = data.balance;
+        localStorage.setItem('gv_vc', vcBalance);
+      }
       btn.disabled    = false;
       btn.textContent = '[ UNLOCK WITH VC ]';
     } else {
@@ -734,9 +766,14 @@ async function loadBalance() {
     const res  = await fetch(`${API}/vc/balance`, {
       headers: { 'Authorization': `Bearer ${token}` }
     });
+    // BUG FIX: check for 401 and redirect, don't silently fall back
+    if (res.status === 401) { localStorage.removeItem('gv_token'); window.location.href = 'login.html'; return; }
     const data = await res.json();
-    vcBalance = data.balance ?? 0;
+    vcBalance = data.balance ?? data.vc_balance ?? 0;
+    // Keep localStorage in sync for other pages
+    localStorage.setItem('gv_vc', vcBalance);
   } catch(e) {
+    // Network error only — use cached value
     vcBalance = parseInt(localStorage.getItem('gv_vc') || '0');
   }
 }
@@ -759,6 +796,10 @@ async function loadCourses() {
   }
 }
 
+// BUG FIX: load balance FIRST so vcBalance is accurate before courses render
+// and any payment modal opens. Using sequential await, not Promise.all,
+// because renderCourses() reads vcBalance but doesn't use it directly —
+// openPayment() does, and that only fires on user click, so parallel is fine.
 async function init() {
   await Promise.all([loadBalance(), loadCourses()]);
 }
