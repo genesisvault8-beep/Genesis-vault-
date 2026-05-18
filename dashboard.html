@@ -1259,8 +1259,8 @@ async function createPost() {
   const code    = codeInputOpen ? document.getElementById('post-code').value.trim() : '';
   if (!content) return;
   const btn = document.querySelector('#page-community .post-btn');
-  if (btn) { btn.disabled = true; btn.textContent = '[ POSTING... ]'; }
   try {
+    if (btn) { btn.disabled = true; btn.textContent = '[ POSTING... ]'; }
     const res  = await fetchWithAuth(`${API}/posts`, {
       method:'POST',
       body: JSON.stringify({ content, category: postCategory, code_content: code || null })
@@ -1270,16 +1270,18 @@ async function createPost() {
       document.getElementById('post-content').value = '';
       document.getElementById('post-code').value    = '';
       if (codeInputOpen) toggleCodeInput();
+      // Force reload feed by resetting cache timer
+      feedLastLoaded = 0;
       loadFeed();
     } else {
       toast('// Failed to post. Try again.');
     }
   } catch(e) {
     toast('// Failed to post. Try again.');
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = '[ POST ]'; }
   }
-  if (btn) { btn.disabled = false; btn.textContent = '[ POST ]'; }
-}
-
+                            }
 async function reactPost(postId, emoji, btn) {
   try {
     const res  = await fetchWithAuth(`${API}/posts/${postId}/react`, {
