@@ -116,9 +116,7 @@
   }
   .pkg-card:hover { border-color:var(--vc); box-shadow:var(--vc-glow); }
   .pkg-card:hover::before { opacity:1; }
-  .pkg-card.popular {
-    border-color:var(--vc);
-  }
+  .pkg-card.popular { border-color:var(--vc); }
   .pkg-card.popular::after {
     content:'// BEST VALUE';
     position:absolute; top:12px; right:14px;
@@ -138,12 +136,6 @@
   }
   .pkg-desc {
     font-size:0.78rem; color:var(--text-dim); line-height:1.5; margin-bottom:12px;
-  }
-  .pkg-bonus {
-    font-family:'Share Tech Mono',monospace; font-size:0.65rem;
-    color:var(--accent3); letter-spacing:1px;
-    border:1px solid rgba(255,0,60,0.3); padding:2px 8px;
-    display:inline-block; margin-bottom:10px;
   }
   .pkg-btn {
     width:100%; padding:11px; background:none;
@@ -203,7 +195,23 @@
     font-family:'Share Tech Mono',monospace; color:var(--vc);
     letter-spacing:3px; font-size:0.9rem; margin-bottom:6px;
   }
-  .modal-pkg-name { color:white; font-weight:700; font-size:1rem; letter-spacing:2px; margin-bottom:16px; }
+
+  /* Modal package summary */
+  .modal-summary {
+    background:var(--bg3); border:1px solid var(--border);
+    border-left:3px solid var(--vc); padding:14px 16px;
+    margin-bottom:16px; display:flex; justify-content:space-between; align-items:center;
+  }
+  .modal-summary .ms-vc {
+    font-family:'Share Tech Mono',monospace; font-size:1.4rem;
+    color:var(--vc); font-weight:700; line-height:1;
+  }
+  .modal-summary .ms-vc span { font-size:0.75rem; color:var(--text-dim); margin-left:4px; }
+  .modal-summary .ms-usdt {
+    font-family:'Share Tech Mono',monospace; font-size:0.9rem;
+    color:var(--accent); letter-spacing:1px;
+  }
+
   .modal label {
     display:block; font-size:0.68rem; letter-spacing:2px;
     color:var(--text-dim); margin-bottom:6px;
@@ -224,6 +232,11 @@
     font-size:0.72rem; line-height:1.9; color:var(--text-dim);
   }
   .info-box span { color:var(--accent); }
+  .info-box .wallet-addr {
+    color:var(--vc); word-break:break-all; display:block; margin-top:4px;
+    font-size:0.7rem;
+  }
+
   .btn-submit {
     width:100%; padding:14px; background:var(--vc); color:#000;
     border:none; font-family:'Rajdhani',sans-serif; font-weight:700;
@@ -244,6 +257,22 @@
   }
   .status-msg.ok  { border:1px solid var(--accent);  color:var(--accent);  background:rgba(0,245,196,0.05); }
   .status-msg.err { border:1px solid var(--accent3); color:var(--accent3); background:rgba(255,0,60,0.05); }
+
+  /* Confirmation overlay inside modal */
+  .confirm-screen {
+    display:none; text-align:center; padding:20px 0;
+  }
+  .confirm-screen.active { display:block; }
+  .confirm-icon {
+    font-size:2.5rem; margin-bottom:12px;
+  }
+  .confirm-screen h4 {
+    font-family:'Share Tech Mono',monospace; color:var(--accent);
+    letter-spacing:3px; font-size:0.85rem; margin-bottom:8px;
+  }
+  .confirm-screen p {
+    font-size:0.8rem; color:var(--text-dim); line-height:1.7; margin-bottom:20px;
+  }
 
   .loading { text-align:center; padding:20px; color:var(--text-dim); font-family:'Share Tech Mono',monospace; font-size:0.8rem; }
   .spinner { display:inline-block; width:16px; height:16px; border:2px solid var(--border); border-top-color:var(--vc); border-radius:50%; animation:spin 0.8s linear infinite; vertical-align:middle; margin-right:8px; }
@@ -276,43 +305,40 @@
   <p class="section-title">// VC Packages</p>
   <div class="packages-grid">
 
-    <div class="pkg-card" onclick="openBuy('starter')">
+    <div class="pkg-card" onclick="openBuy('5usd_30vc')">
       <div class="pkg-top">
-        <div class="pkg-amount">100 <span>VC</span></div>
-        <div class="pkg-price">$1 USDT</div>
+        <div class="pkg-amount">30 <span>VC</span></div>
+        <div class="pkg-price">5 USDT</div>
       </div>
-      <p class="pkg-desc">Good for trying out a lab or two. Perfect for new operatives.</p>
-      <button class="pkg-btn">[ GET 100 VC ]</button>
+      <p class="pkg-desc">Entry-level pack. Good for trying out a lab or quick tool access.</p>
+      <button class="pkg-btn">[ GET 30 VC ]</button>
     </div>
 
-    <div class="pkg-card popular" onclick="openBuy('standard')">
+    <div class="pkg-card" onclick="openBuy('10usd_70vc')">
       <div class="pkg-top">
-        <div class="pkg-amount">500 <span>VC</span></div>
-        <div class="pkg-price">$4 USDT</div>
+        <div class="pkg-amount">70 <span>VC</span></div>
+        <div class="pkg-price">10 USDT</div>
       </div>
-      <div class="pkg-bonus">+50 BONUS VC</div>
-      <p class="pkg-desc">Most popular package. Access multiple labs and courses.</p>
-      <button class="pkg-btn">[ GET 550 VC ]</button>
+      <p class="pkg-desc">Standard pack. Access multiple labs and core courses.</p>
+      <button class="pkg-btn">[ GET 70 VC ]</button>
     </div>
 
-    <div class="pkg-card" onclick="openBuy('pro')">
+    <div class="pkg-card popular" onclick="openBuy('15usd_150vc')">
       <div class="pkg-top">
-        <div class="pkg-amount">1000 <span>VC</span></div>
-        <div class="pkg-price">$7 USDT</div>
+        <div class="pkg-amount">150 <span>VC</span></div>
+        <div class="pkg-price">15 USDT</div>
       </div>
-      <div class="pkg-bonus">+200 BONUS VC</div>
-      <p class="pkg-desc">Serious operatives. Full access to the vault ecosystem.</p>
-      <button class="pkg-btn">[ GET 1200 VC ]</button>
+      <p class="pkg-desc">Best value. Full access to most vault content and tools.</p>
+      <button class="pkg-btn">[ GET 150 VC ]</button>
     </div>
 
-    <div class="pkg-card" onclick="openBuy('elite')">
+    <div class="pkg-card" onclick="openBuy('30usd_350vc')">
       <div class="pkg-top">
-        <div class="pkg-amount">2500 <span>VC</span></div>
-        <div class="pkg-price">$15 USDT</div>
+        <div class="pkg-amount">350 <span>VC</span></div>
+        <div class="pkg-price">30 USDT</div>
       </div>
-      <div class="pkg-bonus">+750 BONUS VC</div>
-      <p class="pkg-desc">Elite tier. Maximum VC at maximum value. Unlock everything.</p>
-      <button class="pkg-btn">[ GET 3250 VC ]</button>
+      <p class="pkg-desc">Elite tier. Maximum VC for serious operatives. Unlock everything.</p>
+      <button class="pkg-btn">[ GET 350 VC ]</button>
     </div>
 
   </div>
@@ -352,7 +378,7 @@
     </div>
     <div class="how-step">
       <div class="step-num">2</div>
-      <div class="step-text">Send the exact USDT amount <strong>(BEP-20 / Binance Smart Chain)</strong> to the Vault wallet address shown.</div>
+      <div class="step-text">Send the exact USDT amount <strong>(BEP-20 / Binance Smart Chain)</strong> to the Vault wallet address shown in the popup.</div>
     </div>
     <div class="how-step">
       <div class="step-num">3</div>
@@ -360,7 +386,7 @@
     </div>
     <div class="how-step">
       <div class="step-num">4</div>
-      <div class="step-text">Admin verifies within <strong>24 hours</strong> and your VC balance updates automatically.</div>
+      <div class="step-text">Admin verifies within <strong>24 hours</strong> and your VC balance updates once confirmed.</div>
     </div>
   </div>
 
@@ -369,40 +395,67 @@
 <!-- PURCHASE MODAL -->
 <div class="modal" id="modal-buy">
   <div class="modal-box">
-    <h3>// BUY VC PACKAGE</h3>
-    <div class="modal-pkg-name" id="modal-pkg-name">—</div>
 
-    <div class="info-box">
-      // Send exact USDT <span>(BEP-20 / Binance Smart Chain)</span> to:<br>
-      // Vault wallet: <span id="modal-wallet-addr" style="word-break:break-all;">Loading...</span><br>
-      // Then paste your TX ID below<br>
-      // Admin confirms within <span>24 hours</span>
+    <!-- Purchase form view -->
+    <div id="modal-form-view">
+      <h3>// BUY VC PACKAGE</h3>
+
+      <!-- Package summary -->
+      <div class="modal-summary" id="modal-summary">
+        <div>
+          <div class="modal-summary .ms-vc" id="modal-vc-display" style="font-family:'Share Tech Mono',monospace;font-size:1.4rem;color:var(--vc);font-weight:700;">— <span style="font-size:0.75rem;color:var(--text-dim);">VC</span></div>
+          <div style="font-family:'Share Tech Mono',monospace;font-size:0.65rem;color:var(--text-dim);letter-spacing:2px;margin-top:4px;">YOU RECEIVE</div>
+        </div>
+        <div style="text-align:right;">
+          <div id="modal-usdt-display" style="font-family:'Share Tech Mono',monospace;font-size:1rem;color:var(--accent);letter-spacing:1px;">— USDT</div>
+          <div style="font-family:'Share Tech Mono',monospace;font-size:0.65rem;color:var(--text-dim);letter-spacing:2px;margin-top:4px;">YOU SEND</div>
+        </div>
+      </div>
+
+      <!-- Wallet info box -->
+      <div class="info-box">
+        <div>// Send exact USDT <span>(BEP-20 / BSC)</span> to this address:</div>
+        <span class="wallet-addr" id="modal-wallet-addr"><span class="spinner"></span> Loading...</span>
+        <div style="margin-top:6px;">// Then paste your TX ID below &amp; submit</div>
+        <div>// Admin confirms within <span>24 hours</span></div>
+      </div>
+
+      <label>Your Binance TX ID</label>
+      <input type="text" id="buy-tx" placeholder="Paste transaction hash here...">
+
+      <div class="status-msg" id="buy-status"></div>
+      <button class="btn-submit" id="btn-submit" onclick="submitPayment()">[ SUBMIT PAYMENT ]</button>
+      <button class="btn-cancel" onclick="closeModal()">Cancel</button>
     </div>
 
-    <label>Your Binance TX ID</label>
-    <input type="text" id="buy-tx" placeholder="Transaction hash...">
+    <!-- Confirmation view (shown after success) -->
+    <div class="confirm-screen" id="modal-confirm-view">
+      <div class="confirm-icon">✓</div>
+      <h4>// PAYMENT SUBMITTED</h4>
+      <p id="confirm-msg">Your purchase request has been received.<br>Admin will verify and credit your VC within 24 hours.</p>
+      <button class="btn-submit" onclick="closeModal()" style="clip-path:none;">[ CLOSE ]</button>
+    </div>
 
-    <div class="status-msg" id="buy-status"></div>
-    <button class="btn-submit" id="btn-submit" onclick="submitPayment()">[ SUBMIT PAYMENT ]</button>
-    <button class="btn-cancel" onclick="closeModal()">Cancel</button>
   </div>
 </div>
 
 <script>
-const API   = 'https://genesis-vault-backend.onrender.com/api';
-let token   = localStorage.getItem('gv_token');
+const API = 'https://genesis-vault-backend.onrender.com/api';
+let token = localStorage.getItem('gv_token');
 if (!token) location.href = 'login.html';
 
 let activePkg = null;
 
 const PACKAGES = {
-  starter:  { label: '100 VC — $1 USDT',           usdt: 1,  vc: 100,  bonus: 0   },
-  standard: { label: '500 VC + 50 Bonus — $4 USDT', usdt: 4,  vc: 500,  bonus: 50  },
-  pro:      { label: '1000 VC + 200 Bonus — $7 USDT', usdt: 7,  vc: 1000, bonus: 200 },
-  elite:    { label: '2500 VC + 750 Bonus — $15 USDT', usdt: 15, vc: 2500, bonus: 750 },
+  '5usd_30vc':   { label: '30 VC — 5 USDT',   usdt: 5,  vc: 30  },
+  '10usd_70vc':  { label: '70 VC — 10 USDT',  usdt: 10, vc: 70  },
+  '15usd_150vc': { label: '150 VC — 15 USDT', usdt: 15, vc: 150 },
+  '30usd_350vc': { label: '350 VC — 30 USDT', usdt: 30, vc: 350 },
 };
 
-function h() { return { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }; }
+function h() {
+  return { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` };
+}
 
 async function fetchWithAuth(url, options = {}) {
   options.headers = { ...h(), ...(options.headers || {}) };
@@ -419,7 +472,6 @@ async function loadBalance() {
     const data = await res.json();
     const vc   = data.balance ?? data.vc_balance ?? 0;
     el.textContent = `⬡ ${Number(vc).toLocaleString()} VC`;
-    // Keep stat-vc and menu-vc-balance in sync if user navigates back to dashboard
     localStorage.setItem('gv_vc', vc);
   } catch(e) {
     const cached = parseInt(localStorage.getItem('gv_vc') || '0');
@@ -429,24 +481,41 @@ async function loadBalance() {
 
 /* ── LOAD WALLET ADDRESS ── */
 async function loadWallet() {
+  const el = document.getElementById('modal-wallet-addr');
+  el.innerHTML = '<span class="spinner"></span> Loading...';
   try {
     const res  = await fetchWithAuth(`${API}/settings/wallet`);
     const data = await res.json();
-    const addr = data.wallet_address || data.address || 'Contact admin for wallet address';
-    document.getElementById('modal-wallet-addr').textContent = addr;
+    const addr = data.wallet_address || data.address || null;
+    if (addr) {
+      el.textContent = addr;
+    } else {
+      el.textContent = 'Contact admin for wallet address';
+    }
   } catch(e) {
-    document.getElementById('modal-wallet-addr').textContent = 'Contact admin for wallet address';
+    el.textContent = 'Contact admin for wallet address';
   }
 }
 
 /* ── OPEN BUY MODAL ── */
 function openBuy(pkgKey) {
   activePkg = { key: pkgKey, ...PACKAGES[pkgKey] };
-  document.getElementById('modal-pkg-name').textContent = activePkg.label;
+
+  // Populate summary
+  document.getElementById('modal-vc-display').innerHTML =
+    `${activePkg.vc} <span style="font-size:0.75rem;color:var(--text-dim);">VC</span>`;
+  document.getElementById('modal-usdt-display').textContent = `${activePkg.usdt} USDT`;
+
+  // Reset form
   document.getElementById('buy-tx').value = '';
   document.getElementById('buy-status').style.display = 'none';
   document.getElementById('btn-submit').disabled = false;
   document.getElementById('btn-submit').textContent = '[ SUBMIT PAYMENT ]';
+
+  // Show form, hide confirmation
+  document.getElementById('modal-form-view').style.display = 'block';
+  document.getElementById('modal-confirm-view').classList.remove('active');
+
   loadWallet();
   document.getElementById('modal-buy').classList.add('active');
 }
@@ -461,37 +530,49 @@ async function submitPayment() {
   const tx  = document.getElementById('buy-tx').value.trim();
   const btn = document.getElementById('btn-submit');
   const msg = document.getElementById('buy-status');
-  if (!tx) { showStatus(msg, '// TX ID required.', true); return; }
-  btn.disabled = true; btn.textContent = '[ SUBMITTING... ]';
+
+  if (!tx) { showStatus(msg, '// TX ID is required.', true); return; }
+
+  btn.disabled = true;
+  btn.textContent = '[ SUBMITTING... ]';
+
   try {
-    const res  = await fetchWithAuth(`${API}/vc/purchase`, {
+    const res = await fetchWithAuth(`${API}/vc/purchase`, {
       method: 'POST',
       body: JSON.stringify({
-        package:      activePkg.key,
-        usdt_amount:  activePkg.usdt,
-        vc_amount:    activePkg.vc + activePkg.bonus,
+        package:       activePkg.key,
+        usdt_amount:   activePkg.usdt,
+        vc_amount:     activePkg.vc,
         binance_tx_id: tx
       })
     });
+
     const data = await res.json();
-    if (data.status === 'success') {
-      showStatus(msg, `✓ Submitted! Admin verifies within 24h. You'll receive ${(activePkg.vc + activePkg.bonus).toLocaleString()} VC.`, false);
-      btn.textContent = '[ SUBMITTED ]';
+
+    if (res.ok || data.status === 'success' || data.status === 'pending') {
+      // Show confirmation screen
+      document.getElementById('confirm-msg').innerHTML =
+        `Purchase request for <strong style="color:var(--vc);">${activePkg.vc} VC</strong> (${activePkg.usdt} USDT) received.<br>
+         Admin will verify your transaction and credit your balance within <strong>24 hours</strong>.`;
+      document.getElementById('modal-form-view').style.display = 'none';
+      document.getElementById('modal-confirm-view').classList.add('active');
     } else {
-      showStatus(msg, data.message || '// Submission failed.', true);
-      btn.disabled = false; btn.textContent = '[ SUBMIT PAYMENT ]';
+      showStatus(msg, data.message || '// Submission failed. Please try again.', true);
+      btn.disabled = false;
+      btn.textContent = '[ SUBMIT PAYMENT ]';
     }
   } catch(e) {
-    showStatus(msg, '// Network error.', true);
-    btn.disabled = false; btn.textContent = '[ SUBMIT PAYMENT ]';
+    showStatus(msg, '// Network error. Please check your connection.', true);
+    btn.disabled = false;
+    btn.textContent = '[ SUBMIT PAYMENT ]';
   }
 }
 
 /* ── UTILS ── */
-function showStatus(el, msg, err) {
-  el.textContent = msg;
-  el.className   = 'status-msg ' + (err ? 'err' : 'ok');
-  el.style.display = 'block';
+function showStatus(el, text, err) {
+  el.textContent    = text;
+  el.className      = 'status-msg ' + (err ? 'err' : 'ok');
+  el.style.display  = 'block';
 }
 
 /* ── INIT ── */
