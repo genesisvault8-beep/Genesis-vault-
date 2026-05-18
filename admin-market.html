@@ -500,10 +500,41 @@
 
 <script>
 const API = 'https://genesis-vault-backend.onrender.com/api';
+function getToken() {
+  return localStorage.getItem('gv_token');
+}
 
-const _token = localStorage.getItem('gv_token') || sessionStorage.getItem('gv_token');
-if (!_token) location.href = 'admin-login.html';
+function parseJWT(token) {
+  try {
+    return JSON.parse(atob(token.split('.')[1]));
+  } catch(e) { return null; }
+}
 
+function isTokenValid(token) {
+  if (!token) return false;
+  const payload = parseJWT(token);
+  if (!payload) return false;
+  if (payload.exp && payload.exp * 1000 < Date.now()) return false;
+  if (payload.role && payload.role !== 'admin') return false;
+  return true;
+}
+
+function blockAccess(reason = 'UNAUTHORIZED') {
+  document.body.innerHTML = `
+    <div style="
+      display:flex; flex-direction:column; align-items:center;
+      justify-content:center; min-height:100vh;
+      background:#020608; font-family:'Share Tech Mono',monospace;
+    ">
+      <div style="color:#ff003c; font-size:1.2rem; letter-spacing:4px; margin-bottom:12px;">
+        // ACCESS DENIED
+      </div>
+      <div style="color:#4a7a8a; font-size:0.7rem; letter-spacing:2px;">
+        // ${reason}
+      </div>
+    </div>`;
+  }
+  
 function h() {
   return { 'Content-Type':'application/json', 'Authorization': `Bearer ${_token}` };
 }
@@ -512,12 +543,7 @@ function h() {
 async function fetchWithAuth(url, options = {}) {
   if (!options.headers) options.headers = h();
   const res = await fetch(url, options);
-  if (res.status === 401) {
-    localStorage.removeItem('gv_token');
-    sessionStorage.removeItem('gv_token');
-    location.href = 'admin-login.html';
-    throw new Error('Unauthorized');
-  }
+  
   return res;
 }
 
