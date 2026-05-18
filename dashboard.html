@@ -1282,7 +1282,7 @@ async function createPost() {
   } finally {
     if (btn) { btn.disabled = false; btn.textContent = '[ POST ]'; }
   }
-                            }
+                            
 async function reactPost(postId, emoji, btn) {
   try {
     const res  = await fetchWithAuth(`${API}/posts/${postId}/react`, {
