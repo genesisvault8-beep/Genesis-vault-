@@ -1421,7 +1421,7 @@ async function loadMessages() {
               ${t.unread ? '<span class="msg-unread-dot"></span>' : ''}
               ${esc(t.subject || '// ADMIN')}
             </span>
-            <span class="msg-thread-time">${ago(t.last_message_at||t.created_at)}</span>
+            <span class="msg-thread-time">${t.last_message_at ? ago(t.last_message_at) : (t.created_at ? ago(t.created_at) : 'no messages')}</span>
           </div>
           <div class="msg-thread-preview">${esc((t.last_message||'').substring(0,80))}${(t.last_message||'').length>80?'...':''}</div>
         </div>`).join('');
