@@ -1515,10 +1515,10 @@ async function sendMessage() {
 
 function closeConversation() {
   activeThreadId = null;
-  document.getElementById('msg-list-view').style.display = '';
+  document.getElementById('msg-list-view').classList.remove('hidden');
   const conv = document.getElementById('msg-conv-view');
   conv.classList.remove('open');
-}
+  }
 
 /* ── PROFILE ───────────────────────────────────────────────────────── */
 async function loadProfile() {
