@@ -395,8 +395,6 @@
 
   .btn-cancel:hover { border-color: var(--accent3); color: var(--accent3); }
 
-
-
   /* PAYOUT */
   .payout-amount {
     font-family: 'Share Tech Mono', monospace;
@@ -485,6 +483,18 @@
     border: none;
     border-top: 1px solid var(--border);
     margin: 20px 0;
+  }
+
+  /* VC MANUAL ADJUST */
+  .vc-adjust-row {
+    display: flex;
+    gap: 8px;
+    align-items: flex-end;
+    margin-top: 8px;
+  }
+  .vc-adjust-row input[type="number"] {
+    flex: 1;
+    margin-bottom: 0;
   }
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.6/marked.min.js"></script>
@@ -667,13 +677,13 @@
     <h3>// PROMOTE MEMBER</h3>
     <p style="color:var(--text-dim);font-size:0.8rem;margin-bottom:16px;font-family:'Share Tech Mono',monospace;" id="promote-username-label"></p>
     <select id="promote-rank">
-  <option value="Ghost">Ghost</option>
-  <option value="Scout">Scout</option>
-  <option value="Hunter">Hunter</option>
-  <option value="Predator">Predator</option>
-  <option value="Phantom">Phantom</option>
-  <option value="Architect">Architect</option>
-  <option value="Guardian">Guardian</option>
+      <option value="Ghost">Ghost</option>
+      <option value="Scout">Scout</option>
+      <option value="Hunter">Hunter</option>
+      <option value="Predator">Predator</option>
+      <option value="Phantom">Phantom</option>
+      <option value="Architect">Architect</option>
+      <option value="Guardian">Guardian</option>
     </select>
     <div class="modal-actions">
       <button class="btn-full" onclick="confirmPromote()">[ PROMOTE ]</button>
@@ -682,13 +692,22 @@
   </div>
 </div>
 
-
-
 <!-- ══ TOAST ══ -->
 <div class="toast" id="toast"></div>
 
+<!-- COURSE VIEWER MODAL -->
+<div id="modal-course-view" style="display:none;position:fixed;inset:0;background:rgba(2,6,8,0.97);z-index:300;overflow-y:auto;padding:20px;">
+  <div style="max-width:600px;margin:0 auto;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--border);">
+      <h3 id="modal-course-title" style="font-family:'Share Tech Mono',monospace;color:var(--accent);letter-spacing:2px;font-size:0.9rem;">// COURSE</h3>
+      <button onclick="document.getElementById('modal-course-view').style.display='none'" style="background:none;border:1px solid var(--border);color:var(--text-dim);width:32px;height:32px;cursor:pointer;font-size:1rem;">✕</button>
+    </div>
+    <div id="modal-course-body" style="font-size:0.9rem;line-height:1.8;color:var(--text);"></div>
+  </div>
+</div>
+
 <script>
-  const API = 'https://genesis-vault-backend.onrender.com/api';
+  const API   = 'https://genesis-vault-backend.onrender.com/api';
   let token   = sessionStorage.getItem('gv_admin_token');
   let adminId = sessionStorage.getItem('gv_admin_id');
   let promoteUserId = null;
@@ -763,7 +782,6 @@
           signal: AbortSignal.timeout(15000)
         });
 
-        // 401 — could be cold-start Supabase timeout returning None, retry first
         if (res.status === 401) {
           if (attempt < MAX_RETRIES - 1) {
             showAdminWakeup(WAKE_MESSAGES[Math.min(attempt, WAKE_MESSAGES.length - 1)]);
@@ -771,9 +789,9 @@
             await new Promise(r => setTimeout(r, 8000));
             continue;
           }
-          // All retries exhausted — real 401, logout
           hideAdminWakeup();
-          sessionStorage.removeItem('gv_admin_token'); sessionStorage.removeItem('gv_admin_id');
+          sessionStorage.removeItem('gv_admin_token');
+          sessionStorage.removeItem('gv_admin_id');
           window.location.href = 'admin-login.html';
           return null;
         }
@@ -782,7 +800,6 @@
         return res;
 
       } catch (err) {
-        // Network error or timeout — likely cold start
         if (attempt < MAX_RETRIES - 1) {
           const wakeMsg = WAKE_MESSAGES[Math.min(attempt, WAKE_MESSAGES.length - 1)];
           showAdminWakeup(wakeMsg);
@@ -791,7 +808,6 @@
           updateAdminWakeupLog(`Retrying... (${attempt + 2}/${MAX_RETRIES})`, '#00f5c4');
         } else {
           hideAdminWakeup();
-          // After all retries failed, don't logout — show error in UI instead
           console.error('apiFetch failed after retries:', err);
           return null;
         }
@@ -816,9 +832,12 @@
     if (name === 'tools')     loadPendingTools();
     if (name === 'vc')        loadVCPurchases();
     if (name === 'users')     loadUsers();
-    if (name === 'courses')   { loadCourses(); }
+    if (name === 'courses')   loadCourses();
   }
 
+  // ── Toast — accepts msg + optional CSS color string ──────────────────
+  // BUG FIX: was previously called with toast(msg, true/false) in VC functions
+  // Correct signature: toast(msg, colorCssString)
   function toast(msg, color = 'var(--accent)') {
     const el = document.getElementById('toast');
     el.textContent = msg;
@@ -826,6 +845,11 @@
     el.style.color = (color === 'var(--accent)') ? 'var(--bg)' : 'white';
     el.classList.add('show');
     setTimeout(() => el.classList.remove('show'), 2800);
+  }
+
+  function esc(s) {
+    if (!s) return '';
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
   }
 
   function timeAgo(dateStr) {
@@ -859,6 +883,9 @@
       const res = await apiFetch(`${API}/admin/dashboard`);
       if (!res) return;
       const d = await res.json();
+
+      // BUG FIX: added pending VC top-ups as its own stat card
+      // Previously only showed pending_payments (tool payments), missing VC queue entirely
       grid.innerHTML = `
         <div class="stat-card green">
           <div class="stat-value">${d.total_members ?? 0}</div>
@@ -870,20 +897,39 @@
         </div>
         <div class="stat-card yellow wide">
           <div class="stat-value">${d.pending_payments ?? 0}</div>
-          <div class="stat-label">Pending Payments</div>
+          <div class="stat-label">Pending Tool Payments</div>
+        </div>
+        <div class="stat-card red wide">
+          <div class="stat-value" id="dash-vc-pending">—</div>
+          <div class="stat-label">Pending VC Top-Ups</div>
         </div>
         <div class="stat-card blue wide">
           <div class="stat-value">${d.total_courses ?? 0}</div>
           <div class="stat-label">Published Courses</div>
         </div>
       `;
+
+      // Fetch pending VC count separately and inject it
+      loadVCPendingCount();
     } catch(e) {
       grid.innerHTML = '<div class="empty">// Failed to load stats.</div>';
     }
   }
 
+  // BUG FIX: new helper — fetches pending VC purchase count for dashboard badge
+  async function loadVCPendingCount() {
+    try {
+      const res  = await apiFetch(`${API}/admin/vc/pending`);
+      if (!res) return;
+      const data = await res.json();
+      const count = (data.purchases || []).length;
+      const el = document.getElementById('dash-vc-pending');
+      if (el) el.textContent = count;
+    } catch(e) { /* non-critical, silently skip */ }
+  }
+
   // ══════════════════════════════════════════════════════════════════
-  // ADMINS + VOTE-REVOKE
+  // ADMINS
   // ══════════════════════════════════════════════════════════════════
 
   async function loadAdmins() {
@@ -903,7 +949,7 @@
         return `
           <div class="admin-row">
             <div>
-              <div class="admin-name">${a.username} ${isSelf ? '<span style="color:var(--accent4);font-size:0.6rem;">[YOU]</span>' : ''}</div>
+              <div class="admin-name">${esc(a.username)} ${isSelf ? '<span style="color:var(--accent4);font-size:0.6rem;">[YOU]</span>' : ''}</div>
               <div class="admin-meta">joined ${timeAgo(a.created_at)}</div>
             </div>
             ${isSelf ? '<span class="badge badge-admin">SELF</span>' : ''}
@@ -914,7 +960,6 @@
       c.innerHTML = '<div class="empty">// Failed to load admins.</div>';
     }
   }
-
 
   // ══════════════════════════════════════════════════════════════════
   // TOOLS
@@ -933,9 +978,9 @@
       }
       c.innerHTML = d.tools.map(t => `
         <div class="item-card" id="tool-${t.id}">
-          <div class="item-meta">By: <span>${t.seller_name || 'Unknown'}</span> · ${timeAgo(t.created_at)}</div>
-          <h4>${t.title}</h4>
-          <p>${(t.description || '').substring(0, 140)}...</p>
+          <div class="item-meta">By: <span>${esc(t.seller_name || 'Unknown')}</span> · ${timeAgo(t.created_at)}</div>
+          <h4>${esc(t.title)}</h4>
+          <p>${esc((t.description || '').substring(0, 140))}...</p>
           <p style="font-family:'Share Tech Mono',monospace;font-size:0.75rem;color:var(--accent2);margin-bottom:10px;">
             Price: ${!t.price || t.price === 0 ? 'FREE' : '$' + t.price + ' USDT'}
           </p>
@@ -996,7 +1041,7 @@
   }
 
   // ══════════════════════════════════════════════════════════════════
-  // VC SPENDING LOGS
+  // VC — PURCHASES + LOGS
   // ══════════════════════════════════════════════════════════════════
 
   let allVCLogs = [];
@@ -1005,7 +1050,6 @@
     document.getElementById('vc-lock-input').style.display = checkbox.checked ? 'flex' : 'none';
   }
 
-  /* ── VC SUB-TAB SWITCH ── */
   function switchVCTab(tab) {
     const isPurchases = tab === 'purchases';
     document.getElementById('vc-purchases-panel').style.display = isPurchases ? 'block' : 'none';
@@ -1018,19 +1062,21 @@
     else loadVCLogs();
   }
 
-  /* ── LOAD PENDING VC PURCHASES ── */
+  // BUG FIX: was calling undefined `authedFetch` — replaced with `apiFetch` throughout
   async function loadVCPurchases() {
     const c = document.getElementById('vc-purchases-container');
     c.innerHTML = '<div class="loading"><span class="spinner"></span>Loading...</div>';
     try {
-      const res  = await authedFetch(`${API}/admin/vc/pending`);
+      const res  = await apiFetch(`${API}/admin/vc/pending`);
+      if (!res) return;
       const data = await res.json();
       const purchases = data.purchases || [];
       if (!purchases.length) {
-        c.innerHTML = '<div class="empty-queue">// No pending VC purchases.</div>'; return;
+        c.innerHTML = '<div class="empty">// No pending VC purchases. ✓</div>';
+        return;
       }
       c.innerHTML = purchases.map(p => `
-        <div class="item-card" style="margin-bottom:12px;">
+        <div class="item-card" id="vc-purchase-${p.id}" style="margin-bottom:12px;">
           <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;gap:10px;">
             <div>
               <div style="font-weight:700;color:white;letter-spacing:1px;">${esc(p.username || p.user_id)}</div>
@@ -1039,39 +1085,68 @@
               </div>
             </div>
             <div style="text-align:right;">
-              <div style="font-family:'Share Tech Mono',monospace;font-size:1rem;color:#f5c400;font-weight:700;">⬡ ${p.vc_received} VC</div>
+              <div style="font-family:'Share Tech Mono',monospace;font-size:1rem;color:#f5c400;font-weight:700;">⬡ ${p.vc_amount ?? p.vc_received ?? '?'} VC</div>
               <div style="font-family:'Share Tech Mono',monospace;font-size:0.7rem;color:var(--accent);">$${p.usdt_amount} USDT</div>
             </div>
           </div>
           <div style="font-family:'Share Tech Mono',monospace;font-size:0.65rem;color:var(--text-dim);margin-bottom:10px;word-break:break-all;">
-            TX: <span style="color:var(--accent2);">${esc(p.binance_tx_id)}</span>
+            TX: <span style="color:var(--accent2);">${esc(p.binance_tx_id || '—')}</span>
           </div>
           <div style="display:flex;gap:8px;">
-            <button class="btn-approve" onclick="confirmVCPurchase(${p.id})" style="flex:1;">[ ✓ CONFIRM ]</button>
-            <button class="btn-reject"  onclick="rejectVCPurchase(${p.id})"  style="flex:1;">[ ✗ REJECT ]</button>
+            <button class="btn-approve" onclick="confirmVCPurchase(${p.id}, this)" style="flex:1;">[ ✓ CONFIRM ]</button>
+            <button class="btn-reject"  onclick="rejectVCPurchase(${p.id}, this)"  style="flex:1;">[ ✗ REJECT ]</button>
           </div>
         </div>`).join('');
     } catch(e) {
-      c.innerHTML = '<div class="empty-queue">// Failed to load VC purchases.</div>';
+      c.innerHTML = '<div class="empty">// Failed to load VC purchases.</div>';
     }
   }
 
-  async function confirmVCPurchase(id) {
+  // BUG FIX: was using authedFetch + wrong toast signature (true/false instead of color string)
+  async function confirmVCPurchase(id, btn) {
+    if (!confirm('Confirm this VC purchase and credit the user?')) return;
+    if (btn) { btn.disabled = true; btn.textContent = '...'; }
     try {
-      const res  = await authedFetch(`${API}/admin/vc/confirm/${id}`, { method:'POST', body: JSON.stringify({}) });
+      const res  = await apiFetch(`${API}/admin/vc/confirm/${id}`, { method: 'POST', body: JSON.stringify({}) });
+      if (!res) { if (btn) { btn.disabled = false; btn.textContent = '[ ✓ CONFIRM ]'; } return; }
       const data = await res.json();
-      if (data.status === 'success') { toast('✓ ' + data.message); loadVCPurchases(); }
-      else toast('Error: ' + data.message, true);
-    } catch(e) { toast('Network error', true); }
+      if (data.status === 'success') {
+        toast('✓ ' + (data.message || 'VC credited successfully'));
+        const card = document.getElementById(`vc-purchase-${id}`);
+        if (card) card.remove();
+        // BUG FIX: refresh dashboard pending count after action
+        loadVCPendingCount();
+      } else {
+        toast('// Error: ' + (data.message || 'Confirm failed'), 'var(--accent3)');
+        if (btn) { btn.disabled = false; btn.textContent = '[ ✓ CONFIRM ]'; }
+      }
+    } catch(e) {
+      toast('// Network error', 'var(--accent3)');
+      if (btn) { btn.disabled = false; btn.textContent = '[ ✓ CONFIRM ]'; }
+    }
   }
 
-  async function rejectVCPurchase(id) {
+  // BUG FIX: was using authedFetch + wrong toast signature
+  async function rejectVCPurchase(id, btn) {
+    if (!confirm('Reject this VC purchase? The user will not receive VC.')) return;
+    if (btn) { btn.disabled = true; btn.textContent = '...'; }
     try {
-      const res  = await authedFetch(`${API}/admin/vc/reject/${id}`, { method:'POST', body: JSON.stringify({}) });
+      const res  = await apiFetch(`${API}/admin/vc/reject/${id}`, { method: 'POST', body: JSON.stringify({}) });
+      if (!res) { if (btn) { btn.disabled = false; btn.textContent = '[ ✗ REJECT ]'; } return; }
       const data = await res.json();
-      if (data.status === 'success') { toast('Purchase rejected.'); loadVCPurchases(); }
-      else toast('Error: ' + data.message, true);
-    } catch(e) { toast('Network error', true); }
+      if (data.status === 'success') {
+        toast('// Purchase rejected.', 'var(--accent3)');
+        const card = document.getElementById(`vc-purchase-${id}`);
+        if (card) card.remove();
+        loadVCPendingCount();
+      } else {
+        toast('// Error: ' + (data.message || 'Reject failed'), 'var(--accent3)');
+        if (btn) { btn.disabled = false; btn.textContent = '[ ✗ REJECT ]'; }
+      }
+    } catch(e) {
+      toast('// Network error', 'var(--accent3)');
+      if (btn) { btn.disabled = false; btn.textContent = '[ ✗ REJECT ]'; }
+    }
   }
 
   async function loadVCLogs() {
@@ -1085,7 +1160,6 @@
       const d = await res.json();
       allVCLogs = d.transactions || [];
 
-      // Stats summary
       const totalSpent  = allVCLogs.filter(t => t.type === 'spend').reduce((a, t) => a + (t.amount || 0), 0);
       const totalEarned = allVCLogs.filter(t => t.type === 'earn').reduce((a, t) => a + (t.amount || 0), 0);
       s.innerHTML = `
@@ -1124,8 +1198,8 @@
       <div class="item-card" style="border-left:3px solid ${t.type === 'earn' ? 'var(--accent)' : 'var(--accent3)'};">
         <div style="display:flex;justify-content:space-between;align-items:flex-start;">
           <div>
-            <div style="font-family:'Share Tech Mono',monospace;font-size:0.85rem;color:white;">${t.username || 'Unknown'}</div>
-            <div class="item-meta" style="margin-top:3px;">${t.reason || '—'} · ${timeAgo(t.created_at)}</div>
+            <div style="font-family:'Share Tech Mono',monospace;font-size:0.85rem;color:white;">${esc(t.username || 'Unknown')}</div>
+            <div class="item-meta" style="margin-top:3px;">${esc(t.reason || '—')} · ${timeAgo(t.created_at)}</div>
           </div>
           <div style="font-family:'Share Tech Mono',monospace;font-size:1.1rem;color:${t.type === 'earn' ? 'var(--accent)' : 'var(--accent3)'};">
             ${t.type === 'earn' ? '+' : '-'}${t.amount} VC
@@ -1155,8 +1229,8 @@
       } else {
         pc.innerHTML = d.posts.map(p => `
           <div class="item-card" id="post-${p.id}">
-            <div class="item-meta">By: <span>${p.username}</span> · ${timeAgo(p.created_at)}</div>
-            <p>${p.content}</p>
+            <div class="item-meta">By: <span>${esc(p.username)}</span> · ${timeAgo(p.created_at)}</div>
+            <p>${esc(p.content)}</p>
             <div class="actions" style="margin-top:10px;">
               <button class="btn-action" onclick="clearPost(${p.id}, this)">[ CLEAR FLAG ]</button>
               <button class="btn-reject" onclick="deletePost(${p.id}, this)">[ DELETE ]</button>
@@ -1178,12 +1252,13 @@
       } else {
         mc.innerHTML = d.members.map(m => `
           <div class="item-card">
-            <div class="item-meta"><span>${m.email}</span> · joined ${timeAgo(m.created_at)}</div>
+            <div style="font-weight:700;color:white;letter-spacing:1px;margin-bottom:2px;">${esc(m.username || m.email)}</div>
+            <div class="item-meta"><span>${esc(m.email)}</span> · joined ${timeAgo(m.created_at)}</div>
             <div class="actions" style="flex-wrap:wrap;gap:6px;">
-              <span class="badge ${m.is_banned ? 'badge-flagged' : 'badge-safe'}">${m.is_banned ? 'BANNED' : m.rank || 'Ghost'}</span>
+              <span class="badge ${m.is_banned ? 'badge-flagged' : 'badge-safe'}">${m.is_banned ? 'BANNED' : (m.rank || 'Ghost')}</span>
               ${!m.is_banned ? `
-                <button class="btn-action" style="font-size:0.65rem;padding:4px 10px;" onclick="openPromoteModal('${m.id}','${m.username || m.email}')">[ PROMOTE ]</button>
-                <button class="btn-reject" style="font-size:0.65rem;padding:4px 10px;" onclick="banMember('${m.id}','${m.email}', this)">[ BAN ]</button>
+                <button class="btn-action" style="font-size:0.65rem;padding:4px 10px;" onclick="openPromoteModal('${m.id}','${esc(m.username || m.email)}')">[ PROMOTE ]</button>
+                <button class="btn-reject" style="font-size:0.65rem;padding:4px 10px;" onclick="banMember('${m.id}','${esc(m.email)}', this)">[ BAN ]</button>
               ` : ''}
             </div>
           </div>
@@ -1268,11 +1343,15 @@
     promoteUserId = null;
   }
 
+  // BUG FIX: save userId BEFORE calling closePromoteModal()
+  // Previously: closePromoteModal() nulled promoteUserId, then the fetch used null in the URL
   async function confirmPromote() {
-    const rank = document.getElementById('promote-rank').value;
+    const rank   = document.getElementById('promote-rank').value;
+    const userId = promoteUserId; // capture before closing
     closePromoteModal();
+    if (!userId) { toast('// No user selected.', 'var(--accent3)'); return; }
     try {
-      const res = await apiFetch(`${API}/admin/users/${promoteUserId}/promote`, {
+      const res = await apiFetch(`${API}/admin/users/${userId}/promote`, {
         method: 'POST',
         body: JSON.stringify({ rank })
       });
@@ -1307,7 +1386,7 @@
       return;
     }
     if (vcLock && vcCost < 1) {
-      toast('// Set a VC cost to lock the course.', 'var(--accent3)');
+      toast('// Set a VC cost of at least 1 to lock the course.', 'var(--accent3)');
       return;
     }
 
@@ -1370,15 +1449,15 @@
     }
     c.innerHTML = courses.map(course => `
       <div class="item-card" id="course-${course.id}">
-        <div class="item-meta">${course.category} · ${course.is_free ? 'FREE' : '$' + course.price + ' USDT'}
+        <div class="item-meta">${esc(course.category)} · ${course.is_free ? 'FREE' : '$' + course.price + ' USDT'}
           ${course.vc_locked ? `· <span style="color:var(--accent4);">🔒 ${course.vc_cost || 0} VC</span>` : ''}
         </div>
-        <h4>${course.title}</h4>
-        <p>${course.description || ''}</p>
+        <h4>${esc(course.title)}</h4>
+        <p>${esc(course.description || '')}</p>
         <div class="actions" style="margin-top:10px;">
-          <button class="btn-approve" style="font-size:0.7rem;padding:5px 12px;" onclick="viewCourse(${course.id}, \`${course.title}\`)">[ VIEW ]</button>
-          <button class="btn-action" style="font-size:0.7rem;padding:5px 12px;" onclick="editCourse(${course.id})">[ EDIT ]</button>
-          <button class="btn-reject" style="font-size:0.7rem;padding:5px 12px;" onclick="deleteCourse(${course.id}, this)">[ DELETE ]</button>
+          <button class="btn-approve" style="font-size:0.7rem;padding:5px 12px;" onclick="viewCourse(${course.id}, \`${esc(course.title)}\`)">[ VIEW ]</button>
+          <button class="btn-action"  style="font-size:0.7rem;padding:5px 12px;" onclick="editCourse(${course.id})">[ EDIT ]</button>
+          <button class="btn-reject"  style="font-size:0.7rem;padding:5px 12px;" onclick="deleteCourse(${course.id}, this)">[ DELETE ]</button>
         </div>
       </div>
     `).join('');
@@ -1413,7 +1492,7 @@
     document.getElementById('c-vc-lock').checked = vcLocked;
     document.getElementById('vc-lock-input').style.display = vcLocked ? 'flex' : 'none';
     if (vcLocked) document.getElementById('c-vc-cost').value = course.vc_cost ?? '';
-    // Swap publish button to update mode
+
     const btn = document.querySelector('[onclick="postCourse()"]');
     btn.textContent = '[ UPDATE COURSE ]';
     btn.onclick = async () => {
@@ -1425,6 +1504,7 @@
       const vcLock   = document.getElementById('c-vc-lock').checked;
       const vcCost   = vcLock ? (parseInt(document.getElementById('c-vc-cost').value) || 0) : 0;
       if (!title || !content) { toast('// Title and content are required.', 'var(--accent3)'); return; }
+      if (vcLock && vcCost < 1) { toast('// Set a VC cost of at least 1 to lock the course.', 'var(--accent3)'); return; }
       btn.disabled = true;
       btn.textContent = '[ UPDATING... ]';
       try {
@@ -1485,10 +1565,7 @@
   }
 
   // ── Init ────────────────────────────────────────────────────────────
-  // Single auth ping first — prevents 3 simultaneous retry loops
-  // all writing "Auth check failed" to the overlay at the same time.
   async function initAdmin() {
-    // One warm-up ping to let Render wake up
     showAdminWakeup('Connecting to vault...');
     updateAdminWakeupLog('Initializing admin session...');
 
@@ -1499,7 +1576,6 @@
       });
 
       if (res.status === 401) {
-        // Retry once after delay before giving up
         updateAdminWakeupLog('Auth check failed, retrying... (1/1)', '#ffaa00');
         await new Promise(r => setTimeout(r, 8000));
         const retry = await fetch(`${API}/admin/dashboard`, {
@@ -1508,18 +1584,17 @@
         });
         if (retry.status === 401) {
           hideAdminWakeup();
-          sessionStorage.removeItem('gv_admin_token'); sessionStorage.removeItem('gv_admin_id');
+          sessionStorage.removeItem('gv_admin_token');
+          sessionStorage.removeItem('gv_admin_id');
           window.location.href = 'admin-login.html';
           return;
         }
       }
     } catch(e) {
-      // Network error — give it one more try
       updateAdminWakeupLog('Connection error, retrying...', '#ffaa00');
       await new Promise(r => setTimeout(r, 6000));
     }
 
-    // Auth passed — now load all sections in parallel
     hideAdminWakeup();
     loadDashboard();
     loadAdmins();
@@ -1527,15 +1602,5 @@
 
   initAdmin();
 </script>
-<!-- COURSE VIEWER MODAL -->
-<div id="modal-course-view" style="display:none;position:fixed;inset:0;background:rgba(2,6,8,0.97);z-index:300;overflow-y:auto;padding:20px;">
-  <div style="max-width:600px;margin:0 auto;">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--border);">
-      <h3 id="modal-course-title" style="font-family:'Share Tech Mono',monospace;color:var(--accent);letter-spacing:2px;font-size:0.9rem;">// COURSE</h3>
-      <button onclick="document.getElementById('modal-course-view').style.display='none'" style="background:none;border:1px solid var(--border);color:var(--text-dim);width:32px;height:32px;cursor:pointer;font-size:1rem;">✕</button>
-    </div>
-    <div id="modal-course-body" style="font-size:0.9rem;line-height:1.8;color:var(--text);"></div>
-  </div>
-</div>
 </body>
 </html>
