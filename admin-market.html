@@ -920,8 +920,7 @@ function renderPromos() {
     return `
     <div class="promo-mgr-card">
       <div class="promo-code-label">${esc(p.code)}</div>
-      <div class="promo-info">
-        <div class="promo-info-line">DISCOUNT: <span>${p.type === 'fixed' ? '$'+p.value+' USDT' : p.value+'%'}</span></div>
+      <div class="promo-info"><div class="promo-info-line">DISCOUNT: <span>${p.type === 'fixed' ? '⬡ '+p.value+' VC' : p.value+'%'}</span></div>
         <div class="promo-info-line">USED: <span>${p.used_count||0}${p.usage_limit ? ' / '+p.usage_limit : ''}</span> &nbsp;·&nbsp; EXPIRES: <span>${p.expiry ? new Date(p.expiry).toLocaleDateString() : 'Never'}</span></div>
       </div>
       <span class="promo-status-badge ${isActive?'active':'inactive'}">${isActive?'ACTIVE':'INACTIVE'}</span>
