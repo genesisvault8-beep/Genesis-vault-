@@ -207,9 +207,61 @@
 
   .confirm-bar { background:rgba(255,0,60,0.06); border:1px solid var(--accent3); padding:12px 16px; margin-bottom:14px; font-family:'Share Tech Mono',monospace; font-size:0.72rem; color:var(--accent3); letter-spacing:1px; }
   .section-action-row { display:flex; justify-content:flex-end; margin-bottom:14px; }
+
+  /* ── TOKEN GATE ── */
+  #token-gate {
+    display:none; position:fixed; inset:0; background:var(--bg);
+    z-index:9999; flex-direction:column; align-items:center;
+    justify-content:center; padding:30px;
+  }
+  #token-gate::before {
+    content:''; position:fixed; inset:0;
+    background-image:
+      linear-gradient(rgba(0,245,196,0.02) 1px,transparent 1px),
+      linear-gradient(90deg,rgba(0,245,196,0.02) 1px,transparent 1px);
+    background-size:40px 40px; pointer-events:none;
+  }
+  .gate-inner { width:100%; max-width:420px; position:relative; z-index:1; }
+  .gate-logo { font-family:'Share Tech Mono',monospace; font-size:1.1rem; letter-spacing:4px; text-align:center; margin-bottom:6px; }
+  .gate-logo span { color:var(--accent); }
+  .gate-sub { font-family:'Share Tech Mono',monospace; font-size:0.65rem; color:var(--text-dim); letter-spacing:3px; text-align:center; margin-bottom:36px; }
+  .gate-label { font-family:'Share Tech Mono',monospace; font-size:0.65rem; color:var(--text-dim); letter-spacing:2px; margin-bottom:8px; }
+  #gate-token-input {
+    width:100%; background:var(--bg2); border:1px solid var(--border);
+    color:var(--text); padding:14px 16px; font-family:'Share Tech Mono',monospace;
+    font-size:0.85rem; outline:none; margin-bottom:12px;
+    transition:border-color 0.2s; letter-spacing:1px;
+  }
+  #gate-token-input:focus { border-color:var(--accent); }
+  #gate-token-input::placeholder { color:var(--text-dim); }
+  #gate-error {
+    display:none; font-family:'Share Tech Mono',monospace; font-size:0.7rem;
+    color:var(--accent3); letter-spacing:1px; margin-bottom:12px;
+    padding:8px 12px; border:1px solid var(--accent3);
+    background:rgba(255,0,60,0.05);
+  }
+  #gate-btn {
+    width:100%; padding:14px; background:var(--accent); color:var(--bg);
+    border:none; font-family:'Rajdhani',sans-serif; font-weight:700;
+    font-size:1rem; letter-spacing:3px; cursor:pointer; transition:all 0.2s;
+    clip-path:polygon(8px 0%,100% 0%,calc(100% - 8px) 100%,0% 100%);
+  }
+  #gate-btn:hover { background:white; }
 </style>
 </head>
 <body>
+
+<!-- TOKEN GATE -->
+<div id="token-gate">
+  <div class="gate-inner">
+    <div class="gate-logo"><span>GENESIS</span>VAULT</div>
+    <div class="gate-sub">// ADMIN MARKET CONTROL //</div>
+    <div class="gate-label">ADMIN TOKEN</div>
+    <input type="password" id="gate-token-input" placeholder="paste your admin token...">
+    <div id="gate-error"></div>
+    <button id="gate-btn" onclick="gateAuthenticate()">AUTHENTICATE</button>
+  </div>
+</div>
 
 <nav>
   <div class="nav-logo" data-text="GENESISVAULT"><span class="g">GENESIS</span><span class="v">VAULT</span></div>
@@ -500,60 +552,84 @@
 
 <script>
 const API = 'https://genesis-vault-backend.onrender.com/api';
+
+/* ═══════════════════ TOKEN GATE ═══════════════════ */
 function getToken() {
-  return localStorage.getItem('gv_token');
+  return localStorage.getItem('gv_token') || sessionStorage.getItem('gv_token');
 }
 
 function parseJWT(token) {
-  try {
-    return JSON.parse(atob(token.split('.')[1]));
-  } catch(e) { return null; }
+  try { return JSON.parse(atob(token.split('.')[1])); }
+  catch(e) { return null; }
 }
 
 function isTokenValid(token) {
   if (!token) return false;
-  const payload = parseJWT(token);
-  if (!payload) return false;
-  if (payload.exp && payload.exp * 1000 < Date.now()) return false;
-  if (payload.role && payload.role !== 'admin') return false;
+  const p = parseJWT(token);
+  if (!p) return false;
+  if (p.exp && p.exp * 1000 < Date.now()) return false;
+  if (p.role && p.role !== 'admin') return false;
   return true;
 }
 
-function blockAccess(reason = 'UNAUTHORIZED') {
-  document.body.innerHTML = `
-    <div style="
-      display:flex; flex-direction:column; align-items:center;
-      justify-content:center; min-height:100vh;
-      background:#020608; font-family:'Share Tech Mono',monospace;
-    ">
-      <div style="color:#ff003c; font-size:1.2rem; letter-spacing:4px; margin-bottom:12px;">
-        // ACCESS DENIED
-      </div>
-      <div style="color:#4a7a8a; font-size:0.7rem; letter-spacing:2px;">
-        // ${reason}
-      </div>
-    </div>`;
+function showGate(msg) {
+  document.getElementById('token-gate').style.display = 'flex';
+  document.querySelector('nav').style.display = 'none';
+  document.querySelector('main').style.display = 'none';
+  if (msg) {
+    const el = document.getElementById('gate-error');
+    el.textContent = msg;
+    el.style.display = 'block';
   }
-  
-function h() {
-  return { 'Content-Type':'application/json', 'Authorization': `Bearer ${_token}` };
 }
 
-async function fetchWithAuth(url, opts = {}) {
+function hideGate() {
+  document.getElementById('token-gate').style.display = 'none';
+  document.querySelector('nav').style.display = 'flex';
+  document.querySelector('main').style.display = 'block';
+}
+
+function gateAuthenticate() {
+  const input = document.getElementById('gate-token-input').value.trim();
+  if (!input) {
+    const el = document.getElementById('gate-error');
+    el.textContent = '// Token required.';
+    el.style.display = 'block';
+    return;
+  }
+  if (!isTokenValid(input)) {
+    const el = document.getElementById('gate-error');
+    el.textContent = '// Invalid or expired token.';
+    el.style.display = 'block';
+    return;
+  }
+  localStorage.setItem('gv_token', input);
+  hideGate();
+  boot();
+}
+
+function h() {
+  const token = getToken();
+  return { 'Content-Type':'application/json', 'Authorization': `Bearer ${token}` };
+}
+
+async function fetchWithAuth(url, options = {}) {
   const token = getToken();
   if (!isTokenValid(token)) {
-    blockAccess('SESSION EXPIRED');
-    return Promise.reject('Session expired');
+    showGate('// SESSION EXPIRED — RE-AUTHENTICATE');
+    throw new Error('Unauthorized');
   }
-  return fetch(url, {
-    ...opts,
-    headers: {
-      ...opts.headers,
-      'Authorization': `Bearer ${token}`
-    }
-  });
+  if (!options.headers) options.headers = h();
+  const res = await fetch(url, options);
+  if (res.status === 401) {
+    localStorage.removeItem('gv_token');
+    sessionStorage.removeItem('gv_token');
+    showGate('// SESSION EXPIRED — RE-AUTHENTICATE');
+    throw new Error('Unauthorized');
   }
-  
+  return res;
+}
+
 /* ── STATE ── */
 let allRevenue  = [];
 let allTools    = [];
@@ -1130,10 +1206,11 @@ function toast(msg, err=false) {
 (function guardInit() {
   const token = getToken();
   if (!isTokenValid(token)) {
-    blockAccess('INVALID OR EXPIRED TOKEN');
-    return;
+    showGate();
+  } else {
+    hideGate();
+    boot();
   }
-  boot();
 })();
 </script>
 </body>
