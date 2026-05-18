@@ -228,6 +228,18 @@
     letter-spacing:2px; flex:1;
   }
 
+  /* Viewer loading indicator */
+  .viewer-loading {
+    display:none; font-family:'Share Tech Mono',monospace;
+    font-size:0.65rem; color:var(--dim); letter-spacing:1px;
+  }
+  .viewer-loading.show { display:inline-flex; align-items:center; gap:6px; }
+  .viewer-spinner {
+    width:10px; height:10px; border:2px solid var(--border);
+    border-top-color:var(--accent); border-radius:50%;
+    animation:spin 0.8s linear infinite; display:inline-block;
+  }
+
   /* Target frame */
   .target-section {
     background:var(--bg2); border:1px solid var(--border);
@@ -264,12 +276,13 @@
     display:flex; gap:8px; padding:12px 14px;
     flex-wrap:wrap;
   }
+  /* FIX #10: Removed duplicate/undefined color property */
   .tool-btn {
     background:none; border:1px solid var(--border);
-    color:var(--text-dim); padding:6px 14px;
+    color:var(--dim); padding:6px 14px;
     font-family:'Share Tech Mono',monospace;
     font-size:0.65rem; cursor:pointer; letter-spacing:1px;
-    transition:all 0.2s; color:var(--dim);
+    transition:all 0.2s;
   }
   .tool-btn:hover { border-color:var(--accent2); color:var(--accent2); }
   .tool-btn.active { border-color:var(--accent); color:var(--accent); }
@@ -311,6 +324,13 @@
     outline:none; line-height:1.6;
   }
   .notes-panel textarea:focus { border-color:var(--accent); }
+  /* FIX #13: Notes save indicator */
+  .notes-save-status {
+    font-family:'Share Tech Mono',monospace; font-size:0.6rem;
+    color:var(--dim); letter-spacing:1px; margin-top:6px;
+    transition:color 0.3s;
+  }
+  .notes-save-status.saved { color:var(--accent); }
 
   /* AI panel */
   .ai-panel {
@@ -375,8 +395,9 @@
   }
   .complete-btn.done {
     background:var(--accent); color:var(--bg);
-    border-color:var(--accent);
+    border-color:var(--accent); cursor:default;
   }
+  .complete-btn:disabled { opacity:0.6; cursor:not-allowed; }
 
   /* Solved overlay */
   .solved-banner {
@@ -410,6 +431,7 @@
     0%,100% { opacity:1; }
     50%      { opacity:0.3; }
   }
+  @keyframes spin { to { transform:rotate(360deg); } }
 </style>
 </head>
 <body>
@@ -430,11 +452,12 @@
       <p>Sandboxed environments to practice real cyber security techniques. All targets are intentionally vulnerable.</p>
       <div class="hero-stats">
         <div class="hstat">
-          <span class="hstat-val" id="stat-total">3</span>
+          <!-- FIX #15: Was hardcoded to 3 — now starts at 0/— until loaded -->
+          <span class="hstat-val" id="stat-total">—</span>
           <span class="hstat-label">Labs</span>
         </div>
         <div class="hstat">
-          <span class="hstat-val" id="stat-solved">0</span>
+          <span class="hstat-val" id="stat-solved">—</span>
           <span class="hstat-label">Solved</span>
         </div>
         <div class="hstat">
@@ -465,6 +488,10 @@
     <div class="viewer-header">
       <button class="viewer-back" onclick="closeLab()">← EXIT LAB</button>
       <div class="viewer-title" id="viewer-title">// LAB</div>
+      <!-- FIX #14: Loading indicator in viewer header -->
+      <span class="viewer-loading" id="viewer-loading">
+        <span class="viewer-spinner"></span>LOADING
+      </span>
       <span class="diff-badge" id="viewer-diff"></span>
     </div>
 
@@ -498,9 +525,10 @@
       <div id="hints-content"></div>
     </div>
 
-    <!-- Notes -->
+    <!-- Notes (FIX #13: auto-save to localStorage per lab) -->
     <div class="notes-panel" id="panel-notes">
-      <textarea id="notes-input" placeholder="// Write your notes here...&#10;// What did you find? What did you try?"></textarea>
+      <textarea id="notes-input" placeholder="// Write your notes here...&#10;// What did you find? What did you try?" oninput="saveNotes()"></textarea>
+      <div class="notes-save-status" id="notes-save-status">// Notes auto-saved per lab</div>
     </div>
 
     <!-- AI -->
@@ -613,8 +641,6 @@ function doLogin(){
   button{background:#238636;color:white;border:none;border-radius:4px;padding:6px 14px;font-size:0.75rem;cursor:pointer;margin-top:8px}
   button:hover{background:#2ea043}
   .response{background:#0d1117;border:1px solid #21262d;border-radius:4px;padding:12px;margin-top:12px;font-size:0.75rem;line-height:1.8;min-height:60px;color:#3fb950;white-space:pre-wrap;display:none}
-  .key-line{color:#ff7b72}
-  /* Source hint visible in page source */
 </style>
 <!-- API CONFIGURATION — DO NOT COMMIT -->
 <!-- SECRET_API_KEY = DS_LIVE_sk_7f9a2b3c4d5e6f7a8b9c0d1e2f3a4b5c -->
@@ -743,11 +769,11 @@ function verifyToken(){
 </script>
 
 <script>
-const API = 'https://genesis-vault-backend.onrender.com/api';
+const API   = 'https://genesis-vault-backend.onrender.com/api';
 const token = localStorage.getItem('gv_token');
 if (!token) window.location.href = 'login.html';
 
-// ── AUTH-AWARE FETCH — redirects to login on 401 ──────────────────────
+// ── AUTH-AWARE FETCH ──────────────────────────────────────────────────
 async function fetchWithAuth(url, options = {}) {
   options.headers = {
     'Authorization': `Bearer ${token}`,
@@ -762,9 +788,10 @@ async function fetchWithAuth(url, options = {}) {
   return res;
 }
 
-// ── FALLBACK LAB DEFINITIONS (used if backend is unreachable) ─────────
+// ── FALLBACK LABS ─────────────────────────────────────────────────────
 const FALLBACK_LABS = [
   {
+    // FIX #12: String IDs normalised — use string to match localStorage solved IDs
     id:         'fakebank',
     title:      'FakeBank Login',
     category:   'AUTH',
@@ -812,12 +839,12 @@ const FALLBACK_LABS = [
   }
 ];
 
-let LABS          = [];   // loaded from backend
-let solved        = [];   // loaded from backend
+let LABS          = [];
+let solved        = [];   // FIX #12: normalised to strings
 let currentLab    = null;
 let currentFilter = 'all';
 
-// ── LOAD LABS FROM BACKEND ────────────────────────────────────────────
+// ── LOAD LABS ─────────────────────────────────────────────────────────
 async function loadLabs() {
   const grid = document.getElementById('labs-grid');
   grid.innerHTML = '<div style="text-align:center;padding:40px;font-family:\'Share Tech Mono\',monospace;font-size:0.75rem;color:var(--dim);">// Loading labs...</div>';
@@ -826,24 +853,30 @@ async function loadLabs() {
     const data = await res.json();
     if (data.status === 'success') {
       LABS   = data.labs || [];
-      solved = LABS.filter(l => l.solved).map(l => l.id);
+      // FIX #12: Normalise all IDs to strings for consistent comparison
+      LABS   = LABS.map(l => ({ ...l, id: String(l.id) }));
+      solved = LABS.filter(l => l.solved).map(l => String(l.id));
       document.getElementById('stat-total').textContent  = LABS.length;
       document.getElementById('stat-solved').textContent = solved.length;
       renderLabs(currentFilter);
     } else {
-      grid.innerHTML = '<div style="text-align:center;padding:40px;font-family:\'Share Tech Mono\',monospace;font-size:0.75rem;color:var(--dim);">// No labs available yet.</div>';
+      useFallback();
     }
   } catch(e) {
-    // Fallback to static labs if backend is unreachable
-    LABS   = FALLBACK_LABS;
-    solved = JSON.parse(localStorage.getItem('gv_lab_solved') || '[]');
-    document.getElementById('stat-total').textContent  = LABS.length;
-    document.getElementById('stat-solved').textContent = solved.length;
-    renderLabs(currentFilter);
+    useFallback();
   }
 }
 
-// ── RENDER LOBBY ─────────────────────────────────────────────────────
+function useFallback() {
+  LABS   = FALLBACK_LABS;
+  // FIX #12: Fallback solved IDs are strings, backend IDs normalised to strings — consistent
+  solved = JSON.parse(localStorage.getItem('gv_lab_solved') || '[]').map(String);
+  document.getElementById('stat-total').textContent  = LABS.length;
+  document.getElementById('stat-solved').textContent = solved.length;
+  renderLabs(currentFilter);
+}
+
+// ── RENDER LOBBY ──────────────────────────────────────────────────────
 function renderLabs(filter) {
   const grid = document.getElementById('labs-grid');
   const filtered = LABS.filter(l => {
@@ -863,26 +896,26 @@ function renderLabs(filter) {
   }
 
   grid.innerHTML = filtered.map(lab => {
-    const isSolved  = lab.solved || solved.includes(lab.id);
+    const isSolved  = lab.solved || solved.includes(String(lab.id));
     const diffClass = lab.difficulty || 'easy';
     const tags      = Array.isArray(lab.tags) ? lab.tags : [];
     return `
-      <div class="lab-card ${diffClass}" onclick="openLab(${lab.id})">
+      <div class="lab-card ${diffClass}" onclick="openLab('${String(lab.id)}')">
         <div class="lab-top">
-          <span class="lab-category">${lab.category || 'MISC'}</span>
+          <span class="lab-category">${escapeHtml(lab.category || 'MISC')}</span>
           <span class="diff-badge diff-${diffClass}">${diffClass.toUpperCase()}</span>
         </div>
-        <h3>${isSolved ? '✓ ' : ''}${lab.title}</h3>
-        <p>${lab.description || ''}</p>
+        <h3>${isSolved ? '✓ ' : ''}${escapeHtml(lab.title)}</h3>
+        <p>${escapeHtml(lab.description || '')}</p>
         <div class="lab-tags">
-          ${tags.map(t => `<span class="lab-tag">${t}</span>`).join('')}
+          ${tags.map(t => `<span class="lab-tag">${escapeHtml(t)}</span>`).join('')}
         </div>
         <div class="lab-footer">
           <div class="lab-status">
             <div class="status-dot" style="${isSolved ? 'background:var(--accent)' : 'background:var(--accent2)'}"></div>
             ${isSolved ? 'COMPLETED' : 'LIVE'}
           </div>
-          <button class="enter-btn ${diffClass}" onclick="event.stopPropagation();openLab(${lab.id})">
+          <button class="enter-btn ${diffClass}" onclick="event.stopPropagation();openLab('${String(lab.id)}')">
             [ ENTER LAB ]
           </button>
         </div>
@@ -899,21 +932,33 @@ function filterLabs(f, el) {
 
 // ── OPEN LAB ─────────────────────────────────────────────────────────
 async function openLab(id) {
-  // Show loading state
+  id = String(id);
+
+  // FIX #14: Show viewer immediately with loading state + spinner in header
   document.getElementById('lobby').style.display      = 'none';
   document.getElementById('lab-viewer').style.display = 'block';
   document.getElementById('viewer-title').textContent = '// Loading...';
-  document.getElementById('lab-frame').srcdoc         = '<div style="display:flex;align-items:center;justify-content:center;height:100%;font-family:monospace;color:#555;font-size:0.8rem;">Loading lab...</div>';
+  document.getElementById('viewer-diff').textContent  = '';
+  document.getElementById('viewer-loading').classList.add('show');
+  document.getElementById('lab-frame').srcdoc = '';
+  document.getElementById('solved-banner').classList.remove('show');
+  document.getElementById('viewer-objective').textContent = '';
   window.scrollTo(0,0);
 
   try {
     const res  = await fetchWithAuth(`${API}/labs/${id}`);
     const data = await res.json();
+
+    document.getElementById('viewer-loading').classList.remove('show');
+
     if (data.status !== 'success' || !data.lab) {
       document.getElementById('viewer-title').textContent = '// Lab not found';
       return;
     }
+
     const lab = data.lab;
+    // FIX #12: Normalise ID
+    lab.id = String(lab.id);
     currentLab = lab;
 
     document.getElementById('viewer-title').textContent     = `// ${lab.title}`;
@@ -921,13 +966,12 @@ async function openLab(id) {
     document.getElementById('viewer-diff').className        = `diff-badge diff-${lab.difficulty || 'easy'}`;
     document.getElementById('viewer-objective').textContent = lab.objective || '';
 
-    // Load hints
+    // FIX #9: Guard against null tags
     const hints = Array.isArray(lab.hints) ? lab.hints : [];
     document.getElementById('hints-content').innerHTML =
-      hints.map(h => `<div class="hint-item">${h}</div>`).join('') ||
+      hints.map(h => `<div class="hint-item">${escapeHtml(h)}</div>`).join('') ||
       '<div style="color:var(--dim);font-size:0.8rem;">// No hints available for this lab.</div>';
 
-    // Load HTML into sandboxed iframe
     document.getElementById('lab-frame').srcdoc = lab.html_content || '<p style="padding:20px;font-family:monospace;">No content loaded.</p>';
 
     // Reset panels
@@ -936,9 +980,17 @@ async function openLab(id) {
       document.getElementById(`btn-${p}`).classList.remove('active');
     });
 
+    // FIX #13: Load saved notes for this lab
+    const savedNotes = localStorage.getItem(`gv_notes_${id}`) || '';
+    document.getElementById('notes-input').value = savedNotes;
+    document.getElementById('notes-save-status').textContent = savedNotes
+      ? '// Notes loaded from last session'
+      : '// Notes auto-saved per lab';
+    document.getElementById('notes-save-status').classList.remove('saved');
+
     // Reset AI
     document.getElementById('ai-messages').innerHTML =
-      `<div class="ai-msg bot" style="color:var(--dim)">Ask me anything about the <strong style="color:var(--accent)">${lab.title}</strong> lab. I can give hints without spoiling the solution.</div>`;
+      `<div class="ai-msg bot" style="color:var(--dim)">Ask me anything about the <strong style="color:var(--accent)">${escapeHtml(lab.title)}</strong> lab. I can give hints without spoiling the solution.</div>`;
 
     // Solved state
     const isSolved = lab.solved || solved.includes(id);
@@ -947,11 +999,14 @@ async function openLab(id) {
     if (isSolved) {
       btn.textContent = '[ COMPLETED ✓ ]';
       btn.classList.add('done');
+      btn.disabled = true; // FIX #8: Prevent re-submission on already-solved labs
     } else {
       btn.textContent = '[ MARK AS COMPLETE ]';
       btn.classList.remove('done');
+      btn.disabled = false;
     }
   } catch(e) {
+    document.getElementById('viewer-loading').classList.remove('show');
     document.getElementById('viewer-title').textContent = '// Failed to load lab';
   }
 }
@@ -981,34 +1036,70 @@ function togglePanel(name) {
   }
 }
 
-// ── COMPLETE ─────────────────────────────────────────────────────────
+// FIX #13: Auto-save notes to localStorage per lab
+let notesSaveTimer = null;
+function saveNotes() {
+  if (!currentLab) return;
+  const val = document.getElementById('notes-input').value;
+  const status = document.getElementById('notes-save-status');
+  status.textContent = '// Saving...';
+  status.classList.remove('saved');
+  clearTimeout(notesSaveTimer);
+  notesSaveTimer = setTimeout(() => {
+    localStorage.setItem(`gv_notes_${currentLab.id}`, val);
+    status.textContent = '// Saved ✓';
+    status.classList.add('saved');
+  }, 600);
+}
+
+// ── COMPLETE (FIX #8: guard already-solved state) ─────────────────────
 async function markComplete() {
   if (!currentLab) return;
+  const isSolved = currentLab.solved || solved.includes(String(currentLab.id));
+  if (isSolved) return; // FIX #8: Already solved, do nothing
+
   const btn = document.getElementById('complete-btn');
   btn.disabled = true;
+  btn.textContent = '[ SUBMITTING... ]';
+
   try {
-    const res  = await fetchWithAuth(`${API}/labs/${currentLab.id}/complete`, {
-      method:  'POST',
-      headers: { 'Content-Type': 'application/json' }
-    });
+    // FIX #11: Remove Content-Type header since no body is sent
+    const res  = await fetchWithAuth(`${API}/labs/${currentLab.id}/complete`, { method: 'POST' });
     const data = await res.json();
     if (data.status === 'success') {
-      if (!solved.includes(currentLab.id)) solved.push(currentLab.id);
+      if (!solved.includes(String(currentLab.id))) solved.push(String(currentLab.id));
       currentLab.solved = true;
       document.getElementById('solved-banner').classList.add('show');
       btn.textContent = '[ COMPLETED ✓ ]';
       btn.classList.add('done');
+      btn.disabled = true; // FIX #8: Keep disabled after solve
       document.getElementById('stat-solved').textContent = solved.length;
+    } else {
+      btn.disabled = false;
+      btn.textContent = '[ MARK AS COMPLETE ]';
     }
   } catch(e) {
     // Fallback to localStorage
-    if (!solved.includes(currentLab.id)) solved.push(currentLab.id);
+    if (!solved.includes(String(currentLab.id))) solved.push(String(currentLab.id));
     localStorage.setItem('gv_lab_solved', JSON.stringify(solved));
+    currentLab.solved = true;
     document.getElementById('solved-banner').classList.add('show');
     btn.textContent = '[ COMPLETED ✓ ]';
     btn.classList.add('done');
+    btn.disabled = true; // FIX #8
+    document.getElementById('stat-solved').textContent = solved.length;
   }
-  btn.disabled = false;
+}
+
+// ── HTML ESCAPE UTIL ─────────────────────────────────────────────────
+function escapeHtml(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;')
+    .replace(/'/g,'&#39;');
 }
 
 // ── USER INFO ────────────────────────────────────────────────────────
@@ -1022,13 +1113,12 @@ async function initUser() {
     if (d.status === 'success' && d.user) {
       USER_ID   = d.user.id;
       USERNAME  = d.user.username;
-
       USER_RANK = d.user.rank || 'Ghost';
     }
   } catch(e) { console.warn('User init failed, continuing as ghost.'); }
 }
 
-// ── AI HINTS ─────────────────────────────────────────────────────────
+// ── AI HINTS (FIX #9: null guard on tags) ────────────────────────────
 async function sendAI() {
   const input = document.getElementById('ai-input');
   const msgs  = document.getElementById('ai-messages');
@@ -1050,8 +1140,10 @@ async function sendAI() {
   msgs.scrollTop = msgs.scrollHeight;
 
   try {
+    // FIX #9: Guard currentLab.tags — was crashing if tags was null/undefined
+    const labTags = Array.isArray(currentLab?.tags) ? currentLab.tags : [];
     const labContext = currentLab
-      ? `You are a cyber security tutor inside GenesisVault Labs. The user is working on a lab called "${currentLab.title}" (${currentLab.difficulty} difficulty, category: ${currentLab.category}). Objective: ${currentLab.objective}. Tags: ${currentLab.tags.join(', ')}. Give helpful hints without fully spoiling the solution. Be concise and encouraging.`
+      ? `You are a cyber security tutor inside GenesisVault Labs. The user is working on a lab called "${currentLab.title}" (${currentLab.difficulty} difficulty, category: ${currentLab.category}). Objective: ${currentLab.objective}. Tags: ${labTags.join(', ')}. Give helpful hints without fully spoiling the solution. Be concise and encouraging.`
       : 'You are a cyber security tutor. Answer the user\'s question helpfully and concisely.';
 
     const message = `[LAB CONTEXT]: ${labContext}\n\n[USER QUESTION]: ${q}`;
@@ -1076,7 +1168,7 @@ async function sendAI() {
   msgs.scrollTop = msgs.scrollHeight;
 }
 
-// ── INIT ─────────────────────────────────────────────────────────────
+// ── INIT ──────────────────────────────────────────────────────────────
 initUser();
 loadLabs();
 </script>
