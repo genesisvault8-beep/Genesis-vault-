@@ -520,6 +520,7 @@ async function submitPayment() {
       vcBalance = data.new_balance ?? vcBalance;
       showStatus(msg, `✓ Tool unlocked! ⬡ ${vcBalance.toLocaleString()} VC remaining.`, false);
       btn.textContent = '[ UNLOCKED ]';
+      document.getElementById('vc-balance-label').textContent = `⬡ ${vcBalance.toLocaleString()} VC`;
       const t = allTools.find(x => x.id === activeTool.id);
       if (t) t.owned = true;
       setTimeout(async () => {
@@ -565,6 +566,13 @@ async function submitFree() {
       activeTool.owned = true;
       const t = allTools.find(x => x.id === activeTool.id);
       if (t) t.owned = true;
+      // Refresh VC balance in case of any server-side reward/change
+      try {
+        const vr = await fetchWithAuth(`${API}/vc/balance`);
+        const vd = await vr.json();
+        vcBalance = vd.balance ?? vcBalance;
+        document.getElementById('vc-balance-label').textContent = `⬡ ${vcBalance.toLocaleString()} VC`;
+      } catch(e) {}
       renderTools();
       loadOwned();
     } else {
