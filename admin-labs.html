@@ -267,6 +267,30 @@
   }
   .toast.show { opacity:1; }
 
+  /* UNDO TOAST */
+  .undo-toast {
+    position:fixed; bottom:90px; left:50%; transform:translateX(-50%);
+    background:var(--bg2); border:1px solid var(--accent4); color:var(--accent4);
+    padding:10px 20px; font-family:'Share Tech Mono',monospace; font-size:0.72rem;
+    letter-spacing:1px; z-index:301; opacity:0; transition:opacity 0.3s;
+    pointer-events:none; white-space:nowrap; display:flex; align-items:center; gap:12px;
+  }
+  .undo-toast.show { opacity:1; pointer-events:all; }
+  .undo-btn {
+    background:var(--accent4); color:var(--bg); border:none;
+    padding:3px 10px; font-family:'Share Tech Mono',monospace;
+    font-size:0.65rem; cursor:pointer; letter-spacing:1px;
+  }
+
+  /* COMPLETIONS EXPAND */
+  .show-more-btn {
+    display:block; width:100%; padding:7px 0;
+    font-family:'Share Tech Mono',monospace; font-size:0.65rem;
+    color:var(--accent2); background:none; border:1px solid var(--border);
+    cursor:pointer; letter-spacing:1px; margin-top:6px; transition:all 0.2s;
+  }
+  .show-more-btn:hover { border-color:var(--accent2); }
+
   .spinner {
     display:inline-block; width:14px; height:14px;
     border:2px solid var(--border); border-top-color:var(--accent3);
@@ -403,6 +427,11 @@
 </div>
 
 <div class="toast" id="toast"></div>
+<!-- FIX #5: Undo toast for toggle-live accidental taps -->
+<div class="undo-toast" id="undo-toast">
+  <span id="undo-msg"></span>
+  <button class="undo-btn" onclick="undoToggle()">UNDO</button>
+</div>
 
 <script>
 const API   = 'https://genesis-vault-backend.onrender.com/api';
@@ -411,6 +440,10 @@ if (!token) window.location.href = 'admin-login.html';
 
 let currentTags  = [];
 let editingLabId = null;
+
+// FIX #5: Track last toggle for undo
+let lastToggle = null; // { id, checkbox, label, previousState }
+let undoTimer  = null;
 
 // ── AUTH HEADER ───────────────────────────────────────────────────────
 function authH() {
@@ -451,12 +484,18 @@ function showPage(name, el) {
 }
 
 // ── STATS ─────────────────────────────────────────────────────────────
+// FIX #4: Cache stats, only flash loading on first load
+let statsLoaded = false;
 async function loadStats() {
   const grid = document.getElementById('stats-grid');
+  if (!statsLoaded) {
+    grid.innerHTML = '<div class="loading" style="grid-column:1/-1"><span class="spinner"></span>Loading...</div>';
+  }
   try {
     const res  = await fetchWithAuth(`${API}/admin/labs/stats`);
     const data = await res.json();
     const d    = data.stats || {};
+    statsLoaded = true;
     grid.innerHTML = `
       <div class="stat-card green">
         <div class="stat-val">${d.total_labs ?? 0}</div>
@@ -475,11 +514,13 @@ async function loadStats() {
         <div class="stat-label">Offline</div>
       </div>`;
   } catch(e) {
-    grid.innerHTML = `
-      <div class="stat-card green"><div class="stat-val">—</div><div class="stat-label">Total Labs</div></div>
-      <div class="stat-card blue"><div class="stat-val">—</div><div class="stat-label">Live</div></div>
-      <div class="stat-card yellow"><div class="stat-val">—</div><div class="stat-label">Completions</div></div>
-      <div class="stat-card red"><div class="stat-val">—</div><div class="stat-label">Offline</div></div>`;
+    if (!statsLoaded) {
+      grid.innerHTML = `
+        <div class="stat-card green"><div class="stat-val">—</div><div class="stat-label">Total Labs</div></div>
+        <div class="stat-card blue"><div class="stat-val">—</div><div class="stat-label">Live</div></div>
+        <div class="stat-card yellow"><div class="stat-val">—</div><div class="stat-label">Completions</div></div>
+        <div class="stat-card red"><div class="stat-val">—</div><div class="stat-label">Offline</div></div>`;
+    }
   }
 }
 
@@ -501,9 +542,9 @@ async function loadLabs() {
       <div class="lab-item" id="lab-item-${lab.id}">
         <div class="lab-item-top">
           <div>
-            <h4>${lab.title}</h4>
+            <h4>${escapeHtml(lab.title)}</h4>
             <div class="lab-item-meta">
-              <span>${lab.category}</span> ·
+              <span>${escapeHtml(lab.category)}</span> ·
               <span class="diff diff-${lab.difficulty}">${lab.difficulty.toUpperCase()}</span>
             </div>
           </div>
@@ -531,44 +572,88 @@ async function loadLabs() {
   }
 }
 
-// ── TOGGLE LIVE ───────────────────────────────────────────────────────
+// ── HTML ESCAPE UTIL ──────────────────────────────────────────────────
+function escapeHtml(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;')
+    .replace(/'/g,'&#39;');
+}
+
+// ── TOGGLE LIVE (FIX #5: undo support) ───────────────────────────────
 async function toggleLive(id, checkbox) {
   const isLive = checkbox.checked;
   const label  = checkbox.closest('.toggle-wrap').querySelector('.toggle-label');
   label.textContent = isLive ? 'LIVE' : 'OFF';
+
+  // Store for potential undo
+  lastToggle = { id, checkbox, label, previousState: !isLive };
+
+  // Show undo toast for 4s
+  clearTimeout(undoTimer);
+  const undoEl = document.getElementById('undo-toast');
+  document.getElementById('undo-msg').textContent =
+    isLive ? '// Lab set LIVE' : '// Lab taken OFFLINE';
+  undoEl.classList.add('show');
+  undoTimer = setTimeout(() => {
+    undoEl.classList.remove('show');
+    lastToggle = null;
+  }, 4000);
+
   try {
     const res = await fetchWithAuth(`${API}/admin/labs/${id}/toggle`, {
       method:  'POST',
       body:    JSON.stringify({ is_live: isLive })
     });
     const d = await res.json();
-    if (d.status === 'success') {
-      toast(isLive ? '// Lab is now LIVE' : '// Lab taken OFFLINE');
-      loadStats();
-    } else {
-      checkbox.checked = !isLive;
-      label.textContent = !isLive ? 'LIVE' : 'OFF';
+    if (d.status !== 'success') {
+      revertToggle();
       toast('// Toggle failed', 'var(--accent3)');
+    } else {
+      loadStats();
     }
   } catch(e) {
-    checkbox.checked = !isLive;
-    label.textContent = !isLive ? 'LIVE' : 'OFF';
+    revertToggle();
     toast('// Network error', 'var(--accent3)');
   }
 }
 
-// ── DELETE LAB ────────────────────────────────────────────────────────
+function undoToggle() {
+  if (!lastToggle) return;
+  clearTimeout(undoTimer);
+  document.getElementById('undo-toast').classList.remove('show');
+  revertToggle();
+  // Fire the toggle again silently to sync server
+  fetchWithAuth(`${API}/admin/labs/${lastToggle.id}/toggle`, {
+    method: 'POST',
+    body:   JSON.stringify({ is_live: lastToggle.previousState })
+  }).then(() => loadStats()).catch(() => {});
+  lastToggle = null;
+}
+
+function revertToggle() {
+  if (!lastToggle) return;
+  lastToggle.checkbox.checked = lastToggle.previousState;
+  lastToggle.label.textContent = lastToggle.previousState ? 'LIVE' : 'OFF';
+}
+
+// ── DELETE LAB (FIX #1: check data.status not res.ok) ─────────────────
 async function deleteLab(id, btn) {
   if (!confirm('Permanently delete this lab? This cannot be undone.')) return;
   btn.disabled = true; btn.textContent = '...';
   try {
-    const res = await fetchWithAuth(`${API}/admin/labs/${id}/delete`, { method:'POST' });
-    if (res.ok) {
+    const res  = await fetchWithAuth(`${API}/admin/labs/${id}/delete`, { method:'POST' });
+    const data = await res.json();
+    // FIX #1: was checking res.ok — now checks data.status
+    if (data.status === 'success') {
       document.getElementById(`lab-item-${id}`).remove();
       toast('// Lab deleted', 'var(--accent3)');
       loadStats();
     } else {
-      toast('// Delete failed', 'var(--accent3)');
+      toast(`// Delete failed: ${data.message || 'Server error'}`, 'var(--accent3)');
       btn.disabled = false; btn.textContent = '[ DELETE ]';
     }
   } catch(e) {
@@ -579,6 +664,17 @@ async function deleteLab(id, btn) {
 
 // ── EDIT LAB ──────────────────────────────────────────────────────────
 async function editLab(id) {
+  // FIX: Switch page + scroll BEFORE the fetch so user sees immediate response
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-add').classList.add('active');
+  const addNavItem = document.querySelectorAll('.nav-item')[1];
+  addNavItem.classList.add('active');
+  addNavItem.querySelector('.nav-label').textContent = 'Edit Lab';
+  document.getElementById('add-section-title').textContent = `// Loading Lab #${id}...`;
+  document.getElementById('publish-btn').disabled = true;
+  window.scrollTo(0,0);
+
   try {
     const res  = await fetchWithAuth(`${API}/admin/labs/${id}`);
     const data = await res.json();
@@ -593,32 +689,26 @@ async function editLab(id) {
     document.getElementById('f-difficulty').value= lab.difficulty || 'easy';
     document.getElementById('lab-html-content').value = lab.html_content || '';
     document.getElementById('f-is-live').checked = lab.is_live ?? true;
+    document.getElementById('live-toggle-label').textContent = (lab.is_live ?? true) ? 'LIVE' : 'OFFLINE';
 
     currentTags = lab.tags || [];
     renderTags();
 
-    // Load hints
     document.getElementById('hints-list').innerHTML = '';
     (lab.hints || []).forEach(h => addHintRow(h));
 
     document.getElementById('publish-btn').textContent = '[ UPDATE LAB ]';
-
-    // Switch to add page
-    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-    document.getElementById('page-add').classList.add('active');
-    const addNavItem = document.querySelectorAll('.nav-item')[1];
-    addNavItem.classList.add('active');
-    addNavItem.querySelector('.nav-label').textContent = 'Edit Lab';
+    document.getElementById('publish-btn').disabled = false;
     document.getElementById('add-section-title').textContent = `// Edit Lab #${id}`;
-    window.scrollTo(0,0);
     toast('// Lab loaded for editing');
   } catch(e) {
     toast('// Failed to load lab', 'var(--accent3)');
+    document.getElementById('add-section-title').textContent = '// Edit Lab — Failed';
+    document.getElementById('publish-btn').disabled = false;
   }
 }
 
-// ── TAGS ──────────────────────────────────────────────────────────────
+// ── TAGS (FIX #2: XSS-safe via data-tag attribute) ───────────────────
 function addTag() {
   const input = document.getElementById('f-tag-input');
   const val   = input.value.trim().toLowerCase().replace(/\s+/g,'-');
@@ -633,18 +723,31 @@ function removeTag(tag) {
   renderTags();
 }
 
+// FIX #2: Use data-tag attribute instead of inline onclick string interpolation
 function renderTags() {
-  document.getElementById('tags-list').innerHTML =
-    currentTags.map(t => `<span class="tag-chip" onclick="removeTag('${t}')">${t} ×</span>`).join('');
+  const list = document.getElementById('tags-list');
+  list.innerHTML = currentTags.map(t =>
+    `<span class="tag-chip" data-tag="${escapeHtml(t)}">${escapeHtml(t)} ×</span>`
+  ).join('');
+  list.querySelectorAll('.tag-chip').forEach(chip => {
+    chip.addEventListener('click', () => removeTag(chip.dataset.tag));
+  });
 }
 
 // ── HINTS ─────────────────────────────────────────────────────────────
 function addHintRow(value = '') {
   const wrap = document.createElement('div');
   wrap.className = 'hint-row';
-  wrap.innerHTML = `
-    <input type="text" placeholder="Hint text..." value="${value.replace(/"/g,'&quot;')}">
-    <button class="hint-del" onclick="this.parentElement.remove()">×</button>`;
+  const input = document.createElement('input');
+  input.type = 'text';
+  input.placeholder = 'Hint text...';
+  input.value = value;
+  const del = document.createElement('button');
+  del.className = 'hint-del';
+  del.textContent = '×';
+  del.onclick = () => wrap.remove();
+  wrap.appendChild(input);
+  wrap.appendChild(del);
   document.getElementById('hints-list').appendChild(wrap);
 }
 
@@ -677,14 +780,14 @@ async function publishLab() {
                     tags: currentTags, hints, html_content: html, is_live: isLive };
 
   const url    = editingLabId ? `${API}/admin/labs/${editingLabId}/update` : `${API}/admin/labs/create`;
-  const method = 'POST';
 
   try {
-    const res  = await fetchWithAuth(url, { method, body: JSON.stringify(payload) });
+    const res  = await fetchWithAuth(url, { method:'POST', body: JSON.stringify(payload) });
     const data = await res.json();
     if (data.status === 'success') {
       toast(editingLabId ? '// Lab updated!' : '// Lab published!');
       resetForm();
+      statsLoaded = false;
       loadStats();
       loadLabs();
     } else {
@@ -717,11 +820,10 @@ function resetForm() {
   addNavItem.querySelector('.nav-label').textContent = 'Add Lab';
   currentTags = [];
   renderTags();
-  // Add 2 blank hint rows by default
   addHintRow(); addHintRow();
 }
 
-// ── COMPLETIONS ───────────────────────────────────────────────────────
+// ── COMPLETIONS (FIX #6: show-all button) ────────────────────────────
 async function loadCompletions() {
   const list = document.getElementById('completions-list');
   list.innerHTML = '<div class="loading"><span class="spinner"></span>Loading...</div>';
@@ -735,29 +837,50 @@ async function loadCompletions() {
       return;
     }
 
-    // Group by lab
     const grouped = {};
     rows.forEach(r => {
       if (!grouped[r.lab_title]) grouped[r.lab_title] = [];
       grouped[r.lab_title].push(r);
     });
 
-    list.innerHTML = Object.entries(grouped).map(([labTitle, comps]) => `
-      <div class="lab-item">
-        <h4>${labTitle}</h4>
-        <div class="lab-item-meta">${comps.length} completion${comps.length !== 1 ? 's' : ''}</div>
-        <div style="margin-top:8px;">
-          ${comps.slice(0,8).map(c => `
-            <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);font-size:0.78rem;">
-              <span style="color:var(--accent2);font-family:'Share Tech Mono',monospace;">${c.username || 'Unknown'}</span>
-              <span style="color:var(--dim);font-family:'Share Tech Mono',monospace;font-size:0.65rem;">${timeAgo(c.completed_at)}</span>
-            </div>`).join('')}
-          ${comps.length > 8 ? `<div style="padding:6px 0;font-family:'Share Tech Mono',monospace;font-size:0.65rem;color:var(--dim);">+${comps.length - 8} more</div>` : ''}
-        </div>
-      </div>`).join('');
+    list.innerHTML = Object.entries(grouped).map(([labTitle, comps]) => {
+      const visibleRows = comps.slice(0, 8).map(c => `
+        <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);font-size:0.78rem;">
+          <span style="color:var(--accent2);font-family:'Share Tech Mono',monospace;">${escapeHtml(c.username || 'Unknown')}</span>
+          <span style="color:var(--dim);font-family:'Share Tech Mono',monospace;font-size:0.65rem;">${timeAgo(c.completed_at)}</span>
+        </div>`).join('');
+
+      const hiddenRows = comps.slice(8).map(c => `
+        <div class="extra-row" style="display:none;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);font-size:0.78rem;">
+          <span style="color:var(--accent2);font-family:'Share Tech Mono',monospace;">${escapeHtml(c.username || 'Unknown')}</span>
+          <span style="color:var(--dim);font-family:'Share Tech Mono',monospace;font-size:0.65rem;">${timeAgo(c.completed_at)}</span>
+        </div>`).join('');
+
+      const showMoreBtn = comps.length > 8
+        ? `<button class="show-more-btn" onclick="expandCompletions(this)">[ +${comps.length - 8} MORE — SHOW ALL ]</button>`
+        : '';
+
+      return `
+        <div class="lab-item">
+          <h4>${escapeHtml(labTitle)}</h4>
+          <div class="lab-item-meta">${comps.length} completion${comps.length !== 1 ? 's' : ''}</div>
+          <div style="margin-top:8px;">
+            ${visibleRows}
+            ${hiddenRows}
+            ${showMoreBtn}
+          </div>
+        </div>`;
+    }).join('');
   } catch(e) {
     list.innerHTML = '<div class="empty">// Failed to load completions.</div>';
   }
+}
+
+// FIX #6: Expand hidden completion rows
+function expandCompletions(btn) {
+  const card = btn.closest('.lab-item');
+  card.querySelectorAll('.extra-row').forEach(r => r.style.display = 'flex');
+  btn.remove();
 }
 
 function timeAgo(dateStr) {
