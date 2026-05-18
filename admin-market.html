@@ -207,61 +207,9 @@
 
   .confirm-bar { background:rgba(255,0,60,0.06); border:1px solid var(--accent3); padding:12px 16px; margin-bottom:14px; font-family:'Share Tech Mono',monospace; font-size:0.72rem; color:var(--accent3); letter-spacing:1px; }
   .section-action-row { display:flex; justify-content:flex-end; margin-bottom:14px; }
-
-  /* ── TOKEN GATE ── */
-  #token-gate {
-    display:none; position:fixed; inset:0; background:var(--bg);
-    z-index:9999; flex-direction:column; align-items:center;
-    justify-content:center; padding:30px;
-  }
-  #token-gate::before {
-    content:''; position:fixed; inset:0;
-    background-image:
-      linear-gradient(rgba(0,245,196,0.02) 1px,transparent 1px),
-      linear-gradient(90deg,rgba(0,245,196,0.02) 1px,transparent 1px);
-    background-size:40px 40px; pointer-events:none;
-  }
-  .gate-inner { width:100%; max-width:420px; position:relative; z-index:1; }
-  .gate-logo { font-family:'Share Tech Mono',monospace; font-size:1.1rem; letter-spacing:4px; text-align:center; margin-bottom:6px; }
-  .gate-logo span { color:var(--accent); }
-  .gate-sub { font-family:'Share Tech Mono',monospace; font-size:0.65rem; color:var(--text-dim); letter-spacing:3px; text-align:center; margin-bottom:36px; }
-  .gate-label { font-family:'Share Tech Mono',monospace; font-size:0.65rem; color:var(--text-dim); letter-spacing:2px; margin-bottom:8px; }
-  #gate-token-input {
-    width:100%; background:var(--bg2); border:1px solid var(--border);
-    color:var(--text); padding:14px 16px; font-family:'Share Tech Mono',monospace;
-    font-size:0.85rem; outline:none; margin-bottom:12px;
-    transition:border-color 0.2s; letter-spacing:1px;
-  }
-  #gate-token-input:focus { border-color:var(--accent); }
-  #gate-token-input::placeholder { color:var(--text-dim); }
-  #gate-error {
-    display:none; font-family:'Share Tech Mono',monospace; font-size:0.7rem;
-    color:var(--accent3); letter-spacing:1px; margin-bottom:12px;
-    padding:8px 12px; border:1px solid var(--accent3);
-    background:rgba(255,0,60,0.05);
-  }
-  #gate-btn {
-    width:100%; padding:14px; background:var(--accent); color:var(--bg);
-    border:none; font-family:'Rajdhani',sans-serif; font-weight:700;
-    font-size:1rem; letter-spacing:3px; cursor:pointer; transition:all 0.2s;
-    clip-path:polygon(8px 0%,100% 0%,calc(100% - 8px) 100%,0% 100%);
-  }
-  #gate-btn:hover { background:white; }
 </style>
 </head>
 <body>
-
-<!-- TOKEN GATE -->
-<div id="token-gate">
-  <div class="gate-inner">
-    <div class="gate-logo"><span>GENESIS</span>VAULT</div>
-    <div class="gate-sub">// ADMIN MARKET CONTROL //</div>
-    <div class="gate-label">ADMIN TOKEN</div>
-    <input type="password" id="gate-token-input" placeholder="paste your admin token...">
-    <div id="gate-error"></div>
-    <button id="gate-btn" onclick="gateAuthenticate()">AUTHENTICATE</button>
-  </div>
-</div>
 
 <nav>
   <div class="nav-logo" data-text="GENESISVAULT"><span class="g">GENESIS</span><span class="v">VAULT</span></div>
@@ -314,11 +262,6 @@
         <div class="stat-value" id="stat-sales"><span class="spinner"></span></div>
         <div class="stat-sub">all time count</div>
       </div>
-      <div class="stat-card green" style="grid-column:1/-1;">
-        <div class="stat-label">VC SALES (INSTANT)</div>
-        <div class="stat-value" id="stat-vc-sales" style="font-size:1.4rem;"><span class="spinner"></span></div>
-        <div class="stat-sub">tools sold via VC · bypasses queue</div>
-      </div>
     </div>
     <div class="s-title">// QUICK ACTIONS</div>
     <div style="display:flex;gap:10px;flex-wrap:wrap;">
@@ -339,9 +282,6 @@
       <button class="btn-add" onclick="openAddTool()">[ + ADD NEW TOOL ]</button>
     </div>
     <div class="s-title">// TOOL LISTINGS</div>
-    <input type="text" id="tools-mgr-search" placeholder="// search tools..." oninput="filterToolsMgr()"
-      style="width:100%;background:var(--bg2);border:1px solid var(--border);color:var(--text);padding:9px 14px;font-family:'Share Tech Mono',monospace;font-size:0.8rem;outline:none;margin-bottom:14px;transition:border-color 0.2s;"
-      onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'">
     <div id="tools-mgr-container"><div class="loading"><span class="spinner"></span>Loading tools...</div></div>
   </div>
 
@@ -553,78 +493,21 @@
 <script>
 const API = 'https://genesis-vault-backend.onrender.com/api';
 
-/* ═══════════════════ TOKEN GATE ═══════════════════ */
-function getToken() {
-  return localStorage.getItem('gv_token') || sessionStorage.getItem('gv_token');
-}
-
-function parseJWT(token) {
-  try { return JSON.parse(atob(token.split('.')[1])); }
-  catch(e) { return null; }
-}
-
-function isTokenValid(token) {
-  if (!token) return false;
-  const p = parseJWT(token);
-  if (!p) return false;
-  if (p.exp && p.exp * 1000 < Date.now()) return false;
-  if (p.role && p.role !== 'admin') return false;
-  return true;
-}
-
-function showGate(msg) {
-  document.getElementById('token-gate').style.display = 'flex';
-  document.querySelector('nav').style.display = 'none';
-  document.querySelector('main').style.display = 'none';
-  if (msg) {
-    const el = document.getElementById('gate-error');
-    el.textContent = msg;
-    el.style.display = 'block';
-  }
-}
-
-function hideGate() {
-  document.getElementById('token-gate').style.display = 'none';
-  document.querySelector('nav').style.display = 'flex';
-  document.querySelector('main').style.display = 'block';
-}
-
-function gateAuthenticate() {
-  const input = document.getElementById('gate-token-input').value.trim();
-  if (!input) {
-    const el = document.getElementById('gate-error');
-    el.textContent = '// Token required.';
-    el.style.display = 'block';
-    return;
-  }
-  if (!isTokenValid(input)) {
-    const el = document.getElementById('gate-error');
-    el.textContent = '// Invalid or expired token.';
-    el.style.display = 'block';
-    return;
-  }
-  localStorage.setItem('gv_token', input);
-  hideGate();
-  boot();
-}
+const _token = localStorage.getItem('gv_token') || sessionStorage.getItem('gv_token');
+if (!_token) location.href = 'admin-login.html';
 
 function h() {
-  const token = getToken();
-  return { 'Content-Type':'application/json', 'Authorization': `Bearer ${token}` };
+  return { 'Content-Type':'application/json', 'Authorization': `Bearer ${_token}` };
 }
 
+// ── AUTH-AWARE FETCH — redirects to admin-login on 401 ──
 async function fetchWithAuth(url, options = {}) {
-  const token = getToken();
-  if (!isTokenValid(token)) {
-    showGate('// SESSION EXPIRED — RE-AUTHENTICATE');
-    throw new Error('Unauthorized');
-  }
   if (!options.headers) options.headers = h();
   const res = await fetch(url, options);
   if (res.status === 401) {
     localStorage.removeItem('gv_token');
     sessionStorage.removeItem('gv_token');
-    showGate('// SESSION EXPIRED — RE-AUTHENTICATE');
+    location.href = 'admin-login.html';
     throw new Error('Unauthorized');
   }
   return res;
@@ -662,9 +545,6 @@ async function loadStats() {
     document.getElementById('stat-pending').textContent = data.pending_count  || 0;
     document.getElementById('stat-tools').textContent   = data.tools_count    || 0;
     document.getElementById('stat-sales').textContent   = data.total_sales    || 0;
-    document.getElementById('stat-vc-sales').textContent = data.vc_sales_count != null
-      ? `${data.vc_sales_count} sales`
-      : '—';
 
     const badge = document.getElementById('queue-count-badge');
     if (data.pending_count > 0) badge.textContent = `(${data.pending_count} PENDING)`;
@@ -825,16 +705,6 @@ function renderToolsMgr() {
   </div>`).join('');
 }
 
-function filterToolsMgr() {
-  const q = (document.getElementById('tools-mgr-search')?.value || '').toLowerCase();
-  document.querySelectorAll('[id^="tmgr-"]').forEach(card => {
-    const name = card.querySelector('.tool-mgr-name')?.textContent.toLowerCase() || '';
-    const meta = card.querySelector('.tool-mgr-meta')?.textContent.toLowerCase() || '';
-    card.style.display = (!q || name.includes(q) || meta.includes(q)) ? '' : 'none';
-  });
-}
-  
-
 async function toggleToolActive(id, el) {
   const track = document.getElementById(`toggle-active-${id}`);
   const lbl   = track.nextElementSibling;
@@ -846,13 +716,10 @@ async function toggleToolActive(id, el) {
       method:'POST', headers: h(), body: JSON.stringify({ is_active: !isOn })
     });
   } catch(e) {
-    // Revert UI
     track.classList.toggle('on', isOn);
     lbl.textContent = isOn ? 'ACTIVE' : 'INACTIVE';
-    // Show error toast
-    toast('// Toggle failed. Check network or backend.', true);
-   }
   }
+}
 
 function openAddTool() {
   editingToolId = null;
@@ -1029,7 +896,8 @@ function renderPromos() {
     return `
     <div class="promo-mgr-card">
       <div class="promo-code-label">${esc(p.code)}</div>
-      <div class="promo-info"><div class="promo-info-line">DISCOUNT: <span>${p.type === 'fixed' ? '⬡ '+p.value+' VC' : p.value+'%'}</span></div>
+      <div class="promo-info">
+        <div class="promo-info-line">DISCOUNT: <span>${p.type === 'fixed' ? '$'+p.value+' USDT' : p.value+'%'}</span></div>
         <div class="promo-info-line">USED: <span>${p.used_count||0}${p.usage_limit ? ' / '+p.usage_limit : ''}</span> &nbsp;·&nbsp; EXPIRES: <span>${p.expiry ? new Date(p.expiry).toLocaleDateString() : 'Never'}</span></div>
       </div>
       <span class="promo-status-badge ${isActive?'active':'inactive'}">${isActive?'ACTIVE':'INACTIVE'}</span>
@@ -1203,15 +1071,7 @@ function toast(msg, err=false) {
   document.body.appendChild(t); setTimeout(()=>t.remove(), 2800);
 }
 
-(function guardInit() {
-  const token = getToken();
-  if (!isTokenValid(token)) {
-    showGate();
-  } else {
-    hideGate();
-    boot();
-  }
-})();
+boot();
 </script>
 </body>
 </html>
