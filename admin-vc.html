@@ -1,0 +1,1037 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Genesis Vault | Admin — VC Management</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:        #020608;
+    --bg2:       #060d10;
+    --bg3:       #0a1520;
+    --bg4:       #0d1e2a;
+    --accent:    #00f5c4;
+    --accent2:   #00a8ff;
+    --accent3:   #ff003c;
+    --accent4:   #ff8c00;
+    --text:      #c8e6f0;
+    --text-dim:  #4a7a8a;
+    --border:    #0f2a35;
+    --vc:        #f5c400;
+    --vc-glow:   0 0 20px rgba(245,196,0,0.2);
+    --ok:        #00f5c4;
+    --ok-bg:     rgba(0,245,196,0.07);
+    --warn:      #ff8c00;
+    --warn-bg:   rgba(255,140,0,0.07);
+    --danger:    #ff003c;
+    --danger-bg: rgba(255,0,60,0.07);
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  body {
+    background:var(--bg); color:var(--text);
+    font-family:'Rajdhani',sans-serif; min-height:100vh;
+  }
+
+  body::before {
+    content:''; position:fixed; inset:0; pointer-events:none; z-index:0;
+    background-image:
+      linear-gradient(rgba(0,245,196,0.015) 1px,transparent 1px),
+      linear-gradient(90deg,rgba(0,245,196,0.015) 1px,transparent 1px);
+    background-size:40px 40px;
+  }
+
+  /* ── NAV ── */
+  nav {
+    position:fixed; top:0; left:0; right:0; height:56px;
+    background:rgba(2,6,8,0.97); border-bottom:1px solid var(--border);
+    display:flex; align-items:center; justify-content:space-between;
+    padding:0 24px; z-index:200; backdrop-filter:blur(12px);
+  }
+  .nav-left { display:flex; align-items:center; gap:20px; }
+  .nav-logo { font-family:'Share Tech Mono',monospace; font-size:0.95rem; letter-spacing:3px; }
+  .nav-logo span:first-child { color:var(--accent); }
+  .nav-logo span:last-child  { color:white; }
+  .nav-badge {
+    font-family:'Share Tech Mono',monospace; font-size:0.6rem;
+    background:var(--danger); color:white; padding:2px 8px;
+    letter-spacing:2px; animation:pulse 2s infinite;
+  }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.6} }
+
+  .nav-right { display:flex; align-items:center; gap:12px; }
+  .nav-user {
+    font-family:'Share Tech Mono',monospace; font-size:0.65rem;
+    color:var(--text-dim); letter-spacing:1px;
+  }
+  .btn-logout {
+    background:none; border:1px solid var(--border); color:var(--text-dim);
+    padding:5px 14px; font-family:'Share Tech Mono',monospace; font-size:0.65rem;
+    cursor:pointer; letter-spacing:1px; transition:all 0.2s;
+  }
+  .btn-logout:hover { border-color:var(--danger); color:var(--danger); }
+
+  /* ── LAYOUT ── */
+  .layout {
+    display:flex; min-height:100vh; padding-top:56px;
+    position:relative; z-index:1;
+  }
+
+  /* ── SIDEBAR ── */
+  aside {
+    width:220px; flex-shrink:0;
+    background:var(--bg2); border-right:1px solid var(--border);
+    padding:24px 0; position:sticky; top:56px;
+    height:calc(100vh - 56px); overflow-y:auto;
+  }
+  .side-section {
+    font-family:'Share Tech Mono',monospace; font-size:0.6rem;
+    color:var(--text-dim); letter-spacing:3px; padding:0 20px 8px;
+  }
+  .side-item {
+    display:flex; align-items:center; gap:10px;
+    padding:10px 20px; cursor:pointer;
+    font-family:'Share Tech Mono',monospace; font-size:0.72rem;
+    letter-spacing:1px; color:var(--text-dim);
+    border-left:2px solid transparent; transition:all 0.2s;
+  }
+  .side-item:hover { color:var(--text); background:var(--bg3); border-left-color:var(--border); }
+  .side-item.active { color:var(--vc); border-left-color:var(--vc); background:rgba(245,196,0,0.05); }
+  .side-item .icon { font-size:0.9rem; width:16px; text-align:center; }
+  .side-badge {
+    margin-left:auto; font-size:0.6rem; background:var(--danger);
+    color:white; padding:1px 6px; border-radius:0; min-width:20px; text-align:center;
+  }
+  .side-divider { border:none; border-top:1px solid var(--border); margin:12px 20px; }
+
+  /* ── MAIN CONTENT ── */
+  .content {
+    flex:1; padding:28px 28px 40px; overflow-x:hidden;
+  }
+
+  .page-header {
+    display:flex; align-items:flex-end; justify-content:space-between;
+    margin-bottom:24px; padding-bottom:16px; border-bottom:1px solid var(--border);
+  }
+  .page-header h1 {
+    font-size:1.4rem; font-weight:700; letter-spacing:4px;
+    color:white; text-transform:uppercase;
+  }
+  .page-header h1 span { color:var(--vc); }
+  .page-sub {
+    font-family:'Share Tech Mono',monospace; font-size:0.65rem;
+    color:var(--text-dim); letter-spacing:2px; margin-top:4px;
+  }
+  .page-time {
+    font-family:'Share Tech Mono',monospace; font-size:0.65rem;
+    color:var(--text-dim); letter-spacing:1px; text-align:right;
+  }
+
+  /* ── STAT CARDS ── */
+  .stats-row {
+    display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr));
+    gap:14px; margin-bottom:28px;
+  }
+  .stat-card {
+    background:var(--bg2); border:1px solid var(--border);
+    padding:16px 18px; position:relative; overflow:hidden;
+    animation:fadeUp 0.4s ease both;
+  }
+  .stat-card::before {
+    content:''; position:absolute; bottom:0; left:0; right:0; height:2px;
+  }
+  .stat-card.gold::before   { background:linear-gradient(90deg,transparent,var(--vc),transparent); }
+  .stat-card.green::before  { background:linear-gradient(90deg,transparent,var(--accent),transparent); }
+  .stat-card.blue::before   { background:linear-gradient(90deg,transparent,var(--accent2),transparent); }
+  .stat-card.red::before    { background:linear-gradient(90deg,transparent,var(--danger),transparent); }
+  .stat-card.orange::before { background:linear-gradient(90deg,transparent,var(--warn),transparent); }
+
+  .stat-label {
+    font-family:'Share Tech Mono',monospace; font-size:0.6rem;
+    color:var(--text-dim); letter-spacing:3px; margin-bottom:8px;
+  }
+  .stat-val {
+    font-family:'Share Tech Mono',monospace; font-size:1.5rem;
+    font-weight:700; line-height:1;
+  }
+  .stat-card.gold   .stat-val { color:var(--vc); }
+  .stat-card.green  .stat-val { color:var(--accent); }
+  .stat-card.blue   .stat-val { color:var(--accent2); }
+  .stat-card.red    .stat-val { color:var(--danger); }
+  .stat-card.orange .stat-val { color:var(--warn); }
+  .stat-sub {
+    font-family:'Share Tech Mono',monospace; font-size:0.6rem;
+    color:var(--text-dim); margin-top:4px; letter-spacing:1px;
+  }
+
+  @keyframes fadeUp { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
+  .stat-card:nth-child(2) { animation-delay:0.05s; }
+  .stat-card:nth-child(3) { animation-delay:0.1s; }
+  .stat-card:nth-child(4) { animation-delay:0.15s; }
+  .stat-card:nth-child(5) { animation-delay:0.2s; }
+
+  /* ── SECTION TITLE ── */
+  .section-hdr {
+    display:flex; align-items:center; justify-content:space-between;
+    margin-bottom:14px;
+  }
+  .section-title {
+    font-family:'Share Tech Mono',monospace; font-size:0.72rem;
+    color:var(--accent); letter-spacing:3px;
+  }
+
+  /* ── FILTER TABS ── */
+  .filter-tabs { display:flex; gap:6px; flex-wrap:wrap; }
+  .tab {
+    font-family:'Share Tech Mono',monospace; font-size:0.62rem;
+    padding:5px 14px; letter-spacing:2px; cursor:pointer;
+    border:1px solid var(--border); color:var(--text-dim);
+    background:none; transition:all 0.2s;
+  }
+  .tab:hover { border-color:var(--vc); color:var(--vc); }
+  .tab.active { border-color:var(--vc); color:#000; background:var(--vc); }
+  .tab .count {
+    display:inline-block; margin-left:6px; font-size:0.55rem;
+    background:rgba(0,0,0,0.3); padding:1px 5px;
+  }
+  .tab.active .count { background:rgba(0,0,0,0.2); }
+
+  /* ── SEARCH/FILTER BAR ── */
+  .toolbar {
+    display:flex; gap:10px; margin-bottom:14px; flex-wrap:wrap;
+  }
+  .search-wrap {
+    flex:1; min-width:200px; position:relative;
+  }
+  .search-wrap input {
+    width:100%; background:var(--bg2); border:1px solid var(--border);
+    color:var(--text); padding:9px 12px 9px 34px;
+    font-family:'Share Tech Mono',monospace; font-size:0.75rem;
+    outline:none; transition:border-color 0.2s;
+  }
+  .search-wrap input:focus { border-color:var(--accent2); }
+  .search-wrap input::placeholder { color:var(--text-dim); }
+  .search-icon {
+    position:absolute; left:12px; top:50%; transform:translateY(-50%);
+    color:var(--text-dim); font-size:0.7rem; pointer-events:none;
+  }
+  .toolbar select {
+    background:var(--bg2); border:1px solid var(--border); color:var(--text);
+    padding:9px 12px; font-family:'Share Tech Mono',monospace; font-size:0.72rem;
+    outline:none; cursor:pointer;
+  }
+  .btn-refresh {
+    background:none; border:1px solid var(--border); color:var(--text-dim);
+    padding:9px 16px; font-family:'Share Tech Mono',monospace; font-size:0.7rem;
+    cursor:pointer; letter-spacing:1px; transition:all 0.2s; white-space:nowrap;
+  }
+  .btn-refresh:hover { border-color:var(--accent); color:var(--accent); }
+  .btn-refresh.spinning .ref-icon { display:inline-block; animation:spin 0.8s linear infinite; }
+  @keyframes spin { to{transform:rotate(360deg)} }
+
+  /* ── TABLE ── */
+  .table-wrap {
+    background:var(--bg2); border:1px solid var(--border);
+    overflow-x:auto; margin-bottom:28px;
+  }
+  table { width:100%; border-collapse:collapse; min-width:700px; }
+  thead tr {
+    background:var(--bg3); border-bottom:1px solid var(--border);
+  }
+  thead th {
+    font-family:'Share Tech Mono',monospace; font-size:0.6rem;
+    color:var(--text-dim); letter-spacing:2px; padding:12px 14px;
+    text-align:left; white-space:nowrap; font-weight:normal;
+  }
+  tbody tr {
+    border-bottom:1px solid var(--border); transition:background 0.15s;
+    animation:fadeUp 0.3s ease both;
+  }
+  tbody tr:last-child { border-bottom:none; }
+  tbody tr:hover { background:var(--bg3); }
+  tbody td { padding:13px 14px; font-size:0.82rem; vertical-align:middle; }
+
+  .td-mono {
+    font-family:'Share Tech Mono',monospace; font-size:0.72rem;
+    color:var(--text-dim);
+  }
+  .td-user { color:white; font-weight:600; letter-spacing:1px; }
+  .td-pkg  { color:var(--vc); font-family:'Share Tech Mono',monospace; font-size:0.72rem; }
+  .td-usdt { color:var(--accent); font-family:'Share Tech Mono',monospace; font-size:0.78rem; }
+  .td-tx {
+    font-family:'Share Tech Mono',monospace; font-size:0.65rem;
+    color:var(--accent2); max-width:140px; overflow:hidden;
+    text-overflow:ellipsis; white-space:nowrap; cursor:pointer;
+  }
+  .td-tx:hover { color:white; }
+
+  /* Status badges */
+  .badge {
+    font-family:'Share Tech Mono',monospace; font-size:0.58rem;
+    padding:3px 10px; letter-spacing:2px; display:inline-block;
+  }
+  .badge.pending  { border:1px solid var(--warn);   color:var(--warn);   background:var(--warn-bg); }
+  .badge.approved { border:1px solid var(--ok);     color:var(--ok);     background:var(--ok-bg); }
+  .badge.rejected { border:1px solid var(--danger); color:var(--danger); background:var(--danger-bg); }
+
+  /* Action buttons */
+  .action-btns { display:flex; gap:6px; }
+  .btn-approve, .btn-reject, .btn-view {
+    font-family:'Share Tech Mono',monospace; font-size:0.6rem;
+    padding:5px 12px; letter-spacing:1px; cursor:pointer;
+    border:none; transition:all 0.2s; white-space:nowrap;
+  }
+  .btn-approve { background:var(--accent); color:#000; }
+  .btn-approve:hover { background:white; }
+  .btn-reject  { background:none; border:1px solid var(--danger); color:var(--danger); }
+  .btn-reject:hover  { background:var(--danger); color:white; }
+  .btn-view    { background:none; border:1px solid var(--border); color:var(--text-dim); }
+  .btn-view:hover    { border-color:var(--accent2); color:var(--accent2); }
+  .btn-approve:disabled, .btn-reject:disabled { opacity:0.35; cursor:not-allowed; }
+
+  /* Empty / loading state */
+  .table-empty {
+    text-align:center; padding:40px 20px;
+    font-family:'Share Tech Mono',monospace; font-size:0.75rem;
+    color:var(--text-dim); letter-spacing:2px;
+  }
+  .spinner {
+    display:inline-block; width:16px; height:16px;
+    border:2px solid var(--border); border-top-color:var(--vc);
+    border-radius:50%; animation:spin 0.8s linear infinite;
+    vertical-align:middle; margin-right:8px;
+  }
+
+  /* ── WALLET SETTINGS PANEL ── */
+  .settings-panel {
+    background:var(--bg2); border:1px solid var(--border);
+    padding:20px; margin-bottom:28px;
+  }
+  .settings-panel h3 {
+    font-family:'Share Tech Mono',monospace; font-size:0.72rem;
+    color:var(--accent); letter-spacing:3px; margin-bottom:14px;
+    padding-bottom:10px; border-bottom:1px solid var(--border);
+  }
+  .settings-row { display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap; }
+  .settings-field { flex:1; min-width:200px; }
+  .settings-field label {
+    display:block; font-family:'Share Tech Mono',monospace;
+    font-size:0.62rem; color:var(--text-dim); letter-spacing:2px; margin-bottom:6px;
+  }
+  .settings-field input {
+    width:100%; background:var(--bg); border:1px solid var(--border);
+    color:var(--text); padding:10px 14px;
+    font-family:'Share Tech Mono',monospace; font-size:0.8rem;
+    outline:none; transition:border-color 0.2s;
+  }
+  .settings-field input:focus { border-color:var(--vc); }
+  .btn-save {
+    background:var(--vc); color:#000; border:none;
+    padding:10px 22px; font-family:'Rajdhani',sans-serif;
+    font-weight:700; font-size:0.9rem; letter-spacing:2px;
+    cursor:pointer; transition:all 0.2s; white-space:nowrap;
+  }
+  .btn-save:hover { background:white; }
+  .btn-save:disabled { opacity:0.5; cursor:not-allowed; }
+  .settings-msg {
+    margin-top:10px; font-family:'Share Tech Mono',monospace;
+    font-size:0.7rem; letter-spacing:1px; padding:8px 12px; display:none;
+  }
+  .settings-msg.ok  { border:1px solid var(--ok);     color:var(--ok);     background:var(--ok-bg); }
+  .settings-msg.err { border:1px solid var(--danger);  color:var(--danger); background:var(--danger-bg); }
+
+  /* ── MODAL (detail view & confirm) ── */
+  .modal {
+    display:none; position:fixed; inset:0;
+    background:rgba(2,6,8,0.96); z-index:300;
+    padding:20px; overflow-y:auto;
+    flex-direction:column; align-items:center; justify-content:flex-start;
+  }
+  .modal.active { display:flex; }
+  .modal-box {
+    background:var(--bg2); border:1px solid var(--vc);
+    padding:24px; width:100%; max-width:480px; margin-top:50px;
+    animation:fadeUp 0.25s ease;
+  }
+  .modal-box h3 {
+    font-family:'Share Tech Mono',monospace; color:var(--vc);
+    letter-spacing:3px; font-size:0.85rem; margin-bottom:16px;
+    padding-bottom:10px; border-bottom:1px solid var(--border);
+  }
+  .detail-row {
+    display:flex; justify-content:space-between; align-items:flex-start;
+    padding:9px 0; border-bottom:1px solid var(--border); gap:14px;
+  }
+  .detail-row:last-of-type { border-bottom:none; }
+  .detail-key {
+    font-family:'Share Tech Mono',monospace; font-size:0.62rem;
+    color:var(--text-dim); letter-spacing:2px; flex-shrink:0;
+  }
+  .detail-val {
+    font-family:'Share Tech Mono',monospace; font-size:0.75rem;
+    color:var(--text); text-align:right; word-break:break-all;
+  }
+  .detail-val.vc     { color:var(--vc); }
+  .detail-val.usdt   { color:var(--accent); }
+  .detail-val.tx     { color:var(--accent2); font-size:0.65rem; }
+  .modal-actions { display:flex; gap:10px; margin-top:18px; }
+  .modal-actions button { flex:1; }
+  .btn-modal-cancel {
+    background:none; border:1px solid var(--border); color:var(--text-dim);
+    padding:10px; font-family:'Share Tech Mono',monospace; font-size:0.7rem;
+    cursor:pointer; transition:all 0.2s; letter-spacing:1px;
+  }
+  .btn-modal-cancel:hover { border-color:var(--accent3); color:var(--accent3); }
+
+  /* ── TOAST ── */
+  .toast {
+    position:fixed; bottom:24px; right:24px; z-index:400;
+    font-family:'Share Tech Mono',monospace; font-size:0.72rem;
+    padding:12px 20px; letter-spacing:1px;
+    transform:translateY(80px); opacity:0;
+    transition:all 0.3s ease;
+  }
+  .toast.show { transform:translateY(0); opacity:1; }
+  .toast.ok   { border:1px solid var(--ok);     color:var(--ok);     background:#020c0a; }
+  .toast.err  { border:1px solid var(--danger);  color:var(--danger); background:#0c0204; }
+
+  /* ── PAGINATION ── */
+  .pagination { display:flex; gap:6px; align-items:center; justify-content:center; }
+  .pg-btn {
+    font-family:'Share Tech Mono',monospace; font-size:0.65rem;
+    padding:6px 12px; background:none; border:1px solid var(--border);
+    color:var(--text-dim); cursor:pointer; transition:all 0.2s;
+  }
+  .pg-btn:hover { border-color:var(--vc); color:var(--vc); }
+  .pg-btn.active { border-color:var(--vc); color:#000; background:var(--vc); }
+  .pg-btn:disabled { opacity:0.3; cursor:not-allowed; }
+  .pg-info { font-family:'Share Tech Mono',monospace; font-size:0.62rem; color:var(--text-dim); margin:0 8px; }
+
+  /* ── LOGIN SCREEN ── */
+  #login-screen {
+    position:fixed; inset:0; background:var(--bg); z-index:500;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .login-box {
+    background:var(--bg2); border:1px solid var(--vc);
+    padding:32px; width:100%; max-width:360px; text-align:center;
+  }
+  .login-box h2 {
+    font-family:'Share Tech Mono',monospace; color:var(--vc);
+    letter-spacing:4px; font-size:0.9rem; margin-bottom:6px;
+  }
+  .login-box p {
+    font-family:'Share Tech Mono',monospace; font-size:0.65rem;
+    color:var(--text-dim); letter-spacing:2px; margin-bottom:24px;
+  }
+  .login-box input {
+    width:100%; background:var(--bg); border:1px solid var(--border);
+    color:var(--text); padding:12px 14px; margin-bottom:12px;
+    font-family:'Share Tech Mono',monospace; font-size:0.85rem;
+    outline:none; transition:border-color 0.2s; text-align:center;
+  }
+  .login-box input:focus { border-color:var(--vc); }
+  .login-box input::placeholder { color:var(--text-dim); }
+  .btn-login {
+    width:100%; padding:13px; background:var(--vc); color:#000; border:none;
+    font-family:'Rajdhani',sans-serif; font-weight:700; font-size:1rem;
+    letter-spacing:3px; cursor:pointer; transition:all 0.2s;
+    clip-path:polygon(8px 0%,100% 0%,calc(100% - 8px) 100%,0% 100%);
+  }
+  .btn-login:hover { background:white; }
+  .login-err {
+    font-family:'Share Tech Mono',monospace; font-size:0.68rem;
+    color:var(--danger); margin-top:10px; min-height:18px; letter-spacing:1px;
+  }
+</style>
+</head>
+<body>
+
+<!-- ── LOGIN SCREEN ── -->
+<div id="login-screen">
+  <div class="login-box">
+    <h2>// ADMIN ACCESS</h2>
+    <p>GENESIS VAULT — RESTRICTED</p>
+    <input type="password" id="login-token" placeholder="Admin token..." autocomplete="off">
+    <button class="btn-login" onclick="adminLogin()">[ AUTHENTICATE ]</button>
+    <div class="login-err" id="login-err"></div>
+  </div>
+</div>
+
+<!-- ── NAV ── -->
+<nav>
+  <div class="nav-left">
+    <div class="nav-logo"><span>GENESIS</span><span>VAULT</span></div>
+    <div class="nav-badge">ADMIN</div>
+  </div>
+  <div class="nav-right">
+    <div class="nav-user" id="nav-user">// ADMIN</div>
+    <button class="btn-logout" onclick="adminLogout()">[ LOGOUT ]</button>
+  </div>
+</nav>
+
+<!-- ── LAYOUT ── -->
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <aside>
+    <div class="side-section" style="margin-bottom:12px;">// NAVIGATION</div>
+
+    <div class="side-item active" onclick="showSection('purchases')">
+      <span class="icon">◈</span> VC PURCHASES
+      <span class="side-badge" id="sb-pending">0</span>
+    </div>
+    <div class="side-item" onclick="showSection('wallet')">
+      <span class="icon">◆</span> WALLET SETTINGS
+    </div>
+
+    <hr class="side-divider">
+    <div class="side-section" style="margin-bottom:12px;">// SYSTEM</div>
+    <div class="side-item" onclick="loadAll()">
+      <span class="icon">↻</span> REFRESH DATA
+    </div>
+  </aside>
+
+  <!-- MAIN CONTENT -->
+  <div class="content">
+
+    <!-- ── PURCHASES SECTION ── -->
+    <div id="section-purchases">
+
+      <div class="page-header">
+        <div>
+          <h1>VC <span>PURCHASES</span></h1>
+          <div class="page-sub">// Review and process payment submissions</div>
+        </div>
+        <div class="page-time" id="last-refresh">—</div>
+      </div>
+
+      <!-- STATS -->
+      <div class="stats-row">
+        <div class="stat-card orange">
+          <div class="stat-label">// PENDING</div>
+          <div class="stat-val" id="stat-pending">—</div>
+          <div class="stat-sub">Awaiting review</div>
+        </div>
+        <div class="stat-card green">
+          <div class="stat-label">// APPROVED</div>
+          <div class="stat-val" id="stat-approved">—</div>
+          <div class="stat-sub">Processed</div>
+        </div>
+        <div class="stat-card red">
+          <div class="stat-label">// REJECTED</div>
+          <div class="stat-val" id="stat-rejected">—</div>
+          <div class="stat-sub">Declined</div>
+        </div>
+        <div class="stat-card blue">
+          <div class="stat-label">// TOTAL USDT</div>
+          <div class="stat-val" id="stat-usdt">—</div>
+          <div class="stat-sub">Approved revenue</div>
+        </div>
+        <div class="stat-card gold">
+          <div class="stat-label">// TOTAL VC OUT</div>
+          <div class="stat-val" id="stat-vc">—</div>
+          <div class="stat-sub">VC distributed</div>
+        </div>
+      </div>
+
+      <!-- FILTER TABS + TOOLBAR -->
+      <div class="section-hdr">
+        <div class="section-title">// PURCHASE REQUESTS</div>
+        <div class="filter-tabs">
+          <button class="tab active" onclick="setFilter('all',this)">ALL <span class="count" id="tc-all">0</span></button>
+          <button class="tab" onclick="setFilter('pending',this)">PENDING <span class="count" id="tc-pending">0</span></button>
+          <button class="tab" onclick="setFilter('approved',this)">APPROVED <span class="count" id="tc-approved">0</span></button>
+          <button class="tab" onclick="setFilter('rejected',this)">REJECTED <span class="count" id="tc-rejected">0</span></button>
+        </div>
+      </div>
+
+      <div class="toolbar">
+        <div class="search-wrap">
+          <span class="search-icon">⌕</span>
+          <input type="text" id="search-input" placeholder="Search user, TX ID, package..." oninput="renderTable()">
+        </div>
+        <select id="sort-select" onchange="renderTable()">
+          <option value="newest">// Newest first</option>
+          <option value="oldest">// Oldest first</option>
+          <option value="usdt_desc">// USDT high→low</option>
+          <option value="usdt_asc">// USDT low→high</option>
+        </select>
+        <button class="btn-refresh" onclick="loadAll()" id="btn-refresh">
+          <span class="ref-icon">↻</span> REFRESH
+        </button>
+      </div>
+
+      <!-- TABLE -->
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>USER</th>
+              <th>PACKAGE</th>
+              <th>USDT</th>
+              <th>VC</th>
+              <th>TX ID</th>
+              <th>DATE</th>
+              <th>STATUS</th>
+              <th>ACTIONS</th>
+            </tr>
+          </thead>
+          <tbody id="purchases-tbody">
+            <tr><td colspan="9" class="table-empty"><span class="spinner"></span> Loading...</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- PAGINATION -->
+      <div class="pagination" id="pagination"></div>
+
+    </div><!-- /section-purchases -->
+
+    <!-- ── WALLET SECTION ── -->
+    <div id="section-wallet" style="display:none;">
+
+      <div class="page-header">
+        <div>
+          <h1>WALLET <span>SETTINGS</span></h1>
+          <div class="page-sub">// Manage the USDT deposit address shown to users</div>
+        </div>
+      </div>
+
+      <div class="settings-panel">
+        <h3>// BINANCE WALLET ADDRESS (BEP-20 / BSC)</h3>
+        <div class="settings-row">
+          <div class="settings-field">
+            <label>Current Wallet Address</label>
+            <input type="text" id="wallet-input" placeholder="0x..." autocomplete="off">
+          </div>
+          <button class="btn-save" id="btn-save-wallet" onclick="saveWallet()">[ SAVE ]</button>
+        </div>
+        <div class="settings-msg" id="wallet-msg"></div>
+      </div>
+
+      <div class="settings-panel" style="border-color:var(--border);">
+        <h3>// NOTES</h3>
+        <div style="font-family:'Share Tech Mono',monospace;font-size:0.72rem;color:var(--text-dim);line-height:2;">
+          <div>// This address is fetched live by the buy-vc.html page via <span style="color:var(--accent);">GET /api/settings/wallet</span></div>
+          <div>// Changes here reflect immediately for all new purchase modal opens</div>
+          <div>// Always use a BEP-20 compatible BSC address for USDT (TRC-20 is different)</div>
+          <div>// Verify the address carefully before saving — users will send funds to it</div>
+        </div>
+      </div>
+
+    </div><!-- /section-wallet -->
+
+  </div><!-- /content -->
+</div><!-- /layout -->
+
+<!-- ── DETAIL MODAL ── -->
+<div class="modal" id="modal-detail">
+  <div class="modal-box">
+    <h3>// PURCHASE DETAILS</h3>
+    <div id="detail-body"></div>
+    <div class="modal-actions" id="detail-actions"></div>
+  </div>
+</div>
+
+<!-- ── TOAST ── -->
+<div class="toast" id="toast"></div>
+
+<script>
+const API = 'https://genesis-vault-backend.onrender.com/api';
+let adminToken = null;
+let allPurchases = [];
+let currentFilter = 'all';
+let currentPage = 1;
+const PER_PAGE = 15;
+
+/* ═══════════════════════════════════════
+   AUTH
+═══════════════════════════════════════ */
+function adminLogin() {
+  const t = document.getElementById('login-token').value.trim();
+  if (!t) { document.getElementById('login-err').textContent = '// Token required'; return; }
+  adminToken = t;
+  localStorage.setItem('gv_admin_token', t);
+  document.getElementById('login-screen').style.display = 'none';
+  loadAll();
+}
+
+function adminLogout() {
+  adminToken = null;
+  localStorage.removeItem('gv_admin_token');
+  location.reload();
+}
+
+document.getElementById('login-token').addEventListener('keydown', e => {
+  if (e.key === 'Enter') adminLogin();
+});
+
+// Auto-login if token cached
+const cached = localStorage.getItem('gv_admin_token');
+if (cached) {
+  adminToken = cached;
+  document.getElementById('login-screen').style.display = 'none';
+}
+
+function h() {
+  return { 'Content-Type': 'application/json', 'Authorization': `Bearer ${adminToken}` };
+}
+
+async function api(path, opts = {}) {
+  opts.headers = { ...h(), ...(opts.headers || {}) };
+  const res = await fetch(`${API}${path}`, opts);
+  if (res.status === 401) {
+    adminLogout();
+    throw new Error('Unauthorized');
+  }
+  return res;
+}
+
+/* ═══════════════════════════════════════
+   SECTION NAVIGATION
+═══════════════════════════════════════ */
+function showSection(name) {
+  document.querySelectorAll('[id^="section-"]').forEach(el => el.style.display = 'none');
+  document.getElementById(`section-${name}`).style.display = 'block';
+  document.querySelectorAll('.side-item').forEach(el => el.classList.remove('active'));
+  event.currentTarget.classList.add('active');
+  if (name === 'wallet') loadWalletSetting();
+}
+
+/* ═══════════════════════════════════════
+   LOAD ALL DATA
+═══════════════════════════════════════ */
+async function loadAll() {
+  const btn = document.getElementById('btn-refresh');
+  btn.classList.add('spinning');
+  try {
+    await loadPurchases();
+  } catch(e) {
+    showToast('// Failed to load data: ' + e.message, true);
+  }
+  btn.classList.remove('spinning');
+  document.getElementById('last-refresh').textContent =
+    `// Last refresh: ${new Date().toLocaleTimeString()}`;
+}
+
+async function loadPurchases() {
+  try {
+    const res  = await api('/vc/purchases');         // GET all purchases (admin)
+    const data = await res.json();
+    allPurchases = Array.isArray(data) ? data :
+                  Array.isArray(data.purchases) ? data.purchases : [];
+  } catch(e) {
+    // Fallback: try /vc/admin/purchases or /admin/purchases
+    try {
+      const res2 = await api('/admin/vc/purchases');
+      const d2   = await res2.json();
+      allPurchases = Array.isArray(d2) ? d2 :
+                    Array.isArray(d2.purchases) ? d2.purchases : [];
+    } catch(e2) {
+      allPurchases = [];
+    }
+  }
+  updateStats();
+  updateTabCounts();
+  renderTable();
+}
+
+/* ═══════════════════════════════════════
+   STATS
+═══════════════════════════════════════ */
+function updateStats() {
+  const pending  = allPurchases.filter(p => p.status === 'pending').length;
+  const approved = allPurchases.filter(p => p.status === 'approved').length;
+  const rejected = allPurchases.filter(p => p.status === 'rejected').length;
+  const usdt     = allPurchases.filter(p => p.status === 'approved')
+                               .reduce((s, p) => s + (parseFloat(p.usdt_amount) || 0), 0);
+  const vc       = allPurchases.filter(p => p.status === 'approved')
+                               .reduce((s, p) => s + (parseInt(p.vc_amount) || 0), 0);
+
+  document.getElementById('stat-pending').textContent  = pending;
+  document.getElementById('stat-approved').textContent = approved;
+  document.getElementById('stat-rejected').textContent = rejected;
+  document.getElementById('stat-usdt').textContent     = usdt.toFixed(2);
+  document.getElementById('stat-vc').textContent       = vc.toLocaleString();
+  document.getElementById('sb-pending').textContent    = pending;
+}
+
+function updateTabCounts() {
+  const pending  = allPurchases.filter(p => p.status === 'pending').length;
+  const approved = allPurchases.filter(p => p.status === 'approved').length;
+  const rejected = allPurchases.filter(p => p.status === 'rejected').length;
+  document.getElementById('tc-all').textContent      = allPurchases.length;
+  document.getElementById('tc-pending').textContent  = pending;
+  document.getElementById('tc-approved').textContent = approved;
+  document.getElementById('tc-rejected').textContent = rejected;
+}
+
+/* ═══════════════════════════════════════
+   TABLE RENDER
+═══════════════════════════════════════ */
+function setFilter(f, el) {
+  currentFilter = f;
+  currentPage = 1;
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  renderTable();
+}
+
+function getFiltered() {
+  const q     = document.getElementById('search-input').value.toLowerCase().trim();
+  const sort  = document.getElementById('sort-select').value;
+
+  let rows = allPurchases.filter(p => {
+    if (currentFilter !== 'all' && p.status !== currentFilter) return false;
+    if (q) {
+      const searchIn = [
+        p.username || p.user || '', p.email || '',
+        p.binance_tx_id || p.tx_id || '',
+        p.package || ''
+      ].join(' ').toLowerCase();
+      if (!searchIn.includes(q)) return false;
+    }
+    return true;
+  });
+
+  rows.sort((a, b) => {
+    if (sort === 'newest') return new Date(b.created_at || 0) - new Date(a.created_at || 0);
+    if (sort === 'oldest') return new Date(a.created_at || 0) - new Date(b.created_at || 0);
+    if (sort === 'usdt_desc') return (b.usdt_amount || 0) - (a.usdt_amount || 0);
+    if (sort === 'usdt_asc')  return (a.usdt_amount || 0) - (b.usdt_amount || 0);
+    return 0;
+  });
+  return rows;
+}
+
+function renderTable() {
+  const filtered = getFiltered();
+  const total    = filtered.length;
+  const pages    = Math.max(1, Math.ceil(total / PER_PAGE));
+  currentPage    = Math.min(currentPage, pages);
+  const slice    = filtered.slice((currentPage - 1) * PER_PAGE, currentPage * PER_PAGE);
+  const tbody    = document.getElementById('purchases-tbody');
+
+  if (!slice.length) {
+    tbody.innerHTML = `<tr><td colspan="9" class="table-empty">// No records found</td></tr>`;
+    document.getElementById('pagination').innerHTML = '';
+    return;
+  }
+
+  tbody.innerHTML = slice.map((p, i) => {
+    const idx     = (currentPage - 1) * PER_PAGE + i + 1;
+    const status  = p.status || 'pending';
+    const tx      = p.binance_tx_id || p.tx_id || '—';
+    const txShort = tx.length > 18 ? tx.slice(0, 8) + '…' + tx.slice(-6) : tx;
+    const date    = p.created_at ? new Date(p.created_at).toLocaleDateString('en-GB', {
+                      day:'2-digit', month:'short', year:'2-digit'
+                    }) : '—';
+    const user    = p.username || p.user || p.email || p.user_id || '—';
+
+    const canAct  = status === 'pending';
+    return `<tr>
+      <td class="td-mono">${idx}</td>
+      <td class="td-user">${escHtml(user)}</td>
+      <td class="td-pkg">${escHtml(p.package || '—')}</td>
+      <td class="td-usdt">${p.usdt_amount || '—'} <span style="font-size:0.6rem;color:var(--text-dim);">USDT</span></td>
+      <td class="td-pkg">${(p.vc_amount || '—').toLocaleString ? Number(p.vc_amount || 0).toLocaleString() : p.vc_amount || '—'} <span style="font-size:0.6rem;color:var(--text-dim);">VC</span></td>
+      <td class="td-tx" title="${escHtml(tx)}" onclick="copyTx('${escHtml(tx)}')">${escHtml(txShort)}</td>
+      <td class="td-mono">${date}</td>
+      <td><span class="badge ${status}">${status.toUpperCase()}</span></td>
+      <td>
+        <div class="action-btns">
+          <button class="btn-view" onclick='openDetail(${JSON.stringify(p).replace(/'/g,"&apos;")})'>VIEW</button>
+          ${canAct ? `
+          <button class="btn-approve" onclick="confirmAction('${p.id || p._id}','approve',this)">✓ OK</button>
+          <button class="btn-reject"  onclick="confirmAction('${p.id || p._id}','reject',this)">✗ REJ</button>
+          ` : ''}
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+
+  renderPagination(pages);
+}
+
+function renderPagination(pages) {
+  const el = document.getElementById('pagination');
+  if (pages <= 1) { el.innerHTML = ''; return; }
+  let html = `<button class="pg-btn" onclick="goPage(${currentPage-1})" ${currentPage===1?'disabled':''}>← PREV</button>`;
+  for (let p = 1; p <= pages; p++) {
+    if (pages > 7 && Math.abs(p - currentPage) > 2 && p !== 1 && p !== pages) {
+      if (p === currentPage - 3 || p === currentPage + 3) html += `<span class="pg-info">…</span>`;
+      continue;
+    }
+    html += `<button class="pg-btn ${p===currentPage?'active':''}" onclick="goPage(${p})">${p}</button>`;
+  }
+  html += `<button class="pg-btn" onclick="goPage(${currentPage+1})" ${currentPage===pages?'disabled':''}>NEXT →</button>`;
+  html += `<span class="pg-info">// ${allPurchases.length} total</span>`;
+  el.innerHTML = html;
+}
+
+function goPage(p) { currentPage = p; renderTable(); }
+
+/* ═══════════════════════════════════════
+   ACTIONS — APPROVE / REJECT
+═══════════════════════════════════════ */
+async function confirmAction(id, action, btnEl) {
+  if (!confirm(`// Confirm: ${action.toUpperCase()} this purchase?`)) return;
+  await doAction(id, action, btnEl);
+}
+
+async function doAction(id, action, btnEl) {
+  if (btnEl) btnEl.disabled = true;
+  try {
+    // Try common endpoint patterns
+    let res;
+    try {
+      res = await api(`/vc/purchases/${id}/${action}`, { method: 'POST' });
+    } catch(e) {
+      res = await api(`/admin/vc/purchases/${id}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ status: action === 'approve' ? 'approved' : 'rejected' })
+      });
+    }
+
+    if (res.ok) {
+      // Update local state
+      const p = allPurchases.find(x => (x.id || x._id) === id);
+      if (p) p.status = action === 'approve' ? 'approved' : 'rejected';
+      updateStats(); updateTabCounts(); renderTable();
+      showToast(action === 'approve' ? '✓ Purchase approved — VC credited' : '✗ Purchase rejected', action !== 'approve');
+      document.getElementById('modal-detail').classList.remove('active');
+    } else {
+      const d = await res.json().catch(() => ({}));
+      showToast('// Error: ' + (d.message || res.statusText), true);
+      if (btnEl) btnEl.disabled = false;
+    }
+  } catch(e) {
+    showToast('// Network error: ' + e.message, true);
+    if (btnEl) btnEl.disabled = false;
+  }
+}
+
+/* ═══════════════════════════════════════
+   DETAIL MODAL
+═══════════════════════════════════════ */
+function openDetail(p) {
+  const status = p.status || 'pending';
+  const tx     = p.binance_tx_id || p.tx_id || '—';
+  const user   = p.username || p.user || p.email || p.user_id || '—';
+  const id     = p.id || p._id || '—';
+  const date   = p.created_at ? new Date(p.created_at).toLocaleString() : '—';
+
+  document.getElementById('detail-body').innerHTML = `
+    <div class="detail-row"><span class="detail-key">ID</span>       <span class="detail-val td-mono">${escHtml(String(id))}</span></div>
+    <div class="detail-row"><span class="detail-key">USER</span>     <span class="detail-val">${escHtml(user)}</span></div>
+    <div class="detail-row"><span class="detail-key">PACKAGE</span>  <span class="detail-val">${escHtml(p.package || '—')}</span></div>
+    <div class="detail-row"><span class="detail-key">USDT</span>     <span class="detail-val usdt">${p.usdt_amount || '—'} USDT</span></div>
+    <div class="detail-row"><span class="detail-key">VC AMOUNT</span><span class="detail-val vc">${Number(p.vc_amount || 0).toLocaleString()} VC</span></div>
+    <div class="detail-row"><span class="detail-key">TX ID</span>    <span class="detail-val tx">${escHtml(tx)}</span></div>
+    <div class="detail-row"><span class="detail-key">STATUS</span>   <span class="detail-val"><span class="badge ${status}">${status.toUpperCase()}</span></span></div>
+    <div class="detail-row"><span class="detail-key">SUBMITTED</span><span class="detail-val td-mono">${date}</span></div>
+  `;
+
+  const actEl = document.getElementById('detail-actions');
+  const rid   = p.id || p._id;
+  if (status === 'pending') {
+    actEl.innerHTML = `
+      <button class="btn-approve" style="flex:1;padding:12px;" onclick="doAction('${rid}','approve')">[ ✓ APPROVE ]</button>
+      <button class="btn-reject"  style="flex:1;padding:12px;" onclick="doAction('${rid}','reject')">[ ✗ REJECT ]</button>
+      <button class="btn-modal-cancel" onclick="document.getElementById('modal-detail').classList.remove('active')">CLOSE</button>
+    `;
+  } else {
+    actEl.innerHTML = `
+      <button class="btn-modal-cancel" style="flex:1;padding:12px;" onclick="document.getElementById('modal-detail').classList.remove('active')">[ CLOSE ]</button>
+    `;
+  }
+
+  document.getElementById('modal-detail').classList.add('active');
+}
+
+/* ═══════════════════════════════════════
+   WALLET SETTINGS
+═══════════════════════════════════════ */
+async function loadWalletSetting() {
+  const inp = document.getElementById('wallet-input');
+  inp.placeholder = 'Loading...';
+  try {
+    const res  = await api('/settings/wallet');
+    const data = await res.json();
+    inp.value = data.wallet_address || data.address || '';
+    inp.placeholder = '0x...';
+  } catch(e) {
+    inp.placeholder = '// Failed to load — enter address manually';
+  }
+}
+
+async function saveWallet() {
+  const addr = document.getElementById('wallet-input').value.trim();
+  const msg  = document.getElementById('wallet-msg');
+  const btn  = document.getElementById('btn-save-wallet');
+  if (!addr) { showSettingsMsg(msg, '// Address required', true); return; }
+
+  btn.disabled = true;
+  try {
+    const res = await api('/settings/wallet', {
+      method: 'POST',
+      body: JSON.stringify({ wallet_address: addr })
+    });
+    if (res.ok) {
+      showSettingsMsg(msg, '✓ Wallet address saved successfully', false);
+      showToast('✓ Wallet address updated', false);
+    } else {
+      const d = await res.json().catch(() => ({}));
+      showSettingsMsg(msg, '// Error: ' + (d.message || 'Save failed'), true);
+    }
+  } catch(e) {
+    showSettingsMsg(msg, '// Network error: ' + e.message, true);
+  }
+  btn.disabled = false;
+}
+
+function showSettingsMsg(el, text, err) {
+  el.textContent  = text;
+  el.className    = 'settings-msg ' + (err ? 'err' : 'ok');
+  el.style.display = 'block';
+  if (!err) setTimeout(() => el.style.display = 'none', 4000);
+}
+
+/* ═══════════════════════════════════════
+   UTILS
+═══════════════════════════════════════ */
+function copyTx(tx) {
+  navigator.clipboard.writeText(tx).then(() => showToast('// TX ID copied', false));
+}
+
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function showToast(msg, err) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className   = 'toast ' + (err ? 'err' : 'ok');
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3500);
+}
+
+/* close modal on backdrop click */
+document.getElementById('modal-detail').addEventListener('click', function(e) {
+  if (e.target === this) this.classList.remove('active');
+});
+
+/* ═══════════════════════════════════════
+   INIT
+═══════════════════════════════════════ */
+if (adminToken) loadAll();
+
+// Auto-refresh every 60s
+setInterval(() => { if (adminToken) loadAll(); }, 60000);
+</script>
+</body>
+</html>
