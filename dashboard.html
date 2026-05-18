@@ -1062,6 +1062,11 @@ async function fetchVCBalance() {
   } catch(e) {}
 }
 
+// Refresh VC balance whenever user returns to this tab (e.g. after visiting market.html)
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden) fetchVCBalance();
+});
+
 /* ── BOOT ──────────────────────────────────────────────────────────── */
 async function boot() {
   try {
@@ -1111,6 +1116,8 @@ async function boot() {
     document.getElementById('welcome-name').textContent   = u;
     document.getElementById('welcome-age').textContent    = age.long;
     document.getElementById('stat-days').textContent      = age.days;
+    const statVc = document.getElementById('stat-vc');
+    if (statVc && statVc.textContent === '—') statVc.textContent = '0';
   }
 }
 
@@ -1158,7 +1165,11 @@ function showPage(page, el) {
   if (page === 'profile')     loadProfile();
   if (page === 'messages')    loadMessages();
 }
-function logout() { localStorage.clear(); location.href = 'login.html'; }
+function logout() {
+  ['gv_token','gv_username','gv_created_at','gv_vc'].forEach(k => localStorage.removeItem(k));
+  sessionStorage.removeItem('gv_token');
+  location.href = 'login.html';
+}
 function openModal(id)  { document.getElementById(id).classList.add('active'); }
 function closeModal(id) { document.getElementById(id).classList.remove('active'); }
 
@@ -1166,6 +1177,7 @@ function closeModal(id) { document.getElementById(id).classList.remove('active')
 let postCategory  = 'General';
 let feedFilter    = '';
 let codeInputOpen = false;
+let feedLastLoaded = 0;
 
 function selectCat(cat, el) {
   postCategory = cat;
@@ -1181,13 +1193,17 @@ function toggleCodeInput() {
 
 function filterFeed(cat, el) {
   feedFilter = cat;
+  feedLastLoaded = 0; // force reload on filter change
   document.querySelectorAll('.feed-tab').forEach(t => t.classList.remove('active'));
   el.classList.add('active');
   loadFeed();
 }
 
 async function loadFeed() {
+  const now = Date.now();
   const c = document.getElementById('feed-container');
+  // Only reload if feed is empty or data is older than 60 seconds
+  if (feedLastLoaded && (now - feedLastLoaded < 60000) && c.querySelector('.post-card')) return;
   c.innerHTML = '<div class="loading"><span class="spinner"></span>Loading feed...</div>';
   try {
     const url  = feedFilter ? `${API}/posts?category=${encodeURIComponent(feedFilter)}` : `${API}/posts`;
@@ -1196,6 +1212,7 @@ async function loadFeed() {
     if (!data.posts?.length) {
       c.innerHTML = '<div class="empty">// No posts yet. Be the first.</div>'; return;
     }
+    feedLastLoaded = Date.now();
     c.innerHTML = data.posts.map(renderPost).join('');
   } catch(e) {
     c.innerHTML = '<div class="empty">// Failed to load feed.</div>';
@@ -1241,6 +1258,8 @@ async function createPost() {
   const content = document.getElementById('post-content').value.trim();
   const code    = codeInputOpen ? document.getElementById('post-code').value.trim() : '';
   if (!content) return;
+  const btn = document.querySelector('#page-community .post-btn');
+  if (btn) { btn.disabled = true; btn.textContent = '[ POSTING... ]'; }
   try {
     const res  = await fetchWithAuth(`${API}/posts`, {
       method:'POST',
@@ -1252,10 +1271,13 @@ async function createPost() {
       document.getElementById('post-code').value    = '';
       if (codeInputOpen) toggleCodeInput();
       loadFeed();
+    } else {
+      toast('// Failed to post. Try again.');
     }
   } catch(e) {
     toast('// Failed to post. Try again.');
   }
+  if (btn) { btn.disabled = false; btn.textContent = '[ POST ]'; }
 }
 
 async function reactPost(postId, emoji, btn) {
