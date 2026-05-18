@@ -554,22 +554,10 @@
 const API = 'https://genesis-vault-backend.onrender.com/api';
 
 /* ═══════════════════ TOKEN GATE ═══════════════════ */
+let _cachedToken = '';
+
 function getToken() {
-  return localStorage.getItem('gv_token') || sessionStorage.getItem('gv_token');
-}
-
-function parseJWT(token) {
-  try { return JSON.parse(atob(token.split('.')[1])); }
-  catch(e) { return null; }
-}
-
-function isTokenValid(token) {
-  if (!token) return false;
-  const p = parseJWT(token);
-  if (!p) return false;
-  if (p.exp && p.exp * 1000 < Date.now()) return false;
-  if (p.role && p.role !== 'admin') return false;
-  return true;
+  return _cachedToken || sessionStorage.getItem('gv_token') || '';
 }
 
 function showGate(msg) {
@@ -589,7 +577,7 @@ function hideGate() {
   document.querySelector('main').style.display = 'block';
 }
 
-function gateAuthenticate() {
+async function gateAuthenticate() {
   const input = document.getElementById('gate-token-input').value.trim();
   if (!input) {
     const el = document.getElementById('gate-error');
@@ -597,15 +585,34 @@ function gateAuthenticate() {
     el.style.display = 'block';
     return;
   }
-  if (!isTokenValid(input)) {
-    const el = document.getElementById('gate-error');
-    el.textContent = '// Invalid or expired token.';
-    el.style.display = 'block';
-    return;
+  const btn = document.getElementById('gate-btn');
+  btn.textContent = 'VERIFYING...';
+  btn.disabled = true;
+  document.getElementById('gate-error').style.display = 'none';
+
+  try {
+    const res = await fetch(`${API}/admin/market/stats`, {
+      headers: { 'Authorization': `Bearer ${input}` }
+    });
+    if (res.status === 401) {
+      document.getElementById('gate-error').textContent = '// Invalid token. Access denied.';
+      document.getElementById('gate-error').style.display = 'block';
+      btn.textContent = 'AUTHENTICATE';
+      btn.disabled = false;
+      return;
+    }
+    _cachedToken = input;
+    sessionStorage.setItem('gv_token', input);
+    btn.textContent = 'AUTHENTICATE';
+    btn.disabled = false;
+    hideGate();
+    boot();
+  } catch(e) {
+    document.getElementById('gate-error').textContent = '// Connection failed. Check backend.';
+    document.getElementById('gate-error').style.display = 'block';
+    btn.textContent = 'AUTHENTICATE';
+    btn.disabled = false;
   }
-  localStorage.setItem('gv_token', input);
-  hideGate();
-  boot();
 }
 
 function h() {
@@ -614,16 +621,11 @@ function h() {
 }
 
 async function fetchWithAuth(url, options = {}) {
-  const token = getToken();
-  if (!isTokenValid(token)) {
-    showGate('// SESSION EXPIRED — RE-AUTHENTICATE');
-    throw new Error('Unauthorized');
-  }
   if (!options.headers) options.headers = h();
   const res = await fetch(url, options);
   if (res.status === 401) {
-    localStorage.removeItem('gv_token');
     sessionStorage.removeItem('gv_token');
+    _cachedToken = '';
     showGate('// SESSION EXPIRED — RE-AUTHENTICATE');
     throw new Error('Unauthorized');
   }
@@ -1203,13 +1205,14 @@ function toast(msg, err=false) {
   document.body.appendChild(t); setTimeout(()=>t.remove(), 2800);
 }
 
-(function guardInit() {
-  const token = getToken();
-  if (!isTokenValid(token)) {
-    showGate();
+// Auto-restore session or show gate
+(async function init() {
+  const saved = sessionStorage.getItem('gv_token');
+  if (saved) {
+    document.getElementById('gate-token-input').value = saved;
+    await gateAuthenticate();
   } else {
-    hideGate();
-    boot();
+    showGate();
   }
 })();
 </script>
