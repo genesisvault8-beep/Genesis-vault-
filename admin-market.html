@@ -724,6 +724,7 @@ function filterToolsMgr() {
     card.style.display = (!q || name.includes(q) || meta.includes(q)) ? '' : 'none';
   });
 }
+  
 
 async function toggleToolActive(id, el) {
   const track = document.getElementById(`toggle-active-${id}`);
@@ -736,10 +737,13 @@ async function toggleToolActive(id, el) {
       method:'POST', headers: h(), body: JSON.stringify({ is_active: !isOn })
     });
   } catch(e) {
+    // Revert UI
     track.classList.toggle('on', isOn);
     lbl.textContent = isOn ? 'ACTIVE' : 'INACTIVE';
+    // Show error toast
+    toast('// Toggle failed. Check network or backend.', true);
+   }
   }
-}
 
 function openAddTool() {
   editingToolId = null;
