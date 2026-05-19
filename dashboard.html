@@ -1292,11 +1292,16 @@ async function reactPost(postId, emoji, btn) {
     });
     const data = await res.json();
     if (data.status !== 'success') return;
-    const added  = data.action === 'added';
-    const cur    = parseInt(btn.textContent.replace(emoji,'').trim()) || 0;
-    const newCnt = added ? cur+1 : Math.max(0,cur-1);
-    btn.textContent = emoji + (newCnt>0?' '+newCnt:'');
+    const added = data.action === 'added';
     btn.classList.toggle('active', added);
+    // Use server count if returned, else calculate locally
+    if (typeof data.count === 'number') {
+      btn.textContent = emoji + (data.count > 0 ? ' ' + data.count : '');
+    } else {
+      const cur    = parseInt(btn.textContent.replace(emoji,'').trim()) || 0;
+      const newCnt = added ? cur+1 : Math.max(0,cur-1);
+      btn.textContent = emoji + (newCnt>0?' '+newCnt:'');
+    }
   } catch(e) {}
 }
 
