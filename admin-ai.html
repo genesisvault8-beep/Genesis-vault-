@@ -511,20 +511,21 @@ function renderEngines(providers) {
 }
 
 async function toggleEngine(name, active, checkbox) {
-  // Radio-style: turn off all others when turning one on
-  if (active) {
-    document.querySelectorAll('.engine-card input[type=checkbox]').forEach(cb => {
-      const n = cb.closest('.engine-card').querySelector('.engine-name').textContent;
-      if (n !== name && cb.checked) {
-        cb.checked = false;
-        const lbl = document.getElementById(`tlabel-${n}`);
-        if (lbl) lbl.textContent = 'OFF';
-        fetch(`${AI_URL}/admin/ai-toggle`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${adminToken}` },
-          body: JSON.stringify({ name: n, active: false })
-        });
-      }
+  const lbl = document.getElementById(`tlabel-${name}`);
+  if (lbl) lbl.textContent = active ? 'ON' : 'OFF';
+  try {
+    const res = await fetch(`${AI_URL}/admin/ai-toggle`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${adminToken}` },
+      body: JSON.stringify({ name, active })
+    });
+    if (res.status === 401) { logout401(); return; }
+    setStatus(`${name}: ${active ? 'ON' : 'OFF'}`);
+  } catch(e) {
+    checkbox.checked = !active; // revert if failed
+    setStatus('TOGGLE ERROR');
+  }
+}
     });
   }
   const lbl = document.getElementById(`tlabel-${name}`);
