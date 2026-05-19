@@ -485,7 +485,8 @@ function renderEngines(providers) {
         keyPills += `<div class="key-pill ok">KEY${i} ✓</div>`;
       });
     } else {
-      keyPills = `<div class="key-pill ${p.hasKey ? 'ok' : 'miss'}">${p.hasKey ? 'KEY ✓' : 'NO KEY ✗'}</div>`;
+      const hasIt = p.hasKey === true || p.hasKey === 1 || p.hasKey === 'true';
+      keyPills = `<div class="key-pill ${hasIt ? 'ok' : 'miss'}">${hasIt ? 'KEY ✓' : 'NO KEY ✗'}</div>`;
     }
 
     card.innerHTML = `
