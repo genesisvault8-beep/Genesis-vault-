@@ -526,21 +526,6 @@ async function toggleEngine(name, active, checkbox) {
     setStatus('TOGGLE ERROR');
   }
 }
-    });
-  }
-  const lbl = document.getElementById(`tlabel-${name}`);
-  if (lbl) lbl.textContent = active ? 'ON' : 'OFF';
-  try {
-    const res = await fetch(`${AI_URL}/admin/ai-toggle`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${adminToken}` },
-      body: JSON.stringify({ name, active })
-    });
-    if (res.status === 401) { logout401(); return; }
-    setStatus(`${name}: ${active ? 'ON' : 'OFF'}`);
-    activeEngine = active ? name : null;
-  } catch(e) { setStatus('TOGGLE ERROR'); }
-}
 
 // ── TEST BENCH PRESETS ──
 const PRESETS = {
