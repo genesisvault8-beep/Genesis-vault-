@@ -19,12 +19,11 @@
   --text: #b8e8d8;
   --dim: #3a6a58;
   --border: #0d3a2a;
+  --purple: #aa88ff;
 }
 * { margin:0; padding:0; box-sizing:border-box; }
 html,body { height:100%; background:var(--bg); color:var(--text); font-family:'JetBrains Mono',monospace; }
 body { display:flex; flex-direction:column; position:fixed; inset:0; overflow:hidden; }
-
-/* SCANLINES */
 body::before {
   content:''; position:fixed; inset:0; pointer-events:none; z-index:999;
   background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,245,196,0.012) 2px,rgba(0,245,196,0.012) 4px);
@@ -42,8 +41,7 @@ body::before {
 .auth-input {
   width:100%; background:var(--bg3); border:1px solid var(--border);
   color:var(--teal); font-family:'JetBrains Mono',monospace; font-size:13px;
-  padding:12px 14px; outline:none; margin-bottom:12px;
-  -webkit-appearance:none;
+  padding:12px 14px; outline:none; margin-bottom:12px; -webkit-appearance:none;
 }
 .auth-input:focus { border-color:var(--teal-dim); }
 .auth-btn {
@@ -53,7 +51,6 @@ body::before {
 }
 .auth-btn:active { background:var(--teal); color:#000; }
 .auth-err { font-size:10px; color:var(--red); margin-top:8px; text-align:center; min-height:16px; }
-.auth-loading { font-size:10px; color:var(--dim); margin-top:8px; text-align:center; }
 
 /* ── MAIN UI ── */
 #main-ui { display:flex; flex-direction:column; height:100%; }
@@ -71,14 +68,10 @@ body::before {
 .logout-btn { font-size:8px; color:var(--red); letter-spacing:1px; cursor:pointer; padding:3px 6px; border:1px solid #330011; }
 
 /* ── TABS ── */
-.tabs {
-  display:flex; border-bottom:1px solid var(--border);
-  background:#030d08; flex-shrink:0;
-}
+.tabs { display:flex; border-bottom:1px solid var(--border); background:#030d08; flex-shrink:0; overflow-x:auto; }
 .tab {
-  flex:1; padding:10px 4px; font-size:9px; letter-spacing:1px; text-align:center;
-  color:var(--dim); cursor:pointer; border-bottom:2px solid transparent;
-  transition:all .15s;
+  flex-shrink:0; padding:10px 10px; font-size:8px; letter-spacing:1px; text-align:center;
+  color:var(--dim); cursor:pointer; border-bottom:2px solid transparent; transition:all .15s;
 }
 .tab.active { color:var(--teal); border-bottom-color:var(--teal); }
 
@@ -94,71 +87,142 @@ body::before {
 .engine-card {
   background:var(--bg3); border:1px solid var(--border);
   padding:12px 14px; margin-bottom:8px;
-  display:flex; align-items:center; justify-content:space-between;
 }
+.engine-card-top { display:flex; align-items:center; justify-content:space-between; }
 .engine-info { flex:1; }
 .engine-name { font-size:12px; font-weight:700; color:var(--text); letter-spacing:1px; }
 .engine-model { font-size:9px; color:var(--dim); margin-top:2px; }
-.engine-key { font-size:8px; margin-top:3px; }
-.engine-key.ok { color:var(--green); }
-.engine-key.miss { color:var(--red); }
+.engine-keys-row { display:flex; gap:6px; margin-top:8px; flex-wrap:wrap; }
+.key-pill {
+  display:flex; align-items:center; gap:5px;
+  border:1px solid var(--border); padding:3px 8px; font-size:8px;
+  color:var(--dim); letter-spacing:1px;
+}
+.key-pill.ok { border-color:var(--green); color:var(--green); }
+.key-pill.miss { border-color:var(--red); color:var(--red); }
+.key-count { font-size:8px; color:var(--warn); margin-left:4px; }
+
+/* ── TOGGLE ── */
 .toggle-wrap { display:flex; flex-direction:column; align-items:center; gap:4px; margin-left:12px; }
-.toggle {
-  position:relative; width:44px; height:24px; cursor:pointer;
-}
+.toggle { position:relative; width:44px; height:24px; cursor:pointer; }
 .toggle input { display:none; }
-.toggle-track {
-  position:absolute; inset:0; background:#1a2e24; border:1px solid var(--border);
-  transition:background .2s;
-}
+.toggle-track { position:absolute; inset:0; background:#1a2e24; border:1px solid var(--border); transition:background .2s; }
 .toggle input:checked ~ .toggle-track { background:var(--teal-dark); border-color:var(--teal-dim); }
-.toggle-thumb {
-  position:absolute; top:3px; left:3px; width:16px; height:16px;
-  background:var(--dim); transition:all .2s;
-}
+.toggle-thumb { position:absolute; top:3px; left:3px; width:16px; height:16px; background:var(--dim); transition:all .2s; }
 .toggle input:checked ~ .toggle-thumb { left:23px; background:var(--teal); }
 .toggle-label { font-size:8px; color:var(--dim); letter-spacing:1px; }
-.toggle input:checked ~ .toggle-label { color:var(--teal); }
 
 /* ── MODE SELECTOR ── */
-.mode-bar {
-  background:var(--bg3); border:1px solid var(--border); padding:12px 14px; margin-bottom:14px;
-}
+.mode-bar { background:var(--bg3); border:1px solid var(--border); padding:12px 14px; margin-bottom:14px; }
 .mode-bar-title { font-size:9px; color:var(--dim); letter-spacing:2px; margin-bottom:8px; }
 .mode-btns { display:flex; gap:8px; }
 .mode-btn {
   flex:1; padding:8px; font-size:9px; letter-spacing:1px; text-align:center;
-  border:1px solid var(--border); background:var(--bg); color:var(--dim); cursor:pointer;
-  transition:all .15s;
+  border:1px solid var(--border); background:var(--bg); color:var(--dim); cursor:pointer; transition:all .15s;
 }
 .mode-btn.active { background:var(--teal-dark); border-color:var(--teal-dim); color:var(--teal); }
 
-/* ── STATS ── */
-.stat-card {
-  background:var(--bg3); border:1px solid var(--border);
-  padding:12px 14px; margin-bottom:8px;
+/* ── TEST BENCH ── */
+.test-bench { background:var(--bg3); border:1px solid var(--teal-dark); padding:12px 14px; margin-bottom:14px; }
+.test-bench-title { font-size:9px; color:var(--teal); letter-spacing:2px; margin-bottom:10px; }
+.preset-btns { display:flex; gap:6px; margin-bottom:10px; flex-wrap:wrap; }
+.preset-btn {
+  padding:5px 9px; font-size:8px; letter-spacing:1px;
+  border:1px solid var(--border); background:var(--bg); color:var(--dim);
+  cursor:pointer; font-family:'JetBrains Mono',monospace; transition:all .15s;
 }
+.preset-btn:active { background:var(--teal-dark); color:var(--teal); border-color:var(--teal-dim); }
+.test-input-row { display:flex; gap:6px; }
+.test-input {
+  flex:1; background:var(--bg); border:1px solid var(--border);
+  color:var(--text); font-family:'JetBrains Mono',monospace; font-size:11px;
+  padding:8px 10px; outline:none; -webkit-appearance:none;
+}
+.test-input:focus { border-color:var(--teal-dim); }
+.test-send-btn {
+  background:var(--teal-dark); border:1px solid var(--teal-dim);
+  color:var(--teal); font-family:'JetBrains Mono',monospace;
+  font-size:9px; letter-spacing:1px; padding:8px 12px; cursor:pointer;
+}
+.test-send-btn:active { background:var(--teal); color:#000; }
+.test-result {
+  margin-top:10px; padding:10px; background:var(--bg);
+  border:1px solid var(--border); font-size:10px; color:var(--text);
+  line-height:1.6; display:none; word-break:break-word; white-space:pre-wrap;
+}
+.test-meta { font-size:8px; color:var(--teal-dim); margin-bottom:6px; }
+
+/* ── ROTATION STATS ── */
+.rotation-card {
+  background:var(--bg3); border:1px solid var(--border); padding:10px 14px; margin-bottom:6px;
+}
+.rotation-header { display:flex; justify-content:space-between; margin-bottom:8px; }
+.rotation-name { font-size:11px; color:var(--text); font-weight:700; }
+.rotation-date { font-size:8px; color:var(--dim); }
+.rotation-keys { display:flex; flex-direction:column; gap:4px; }
+.rotation-key-row { display:flex; align-items:center; justify-content:space-between; }
+.rotation-key-label { font-size:9px; color:var(--dim); }
+.rotation-bar-wrap { flex:1; margin:0 8px; height:4px; background:#0a1a12; border:1px solid var(--border); }
+.rotation-bar { height:100%; background:var(--teal); transition:width .3s; }
+.rotation-count { font-size:9px; color:var(--warn); min-width:30px; text-align:right; }
+
+/* ── STATS ── */
+.stat-card { background:var(--bg3); border:1px solid var(--border); padding:12px 14px; margin-bottom:8px; }
 .stat-card-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; }
 .stat-username { font-size:12px; color:var(--teal); font-weight:600; }
 .stat-tokens { font-size:11px; color:var(--warn); }
 .stat-row { display:flex; justify-content:space-between; font-size:9px; color:var(--dim); margin-top:3px; }
 .stat-providers { font-size:9px; color:var(--text); margin-top:6px; }
-.provider-tag {
-  display:inline-block; border:1px solid var(--border); padding:1px 5px;
-  font-size:8px; color:var(--teal-dim); margin:2px 2px 0 0;
-}
+.provider-tag { display:inline-block; border:1px solid var(--border); padding:1px 5px; font-size:8px; color:var(--teal-dim); margin:2px 2px 0 0; }
 
 /* ── LOGS ── */
-.log-entry {
-  background:var(--bg3); border:1px solid var(--border);
-  padding:10px 12px; margin-bottom:6px;
-}
-.log-meta { display:flex; justify-content:space-between; font-size:8px; color:var(--dim); margin-bottom:5px; }
+.log-entry { background:var(--bg3); border:1px solid var(--border); padding:10px 12px; margin-bottom:6px; }
+.log-meta { display:flex; justify-content:space-between; font-size:8px; color:var(--dim); margin-bottom:5px; flex-wrap:wrap; gap:4px; }
 .log-user { color:var(--teal-dim); }
 .log-provider { color:var(--warn); }
 .log-query { font-size:10px; color:var(--text); margin-bottom:4px; word-break:break-word; }
 .log-response { font-size:9px; color:var(--dim); word-break:break-word; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
 .log-tokens { font-size:8px; color:var(--green); margin-top:4px; }
+
+/* ── FAILURE LOG ── */
+.fail-entry { background:var(--bg3); border:1px solid #330011; padding:10px 12px; margin-bottom:6px; }
+.fail-meta { display:flex; justify-content:space-between; font-size:8px; color:var(--dim); margin-bottom:4px; flex-wrap:wrap; gap:4px; }
+.fail-provider { color:var(--red); font-weight:700; }
+.fail-type { 
+  font-size:9px; padding:1px 6px; border:1px solid;
+  display:inline-block; margin-bottom:4px;
+}
+.fail-type.RATE_LIMITED { color:var(--warn); border-color:var(--warn); }
+.fail-type.TIMEOUT { color:var(--red); border-color:var(--red); }
+.fail-type.SERVICE_DOWN { color:var(--red); border-color:var(--red); }
+.fail-type.EMPTY_RESPONSE { color:var(--dim); border-color:var(--dim); }
+.fail-code { font-size:8px; color:var(--dim); margin-left:6px; }
+
+/* ── LEADERBOARD ── */
+.leader-card {
+  background:var(--bg3); border:1px solid var(--border);
+  padding:10px 14px; margin-bottom:6px;
+  display:flex; align-items:center; gap:10px;
+}
+.leader-rank { font-size:16px; font-weight:700; color:var(--dim); min-width:24px; }
+.leader-rank.gold { color:#ffd700; }
+.leader-rank.silver { color:#aaa; }
+.leader-rank.bronze { color:#cd7f32; }
+.leader-info { flex:1; }
+.leader-name { font-size:12px; color:var(--text); font-weight:700; }
+.leader-model { font-size:8px; color:var(--dim); margin-top:2px; }
+.leader-speed { font-size:13px; color:var(--teal); font-weight:700; text-align:right; }
+.leader-speed span { font-size:8px; color:var(--dim); }
+.leader-status { font-size:8px; margin-top:2px; text-align:right; }
+.leader-status.fast { color:var(--green); }
+.leader-status.ok { color:var(--warn); }
+.leader-status.slow { color:var(--red); }
+.run-leaderboard-btn {
+  width:100%; background:var(--bg3); border:1px solid var(--teal-dim);
+  color:var(--teal); font-family:'JetBrains Mono',monospace;
+  font-size:9px; letter-spacing:2px; padding:11px; cursor:pointer; margin-bottom:14px;
+}
+.run-leaderboard-btn:active { background:var(--teal); color:#000; }
 
 /* ── REFRESH BTN ── */
 .refresh-btn {
@@ -168,7 +232,7 @@ body::before {
 }
 .refresh-btn:active { background:var(--teal-dark); color:var(--teal); }
 
-/* ── LOADING ── */
+/* ── LOADING / EMPTY ── */
 .loading { text-align:center; color:var(--dim); font-size:10px; padding:20px; }
 .empty { text-align:center; color:var(--dim); font-size:10px; padding:30px; }
 
@@ -206,8 +270,11 @@ body::before {
 
   <div class="tabs">
     <div class="tab active" data-tab="engines">ENGINES</div>
+    <div class="tab" data-tab="rotation">ROTATION</div>
     <div class="tab" data-tab="users">USERS</div>
     <div class="tab" data-tab="logs">LOGS</div>
+    <div class="tab" data-tab="failures">FAILURES</div>
+    <div class="tab" data-tab="leaderboard">SPEED</div>
   </div>
 
   <div id="content">
@@ -221,8 +288,34 @@ body::before {
           <div class="mode-btn" id="mode-manual" onclick="setMode('manual')">MANUAL SELECT</div>
         </div>
       </div>
-      <div class="section-title">AI PROVIDERS</div>
+
+      <!-- TEST BENCH -->
+      <div class="test-bench">
+        <div class="test-bench-title">⚡ PROVIDER TEST BENCH</div>
+        <div class="preset-btns">
+          <button class="preset-btn" onclick="setPreset('planner')">PLANNER TEST</button>
+          <button class="preset-btn" onclick="setPreset('analyzer')">ANALYZER TEST</button>
+          <button class="preset-btn" onclick="setPreset('personality')">PERSONALITY TEST</button>
+        </div>
+        <div class="test-input-row">
+          <input type="text" class="test-input" id="test-input" placeholder="type test prompt or pick preset...">
+          <button class="test-send-btn" onclick="runTest()">FIRE</button>
+        </div>
+        <div class="test-result" id="test-result">
+          <div class="test-meta" id="test-meta"></div>
+          <div id="test-output"></div>
+        </div>
+      </div>
+
+      <div class="section-title">AI PROVIDERS — TAP TOGGLE TO TEST ONE AT A TIME</div>
       <div id="engines-list"><div class="loading">LOADING PROVIDERS...</div></div>
+    </div>
+
+    <!-- ROTATION TAB -->
+    <div class="section" id="tab-rotation">
+      <div class="section-title">KEY ROTATION — TODAY'S CALL COUNTS</div>
+      <button class="refresh-btn" onclick="loadRotation()">↻ REFRESH</button>
+      <div id="rotation-list"><div class="loading">LOADING ROTATION STATS...</div></div>
     </div>
 
     <!-- USERS TAB -->
@@ -239,6 +332,20 @@ body::before {
       <div id="logs-list"><div class="loading">LOADING LOGS...</div></div>
     </div>
 
+    <!-- FAILURES TAB -->
+    <div class="section" id="tab-failures">
+      <div class="section-title">FAILURE LOG — ERRORS & TIMEOUTS</div>
+      <button class="refresh-btn" onclick="loadFailures()">↻ REFRESH</button>
+      <div id="failures-list"><div class="loading">LOADING FAILURES...</div></div>
+    </div>
+
+    <!-- LEADERBOARD TAB -->
+    <div class="section" id="tab-leaderboard">
+      <div class="section-title">SPEED LEADERBOARD</div>
+      <button class="run-leaderboard-btn" onclick="runLeaderboard()">⚡ RUN SPEED TEST ALL PROVIDERS</button>
+      <div id="leaderboard-list"><div class="empty">RUN SPEED TEST TO SEE RANKINGS</div></div>
+    </div>
+
   </div>
 
   <div class="statusbar">
@@ -250,16 +357,16 @@ body::before {
 </div>
 
 <script>
-const AI_URL = 'https://genesis-ai-backend.onrender.com'; // same backend as BACKEND_URL in vault-ai.html
+const AI_URL = 'https://genesis-ai-backend.onrender.com';
 let adminToken = '';
 let currentMode = 'auto';
+let activeEngine = null; // for radio-style single toggle
 
 // ── HELPERS ──
 function esc(s) {
   if (!s) return '';
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
-
 function logout401() {
   sessionStorage.removeItem('admin_token');
   adminToken = '';
@@ -269,28 +376,18 @@ function logout401() {
   document.getElementById('auth-err').textContent = 'SESSION EXPIRED. RE-AUTHENTICATE.';
   document.getElementById('auth-btn').textContent = 'AUTHENTICATE';
 }
-
-function setStatus(msg) {
-  document.getElementById('status-right').textContent = msg;
-}
-
-// ── CLOCK ──
-setInterval(() => {
-  document.getElementById('clock').textContent = new Date().toLocaleTimeString('en-GB');
-}, 1000);
+function setStatus(msg) { document.getElementById('status-right').textContent = msg; }
+setInterval(() => { document.getElementById('clock').textContent = new Date().toLocaleTimeString('en-GB'); }, 1000);
 
 // ── AUTH ──
 document.getElementById('auth-btn').addEventListener('click', authenticate);
-document.getElementById('token-input').addEventListener('keydown', e => {
-  if (e.key === 'Enter') authenticate();
-});
+document.getElementById('token-input').addEventListener('keydown', e => { if (e.key === 'Enter') authenticate(); });
 
 async function authenticate() {
   const token = document.getElementById('token-input').value.trim();
   if (!token) return showErr('TOKEN REQUIRED');
   document.getElementById('auth-btn').textContent = 'VERIFYING...';
   document.getElementById('auth-err').textContent = '';
-
   try {
     const res = await fetch(`${AI_URL}/admin/ai-status`, {
       headers: { 'Authorization': `Bearer ${token}` }
@@ -304,8 +401,12 @@ async function authenticate() {
     if (data.providers) {
       adminToken = token;
       sessionStorage.setItem('admin_token', token);
+      currentMode = data.mode || 'auto';
       document.getElementById('auth-screen').style.display = 'none';
       document.getElementById('main-ui').style.display = 'flex';
+      document.getElementById('admin-name').textContent = (data.admin || 'ADMIN').toUpperCase();
+      document.getElementById('mode-auto').classList.toggle('active', currentMode === 'auto');
+      document.getElementById('mode-manual').classList.toggle('active', currentMode === 'manual');
       renderEngines(data.providers);
       loadUsers();
     } else {
@@ -317,21 +418,13 @@ async function authenticate() {
     document.getElementById('auth-btn').textContent = 'AUTHENTICATE';
   }
 }
+function showErr(msg) { document.getElementById('auth-err').textContent = msg; }
 
-function showErr(msg) {
-  document.getElementById('auth-err').textContent = msg;
-}
-
-// Auto-restore session
 window.addEventListener('load', () => {
   const saved = sessionStorage.getItem('admin_token');
-  if (saved) {
-    document.getElementById('token-input').value = saved;
-    authenticate();
-  }
+  if (saved) { document.getElementById('token-input').value = saved; authenticate(); }
 });
 
-// Logout
 document.getElementById('logout-btn').addEventListener('click', () => {
   sessionStorage.removeItem('admin_token');
   adminToken = '';
@@ -348,17 +441,13 @@ document.querySelectorAll('.tab').forEach(tab => {
     document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
     tab.classList.add('active');
     document.getElementById('tab-' + tab.dataset.tab).classList.add('active');
-    if (tab.dataset.tab === 'users') {
-      document.getElementById('status-left').textContent = 'USER STATS';
-      loadUsers();
-    }
-    if (tab.dataset.tab === 'logs') {
-      document.getElementById('status-left').textContent = 'RECENT LOGS';
-      loadLogs();
-    }
-    if (tab.dataset.tab === 'engines') {
-      document.getElementById('status-left').textContent = `MODE: ${currentMode.toUpperCase()}`;
-    }
+    const t = tab.dataset.tab;
+    if (t === 'users') { document.getElementById('status-left').textContent = 'USER STATS'; loadUsers(); }
+    if (t === 'logs') { document.getElementById('status-left').textContent = 'RECENT LOGS'; loadLogs(); }
+    if (t === 'failures') { document.getElementById('status-left').textContent = 'FAILURE LOG'; loadFailures(); }
+    if (t === 'rotation') { document.getElementById('status-left').textContent = 'KEY ROTATION'; loadRotation(); }
+    if (t === 'leaderboard') { document.getElementById('status-left').textContent = 'SPEED TEST'; }
+    if (t === 'engines') { document.getElementById('status-left').textContent = `MODE: ${currentMode.toUpperCase()}`; }
   });
 });
 
@@ -375,10 +464,8 @@ async function setMode(mode) {
       body: JSON.stringify({ mode })
     });
     if (res.status === 401) { logout401(); return; }
-    setStatus(`MODE SET: ${mode.toUpperCase()}`);
-  } catch(e) {
-    setStatus('MODE SAVE FAILED');
-  }
+    setStatus(`MODE: ${mode.toUpperCase()}`);
+  } catch(e) { setStatus('MODE SAVE FAILED'); }
 }
 
 // ── RENDER ENGINES ──
@@ -388,49 +475,158 @@ function renderEngines(providers) {
   providers.forEach(p => {
     const card = document.createElement('div');
     card.className = 'engine-card';
+    card.id = `engine-card-${p.name}`;
+
+    // Build key pills — for multi-key providers show KEY1/KEY2/KEY3
+    const multiKey = ['Groq','Gemini','OpenRouter'].includes(p.name);
+    let keyPills = '';
+    if (multiKey) {
+      [1,2,3].forEach(i => {
+        keyPills += `<div class="key-pill ok">KEY${i} ✓</div>`;
+      });
+    } else {
+      keyPills = `<div class="key-pill ${p.hasKey ? 'ok' : 'miss'}">${p.hasKey ? 'KEY ✓' : 'NO KEY ✗'}</div>`;
+    }
+
     card.innerHTML = `
-      <div class="engine-info">
-        <div class="engine-name">${p.name}</div>
-        <div class="engine-model">${p.model}</div>
-        <div class="engine-key ${p.hasKey ? 'ok' : 'miss'}">${p.hasKey ? '✓ KEY SET' : '✗ NO KEY'}</div>
+      <div class="engine-card-top">
+        <div class="engine-info">
+          <div class="engine-name">${esc(p.name)}</div>
+          <div class="engine-model">${esc(p.model)}</div>
+        </div>
+        <div class="toggle-wrap">
+          <label class="toggle">
+            <input type="checkbox" ${p.active ? 'checked' : ''} onchange="toggleEngine('${p.name}', this.checked, this)">
+            <div class="toggle-track"></div>
+            <div class="toggle-thumb"></div>
+          </label>
+          <span class="toggle-label" id="tlabel-${p.name}">${p.active ? 'ON' : 'OFF'}</span>
+        </div>
       </div>
-      <div class="toggle-wrap">
-        <label class="toggle">
-          <input type="checkbox" ${p.active ? 'checked' : ''} onchange="toggleEngine('${p.name}', this.checked)">
-          <div class="toggle-track"></div>
-          <div class="toggle-thumb"></div>
-        </label>
-        <span class="toggle-label">${p.active ? 'ON' : 'OFF'}</span>
-      </div>
+      <div class="engine-keys-row">${keyPills}</div>
     `;
     list.appendChild(card);
   });
 }
 
-async function toggleEngine(name, active) {
+async function toggleEngine(name, active, checkbox) {
+  // Radio-style: turn off all others when turning one on
+  if (active) {
+    document.querySelectorAll('.engine-card input[type=checkbox]').forEach(cb => {
+      const n = cb.closest('.engine-card').querySelector('.engine-name').textContent;
+      if (n !== name && cb.checked) {
+        cb.checked = false;
+        const lbl = document.getElementById(`tlabel-${n}`);
+        if (lbl) lbl.textContent = 'OFF';
+        fetch(`${AI_URL}/admin/ai-toggle`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${adminToken}` },
+          body: JSON.stringify({ name: n, active: false })
+        });
+      }
+    });
+  }
+  const lbl = document.getElementById(`tlabel-${name}`);
+  if (lbl) lbl.textContent = active ? 'ON' : 'OFF';
   try {
     const res = await fetch(`${AI_URL}/admin/ai-toggle`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${adminToken}`
-      },
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${adminToken}` },
       body: JSON.stringify({ name, active })
     });
     if (res.status === 401) { logout401(); return; }
+    setStatus(`${name}: ${active ? 'ON' : 'OFF'}`);
+    activeEngine = active ? name : null;
+  } catch(e) { setStatus('TOGGLE ERROR'); }
+}
+
+// ── TEST BENCH PRESETS ──
+const PRESETS = {
+  planner: 'scan ports on example.com and tell me what to do next',
+  analyzer: 'PORT 22 open OpenSSH 7.4, PORT 80 open Apache 2.4.6, PORT 443 open nginx 1.14',
+  personality: 'who are you and what can you do for me'
+};
+function setPreset(type) {
+  document.getElementById('test-input').value = PRESETS[type];
+}
+
+async function runTest() {
+  const msg = document.getElementById('test-input').value.trim();
+  if (!msg) return;
+  const resultBox = document.getElementById('test-result');
+  const metaEl = document.getElementById('test-meta');
+  const outputEl = document.getElementById('test-output');
+  resultBox.style.display = 'block';
+  metaEl.textContent = 'FIRING...';
+  outputEl.textContent = '';
+  const start = Date.now();
+  try {
+    const res = await fetch(`${AI_URL}/api/vault-ai`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${adminToken}` },
+      body: JSON.stringify({
+        message: msg,
+        engine: activeEngine || null,
+        username: 'admin-test',
+        rank: 'Admin'
+      })
+    });
+    if (res.status === 401) { logout401(); return; }
     const data = await res.json();
-    if (data.success) {
-      setStatus(`${name}: ${active ? 'ON' : 'OFF'}`);
-      document.querySelectorAll('.engine-card').forEach(card => {
-        if (card.querySelector('.engine-name').textContent === name) {
-          card.querySelector('.toggle-label').textContent = active ? 'ON' : 'OFF';
-        }
-      });
-    } else {
-      setStatus(`TOGGLE FAILED: ${name}`);
-    }
+    const ms = Date.now() - start;
+    metaEl.textContent = `PROVIDER: ${data.provider || 'unknown'} | TIME: ${ms}ms | TOKENS: ~${data.tokens_used || 0}`;
+    outputEl.textContent = data.response || data.error || 'NO RESPONSE';
   } catch(e) {
-    setStatus('TOGGLE ERROR: ' + e.message);
+    metaEl.textContent = 'ERROR';
+    outputEl.textContent = e.message;
+  }
+}
+
+// ── ROTATION STATS ──
+async function loadRotation() {
+  const list = document.getElementById('rotation-list');
+  list.innerHTML = '<div class="loading">LOADING...</div>';
+  try {
+    const res = await fetch(`${AI_URL}/admin/rotation-stats`, {
+      headers: { 'Authorization': `Bearer ${adminToken}` }
+    });
+    if (res.status === 401) { logout401(); return; }
+    const data = await res.json();
+    if (!data.stats || data.stats.length === 0) {
+      list.innerHTML = '<div class="empty">NO ROTATION DATA YET TODAY</div>';
+      return;
+    }
+    // Group by provider
+    const grouped = {};
+    data.stats.forEach(s => {
+      if (!grouped[s.provider]) grouped[s.provider] = [];
+      grouped[s.provider].push(s);
+    });
+    const maxCount = Math.max(...data.stats.map(s => s.call_count), 1);
+    list.innerHTML = '';
+    Object.entries(grouped).forEach(([provider, keys]) => {
+      const card = document.createElement('div');
+      card.className = 'rotation-card';
+      const keysHTML = keys.sort((a,b) => a.key_index - b.key_index).map(k => {
+        const pct = Math.round((k.call_count / maxCount) * 100);
+        return `
+          <div class="rotation-key-row">
+            <span class="rotation-key-label">KEY${k.key_index}</span>
+            <div class="rotation-bar-wrap"><div class="rotation-bar" style="width:${pct}%"></div></div>
+            <span class="rotation-count">${k.call_count}</span>
+          </div>`;
+      }).join('');
+      card.innerHTML = `
+        <div class="rotation-header">
+          <span class="rotation-name">${esc(provider)}</span>
+          <span class="rotation-date">${esc(data.date)}</span>
+        </div>
+        <div class="rotation-keys">${keysHTML}</div>
+      `;
+      list.appendChild(card);
+    });
+  } catch(e) {
+    list.innerHTML = `<div class="empty">ERROR: ${esc(e.message)}</div>`;
   }
 }
 
@@ -450,14 +646,13 @@ async function loadUsers() {
     }
     list.innerHTML = '';
     data.users.forEach(u => {
-      const providerTags = Object.entries(u.providers || {})
-        .map(([p, c]) => `<span class="provider-tag">${p}: ${c}</span>`).join('');
+      const providerTags = Object.entries(u.providers || {}).map(([p,c]) => `<span class="provider-tag">${p}: ${c}</span>`).join('');
       const lastActive = u.last_active ? new Date(u.last_active).toLocaleDateString() : 'N/A';
       const card = document.createElement('div');
       card.className = 'stat-card';
       card.innerHTML = `
         <div class="stat-card-header">
-          <span class="stat-username">${u.username}</span>
+          <span class="stat-username">${esc(u.username)}</span>
           <span class="stat-tokens">${u.total_tokens.toLocaleString()} tokens</span>
         </div>
         <div class="stat-row">
@@ -469,7 +664,7 @@ async function loadUsers() {
       list.appendChild(card);
     });
   } catch(e) {
-    list.innerHTML = `<div class="empty">ERROR: ${e.message}</div>`;
+    list.innerHTML = `<div class="empty">ERROR: ${esc(e.message)}</div>`;
   }
 }
 
@@ -494,9 +689,9 @@ async function loadLogs() {
       entry.className = 'log-entry';
       entry.innerHTML = `
         <div class="log-meta">
-          <span class="log-user">${log.username || 'anon'}</span>
-          <span class="log-provider">${log.provider || 'unknown'}</span>
-          <span>${time}</span>
+          <span class="log-user">${esc(log.username || 'anon')}</span>
+          <span class="log-provider">${esc(log.provider || 'unknown')}</span>
+          <span>${esc(time)}</span>
         </div>
         <div class="log-query">&gt; ${esc(log.user_query)}</div>
         <div class="log-response">${esc(log.ai_response)}</div>
@@ -505,8 +700,131 @@ async function loadLogs() {
       list.appendChild(entry);
     });
   } catch(e) {
-    list.innerHTML = `<div class="empty">ERROR: ${e.message}</div>`;
+    list.innerHTML = `<div class="empty">ERROR: ${esc(e.message)}</div>`;
   }
+}
+
+// ── FAILURES ──
+async function loadFailures() {
+  const list = document.getElementById('failures-list');
+  list.innerHTML = '<div class="loading">LOADING...</div>';
+  try {
+    const res = await fetch(`${AI_URL}/admin/failures`, {
+      headers: { 'Authorization': `Bearer ${adminToken}` }
+    });
+    if (res.status === 401) { logout401(); return; }
+    const data = await res.json();
+    if (!data.failures || data.failures.length === 0) {
+      list.innerHTML = '<div class="empty">NO FAILURES LOGGED — ALL SYSTEMS HOLDING ✓</div>';
+      return;
+    }
+    list.innerHTML = '';
+    data.failures.forEach(f => {
+      const time = f.created_at ? new Date(f.created_at).toLocaleString() : '';
+      const entry = document.createElement('div');
+      entry.className = 'fail-entry';
+      entry.innerHTML = `
+        <div class="fail-meta">
+          <span class="fail-provider">${esc(f.provider)} KEY${f.key_index || 1}</span>
+          <span>${esc(time)}</span>
+        </div>
+        <span class="fail-type ${esc(f.error_type)}">${esc(f.error_type)}</span>
+        ${f.error_code ? `<span class="fail-code">HTTP ${f.error_code}</span>` : ''}
+      `;
+      list.appendChild(entry);
+    });
+  } catch(e) {
+    list.innerHTML = `<div class="empty">ERROR: ${esc(e.message)}</div>`;
+  }
+}
+
+// ── SPEED LEADERBOARD ──
+async function runLeaderboard() {
+  const list = document.getElementById('leaderboard-list');
+  list.innerHTML = '<div class="loading">PINGING ALL PROVIDERS... THIS MAY TAKE 30s...</div>';
+  const testMsg = 'reply with only: VAULT ONLINE';
+
+  // Fetch provider list
+  let providers = [];
+  try {
+    const res = await fetch(`${AI_URL}/admin/ai-status`, {
+      headers: { 'Authorization': `Bearer ${adminToken}` }
+    });
+    const data = await res.json();
+    providers = data.providers.filter(p => p.hasKey);
+  } catch(e) {
+    list.innerHTML = `<div class="empty">FAILED TO FETCH PROVIDERS: ${esc(e.message)}</div>`;
+    return;
+  }
+
+  // Enable one at a time, fire test, measure
+  const results = [];
+  for (const p of providers) {
+    // Enable only this provider
+    await fetch(`${AI_URL}/admin/ai-toggle`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${adminToken}` },
+      body: JSON.stringify({ name: p.name, active: true })
+    });
+
+    const start = Date.now();
+    try {
+      const res = await fetch(`${AI_URL}/api/vault-ai`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${adminToken}` },
+        body: JSON.stringify({ message: testMsg, engine: p.name, username: 'speed-test', rank: 'Admin' })
+      });
+      const ms = Date.now() - start;
+      const ok = res.ok;
+      results.push({ name: p.name, model: p.model, ms, ok });
+    } catch(e) {
+      results.push({ name: p.name, model: p.model, ms: 99999, ok: false });
+    }
+
+    // Disable after test
+    await fetch(`${AI_URL}/admin/ai-toggle`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${adminToken}` },
+      body: JSON.stringify({ name: p.name, active: false })
+    });
+  }
+
+  // Re-enable all
+  for (const p of providers) {
+    await fetch(`${AI_URL}/admin/ai-toggle`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${adminToken}` },
+      body: JSON.stringify({ name: p.name, active: true })
+    });
+  }
+
+  // Sort by speed
+  results.sort((a,b) => a.ms - b.ms);
+  list.innerHTML = '';
+
+  results.forEach((r, i) => {
+    const rank = i + 1;
+    const rankClass = rank === 1 ? 'gold' : rank === 2 ? 'silver' : rank === 3 ? 'bronze' : '';
+    const speedLabel = r.ms < 1000 ? 'FAST' : r.ms < 3000 ? 'OK' : 'SLOW';
+    const speedClass = r.ms < 1000 ? 'fast' : r.ms < 3000 ? 'ok' : 'slow';
+    const displayMs = r.ok ? `${r.ms}` : 'FAIL';
+    const card = document.createElement('div');
+    card.className = 'leader-card';
+    card.innerHTML = `
+      <div class="leader-rank ${rankClass}">#${rank}</div>
+      <div class="leader-info">
+        <div class="leader-name">${esc(r.name)}</div>
+        <div class="leader-model">${esc(r.model)}</div>
+      </div>
+      <div>
+        <div class="leader-speed">${displayMs}<span>ms</span></div>
+        <div class="leader-status ${speedClass}">${r.ok ? speedLabel : 'FAILED'}</div>
+      </div>
+    `;
+    list.appendChild(card);
+  });
+
+  setStatus('SPEED TEST COMPLETE');
 }
 </script>
 </body>
